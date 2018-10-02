@@ -1,0 +1,78 @@
+.widget-small_baseslider-{{id}} {
+	position: relative;
+}
+
+.widget-small_baseslider-{{id}} .title {
+	position: auto;
+	top: 5px;
+	width: 100%;
+}
+
+.widget-small_baseslider-{{id}} .title2 {
+	position: auto;
+	top: 23px;
+	width: 100%;
+}
+
+.widget-small_baseslider-{{id}} .level {
+	font-size: 250%;
+	display: inline-block;
+}
+
+.widget-small_baseslider-{{id}} .unit {
+	font-size: 100%;
+	font-weight: 400;
+	display: inline-block;
+	vertical-align: top;
+	margin-left: 5px;
+	margin-top: 5px;
+}
+
+.widget-small_baseslider-{{id}} .levelunit {
+	position: auto;
+	top: 43px;
+	width: 100%;
+}
+
+.widget-small_baseslider-{{id}} .secondary-icon {
+	position: auto;
+	bottom: 0px;
+	font-size: 20px;
+	width: 32px;
+	color: white;
+}
+
+.widget-small_baseslider-{{id}} .level2 {
+	display: inline-block;
+}
+
+.widget-small_baseslider-{{id}} .unit2 {
+	font-size: 65%;
+	font-weight: 400;
+	display: inline-block;
+	vertical-align: top;
+
+}
+
+.widget-small_baseslider-{{id}} .levelunit2 {
+	position: auto;
+	bottom: 5px;
+	width: 100%;
+}
+.widget-small_baseslider-{{id}} .secondary-icon.plus {
+	right: 24px;
+}
+
+.widget-small_baseslider-{{id}} .secondary-icon.plus i {
+	padding-top: 10px;
+	padding-left: 30px;
+}
+
+.widget-small_baseslider-{{id}} .secondary-icon.minus {
+	left: 8px;
+}
+
+.widget-small_baseslider-{{id}} .secondary-icon.minus i {
+	padding-top: 10px;
+	padding-right: 30px;
+}

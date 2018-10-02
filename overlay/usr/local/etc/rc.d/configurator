@@ -1,0 +1,63 @@
+#!/bin/sh
+#
+# PROVIDE: configurator
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+#
+# configurator_enable:	Set to YES to enable the configurator service.
+#			Default: NO
+# configurator_user:	The user account used to run the configurator daemon.
+#			This is optional, however do not specifically set this to an
+#			empty string as this will cause the daemon to run as root.
+#			Default: USER_NAME
+# configurator_group:	The group account used to run the configurator daemon.
+#			This is optional, however do not specifically set this to an
+#			empty string as this will cause the daemon to run with group wheel.
+#			Default: USER_GROUP
+# configurator_conf:	Hass-configurator user settings
+#			Default: ~/homeassistant/configurator/configurator.conf
+
+# copy file to /usr/local/etc/rc.d/configurator 
+# chmod +x /usr/local/etc/rc.d/configurator
+#
+# sysrc configurator_enable=yes
+# service configurator start | status | restart | stop
+
+. /etc/rc.subr
+name=configurator
+rcvar=${name}_enable
+
+pidfile_child="/var/run/${name}.pid"
+pidfile="/var/run/${name}_daemon.pid"
+
+load_rc_config ${name}
+: ${configurator_enable:="NO"}
+: ${configurator_user:="hass"}
+: ${configurator_group:="hass"}
+: ${configurator_config:="/home/hass/configurator/configurator.conf"}
+: ${configurator:="/srv/configurator/configurator.py"}
+
+command="/usr/sbin/daemon"
+
+start_precmd=${name}_precmd
+configurator_precmd()
+{
+        rc_flags="-f -P ${pidfile} -p ${pidfile_child} /usr/local/bin/python3.6 ${configurator} ${configurator_config} ${rc_flags}"
+        
+    if [ ! -e "${pidfile_child}" ]; then
+            install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile_child}";
+    fi
+
+    if [ ! -e "${pidfile}" ]; then
+            install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile}";
+    fi
+}
+
+stop_postcmd=${name}_postcmd
+configurator_postcmd()
+{
+    rm -f -- "${pidfile}"
+    rm -f -- "${pidfile_child}"
+}
+
+run_rc_command "$1"

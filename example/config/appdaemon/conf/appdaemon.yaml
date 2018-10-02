@@ -1,0 +1,15 @@
+# https://appdaemon.readthedocs.io/en/latest/INSTALL.html#configuration
+secrets: /home/hass/homeassistant/secrets.yaml
+appdaemon:
+  # disable_apps: 1
+  threads: 10
+  production_mode: true
+  app_dir: /home/hass/appdaemon/apps
+  plugins:
+    HASS:
+      type: hass
+      ha_url: http://127.0.0.1:8123
+      ha_key: !secret ha_api_key
+hadashboard:
+  dash_url: http://127.0.0.1:5050
+  dashboard_dir: /home/hass/appdaemon/dashboards

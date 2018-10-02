@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# PROVIDE: hass-server
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# homeassistant_enable:	Set to YES to enable the homeassistant service.
+#			Default: NO
+# homeassistant_user:	The user account used to run the homeassistant daemon.
+#			This is optional, however do not specifically set this to an
+#			empty string as this will cause the daemon to run as root.
+#			Default: USER_NAME
+# homeassistant_group:	The group account used to run the homeassistant daemon.
+#			This is optional, however do not specifically set this to an
+#			empty string as this will cause the daemon to run with group wheel.
+#			Default: USER_GROUP
+# homeassistant_config_dir:	Directory where configuration is located.
+#			Default: USER_HOME
+
+# sysrc homeassistant_enable=yes
+# sysrc homeassistant_config_dir="~/.homeassistant"
+
+. /etc/rc.subr
+name=homeassistant
+rcvar=${name}_enable
+
+pidfile_child="/var/run/${name}.pid"
+pidfile="/var/run/${name}_daemon.pid"
+
+load_rc_config ${name}
+: ${homeassistant_enable:="NO"}
+: ${homeassistant_user:="hass"}
+: ${homeassistant_group:="hass"}
+: ${homeassistant_config_dir:="/home/hass/homeassistant"}
+
+command="/usr/sbin/daemon"
+
+start_precmd=${name}_precmd
+homeassistant_precmd()
+{
+    rc_flags="-f -P ${pidfile} -p ${pidfile_child} /srv/homeassistant/bin/hass --config ${homeassistant_config_dir} ${rc_flags}"
+    
+    pause="sleep 1"
+    
+    if [ ! -e "${pidfile_child}" ]; then
+            install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile_child}";
+    fi
+
+    if [ ! -e "${pidfile}" ]; then
+            install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile}";
+    fi
+    
+    if [ ! -d "${homeassistant_config_dir}" ]; then
+        install -d -g ${homeassistant_group} -o ${homeassistant_user} -m 775 -- "${homeassistant_config_dir}"
+        pause="sleep 10";
+    fi
+}
+
+stop_postcmd=${name}_postcmd
+homeassistant_postcmd()
+{
+    rm -f -- "${pidfile}"
+    rm -f -- "${pidfile_child}"
+}
+
+run_rc_command "$1"                           # start homeassistant then
+${pause}                                      # wait a few seconds before 
+chmod -R g=u "${homeassistant_config_dir}/"   # setting group permissions equal to user permissions

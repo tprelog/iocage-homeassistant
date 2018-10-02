@@ -1,0 +1,18 @@
+-- Home Assistant plugin for FreeNAS --
+
+- control Home-Assistant service:
+    service homeassistant [ restart | start | status | stop ]
+
+- update Home-Assistant:
+    service homeassistant stop    
+    su hass
+       source /srv/homeassistant/bin/activate
+       pip3 install --upgrade homeassistant
+       deactivate && exit    
+    service homeassistant start
+
+- view Home-Assistant log file:
+    cat /home/hass/homeassistant/home-assistant.log
+
+-------------------------------------------------------------
+

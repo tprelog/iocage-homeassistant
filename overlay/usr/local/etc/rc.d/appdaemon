@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# PROVIDE: appdaemon
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# appdaemon_enable:	Set to YES to enable the appdaemon service.
+#			Default: NO
+# appdaemon_user:	The user account used to run the appdaemon daemon.
+#			This is optional, however do not specifically set this to an
+#			empty string as this will cause the daemon to run as root.
+#			Default: USER_NAME
+# appdaemon_group:	The group account used to run the appdaemon daemon.
+#			This is optional, however do not specifically set this to an
+#			empty string as this will cause the daemon to run with group wheel.
+#			Default: USER_GROUP
+# appdaemon_dir:	Directory where --- is located.
+#			Default: USER_HOME
+
+# sysrc appdaemon_enable=yes
+
+. /etc/rc.subr
+name=appdaemon
+rcvar=${name}_enable
+
+pidfile_child="/var/run/${name}.pid"
+pidfile="/var/run/${name}_daemon.pid"
+
+load_rc_config ${name}
+: ${appdaemon_enable:="NO"}
+: ${appdaemon_user:="hass"}
+: ${appdaemon_group:="hass"}
+: ${appdaemon_config_dir:="/home/hass/appdaemon/conf"}
+
+command="/usr/sbin/daemon"
+
+start_precmd=${name}_precmd
+appdaemon_precmd()
+{
+        rc_flags="-f -P ${pidfile} -p ${pidfile_child} /srv/appdaemon/bin/appdaemon -c ${appdaemon_config_dir} ${rc_flags}"
+        
+    if [ ! -e "${pidfile_child}" ]; then
+            install -g ${appdaemon_group} -o ${appdaemon_user} -- /dev/null "${pidfile_child}";
+    fi
+
+    if [ ! -e "${pidfile}" ]; then
+            install -g ${appdaemon_group} -o ${appdaemon_user} -- /dev/null "${pidfile}";
+    fi
+    
+    if [ ! -d "${appdaemon_config_dir}" ]; then
+        install -d -g ${appdaemon_group} -o ${appdaemon_user} -- "${appdaemon_config_dir}";
+    fi
+}
+
+stop_postcmd=${name}_postcmd
+appdaemon_postcmd()
+{
+    rm -f -- "${pidfile}"
+    rm -f -- "${pidfile_child}"
+}
+
+run_rc_command "$1"

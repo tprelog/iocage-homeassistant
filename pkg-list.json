@@ -1,0 +1,12 @@
+{
+    "pkgs": [
+    "shells/bash",
+    "security/ca_root_nss",
+    "devel/git",
+    "devel/gmake",
+    "lang/python36",
+    "databases/py-sqlite3",
+    "sysutils/screen",
+    "ftp/wget"
+    ]
+} 
