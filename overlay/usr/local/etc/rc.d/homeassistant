@@ -1,11 +1,8 @@
 #!/bin/sh
 
-# PROVIDE: hass-server
+# PROVIDE: homeassistant
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
-#
-# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
-# to enable this service:
 #
 # homeassistant_enable:	Set to YES to enable the homeassistant service.
 #			Default: NO
@@ -17,11 +14,15 @@
 #			This is optional, however do not specifically set this to an
 #			empty string as this will cause the daemon to run with group wheel.
 #			Default: USER_GROUP
-# homeassistant_config_dir:	Directory where configuration is located.
-#			Default: USER_HOME
-
-# sysrc homeassistant_enable=yes
-# sysrc homeassistant_config_dir="~/.homeassistant"
+# homeassistant_config_dir:	Directory where homeassistant config is located.
+#			Default: ~/homeassistant
+#
+# copy file to /usr/local/etc/rc.d/homeassistant 
+# chmod +x /usr/local/etc/rc.d/homeassistant
+#
+# sysrc homeassistant_enable=yes                        # to enable
+# sysrc homeassistant_config_dir="~/homeassistant"      # to change
+# service homeassistant start                           # to start
 
 . /etc/rc.subr
 name=homeassistant
@@ -43,8 +44,6 @@ homeassistant_precmd()
 {
     rc_flags="-f -P ${pidfile} -p ${pidfile_child} /srv/homeassistant/bin/hass --config ${homeassistant_config_dir} ${rc_flags}"
     
-    pause="sleep 1"
-    
     if [ ! -e "${pidfile_child}" ]; then
             install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile_child}";
     fi
@@ -55,7 +54,6 @@ homeassistant_precmd()
     
     if [ ! -d "${homeassistant_config_dir}" ]; then
         install -d -g ${homeassistant_group} -o ${homeassistant_user} -m 775 -- "${homeassistant_config_dir}"
-        pause="sleep 10";
     fi
 }
 
@@ -66,6 +64,4 @@ homeassistant_postcmd()
     rm -f -- "${pidfile_child}"
 }
 
-run_rc_command "$1"                           # start homeassistant then
-${pause}                                      # wait a few seconds before 
-chmod -R g=u "${homeassistant_config_dir}/"   # setting group permissions equal to user permissions
+run_rc_command "$1"

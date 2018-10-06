@@ -1,5 +1,5 @@
 # iocage-homeassistant
-Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Daemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) / [HA-Dashboard](https://www.home-assistant.io/docs/ecosystem/hadashboard/) + [Configurator](https://www.home-assistant.io/docs/ecosystem/hass-configurator/#configuration-ui-for-home-assistant)  
+Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Daemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) / [HA-Dashboard](https://www.home-assistant.io/docs/ecosystem/hadashboard/) + [Hass-Configurator](https://www.home-assistant.io/docs/ecosystem/hass-configurator/#configuration-ui-for-home-assistant)  
 
 ---
 ---
@@ -16,7 +16,8 @@ Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Dae
 ---
 ## iocage-jail-homeassistant
 
- - This scrpit can also be used to create a standard-jail for Home-Assistant + AppDaemon/HA-Dashboard + Configurator
+ - This scrpit can also be used to create a standard-jail for Home-Assistant
+ - Includes option to install App-Daemon/HA-Dashboard and(or) Hass-Configurator
  
 **Download pkg-list and create a jail using it to install requirements**
 
@@ -37,8 +38,8 @@ Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Dae
 
 **Answer questions will choose what gets installed**
 
-    Install Home Assistant?  [Y/n]:
-    Install Hass Configurator?  [Y/n]:
+    Install Home-Assistant?  [Y/n]:
+    Install Hass-Configurator?  [Y/n]:
     App-Daemon & HA-Dashboard?  [Y/n]:
     Use the pre-configured examples?  [Y/n]:
 
