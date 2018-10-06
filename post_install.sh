@@ -40,8 +40,8 @@ first_run () {      # This is the main function to setup homeassistant jail
   add_user  # Required for this script to work
 
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
-  mkdir -p /root/bin
-                                        #|- These are like an alais BUT they will also work
+  
+  mkdir -p /root/bin                    #|- These are like an alais BUT they will also work
   ln -s ${0} /root/bin/menu-install     #|- using `iocage exec ${JAIL} update
   ln -s ${0} /root/bin/menu-update      #|- Different names are like using arguments
   ln -s ${0} /root/bin/update           #|- `iocage exec ${JAIL} /root/post_install.sh update'
@@ -277,10 +277,12 @@ if [ "${ctrl}" = "post_install" ]; then
 
     if [ "${ctrl}" = "post_install" ] && [ -z "${1}" ]; then
         first_run
+        echo "Initial Startup Can Take 1-2 Minutes Before Home-Assistant is Reachable" 
         exit
     elif [ "${ctrl}" = "post_install" ] &&  [ "${1}" = "standard" ]; then
         plugin=NO
         first_run
+        echo "Initial Startup Can Take 1-2 Minutes Before Home-Assistant is Reachable"
         exit
     else
         echo "${red}!! post_install.sh !!${end}"

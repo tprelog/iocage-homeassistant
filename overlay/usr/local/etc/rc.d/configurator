@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# PROVIDE: configurator
+# PROVIDE: hass-configurator
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
@@ -14,14 +14,15 @@
 #			This is optional, however do not specifically set this to an
 #			empty string as this will cause the daemon to run with group wheel.
 #			Default: USER_GROUP
-# configurator_conf:	Hass-configurator user settings
-#			Default: ~/homeassistant/configurator/configurator.conf
-
+# configurator_conf:	Hass-Configurator user settings
+#			Default: ~/configurator/configurator.conf
+#
 # copy file to /usr/local/etc/rc.d/configurator 
 # chmod +x /usr/local/etc/rc.d/configurator
 #
-# sysrc configurator_enable=yes
-# service configurator start | status | restart | stop
+# sysrc configurator_enable=yes                      # to enable
+# sysrc configurator_config ="~/.configurator.conf"  # to change
+# service configurator start                         # to start
 
 . /etc/rc.subr
 name=configurator

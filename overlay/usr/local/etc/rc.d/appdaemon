@@ -4,9 +4,6 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
-# to enable this service:
-#
 # appdaemon_enable:	Set to YES to enable the appdaemon service.
 #			Default: NO
 # appdaemon_user:	The user account used to run the appdaemon daemon.
@@ -17,10 +14,15 @@
 #			This is optional, however do not specifically set this to an
 #			empty string as this will cause the daemon to run with group wheel.
 #			Default: USER_GROUP
-# appdaemon_dir:	Directory where --- is located.
-#			Default: USER_HOME
-
-# sysrc appdaemon_enable=yes
+# appdaemon_config_dir:	Directory where appdaemon config is located.
+#			Default: ~/appdaemon/conf
+#
+# copy this file to /usr/local/etc/rc.d/appdaemon 
+# chmod +x /usr/local/etc/rc.d/appdaemon
+#
+# sysrc appdaemon_enable=yes                # to enable
+# sysrc appdaemon_config_dir="~/appdaemon"  # to change
+# service appdaemon start                   # to start
 
 . /etc/rc.subr
 name=appdaemon
