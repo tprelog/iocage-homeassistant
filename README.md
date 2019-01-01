@@ -6,10 +6,9 @@ A somewhat complete "quick start" using this repo can be found in the Home Assis
 [My (almost) complete quick start to installing Home Assistant on FreeNAS 11.2 ](https://community.home-assistant.io/t/my-almost-complete-quick-start-to-installing-home-assistant-on-freenas-11-2-including-appdaemon-ha-dashboard-hass-configurator-mosquitto-and-tasmoadmin/71882?u=troy)
 
 
-If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will now need to add a script to create a custom devfs_ruleset on the FreeNAS host system its self. This is not difficult but the final step requries using the FreeNAS GUI in order to have the custom ruleset automatically created during FreeNAS (re)boots.
+If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will now need to add a script that creates a custom devfs_ruleset on the FreeNAS host system. This is not difficult to do and a quick how-to can be found in the [FreeNAS forums](https://forums.freenas.org/index.php?threads/usb-z-wave-device-no-longer-shows-up-in-iocage-jail-on-freenas-11-2.71301/post-501866).
 
-Ideally if your creating a new jail and already have a USB device mentioned, you'll want to follow [this link to the FreeNAS forums first](https://forums.freenas.org/index.php?threads/usb-z-wave-device-no-longer-shows-up-in-iocage-jail-on-freenas-11-2.71301/post-501866).
-Here you'll find steps to quickly create a script that FreeNAS can use to automatically create the custom devfs_ruleset for you.  
+The final step requries using the FreeNAS GUI in order to have the custom ruleset automatically created during FreeNAS (re)boots.
 
 ---
 ---
