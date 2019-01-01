@@ -8,8 +8,6 @@ A somewhat complete "quick start" using this repo can be found in the Home Assis
 
 If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will now need to add a script that creates a custom devfs_ruleset on the FreeNAS host system. This is not difficult to do and a quick how-to can be found in the [FreeNAS forums](https://forums.freenas.org/index.php?threads/usb-z-wave-device-no-longer-shows-up-in-iocage-jail-on-freenas-11-2.71301/post-501866).
 
-The final step requries using the FreeNAS GUI in order to have the custom ruleset automatically created during FreeNAS (re)boots.
-
 ---
 ---
 ## iocage-plugin-homeassistant
