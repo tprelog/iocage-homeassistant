@@ -2,7 +2,7 @@
 Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Daemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) / [HA-Dashboard](https://www.home-assistant.io/docs/ecosystem/hadashboard/) + [Hass-Configurator](https://www.home-assistant.io/docs/ecosystem/hass-configurator/#configuration-ui-for-home-assistant)  
 
 
-A somewhat complete "quick start" using this repo can be found in the Home Assistant forums:
+A somewhat complete "quick start" using this repo can be found in the Home Assistant forums:  
 [My (almost) complete quick start to installing Home Assistant on FreeNAS 11.2 ](https://community.home-assistant.io/t/my-almost-complete-quick-start-to-installing-home-assistant-on-freenas-11-2-including-appdaemon-ha-dashboard-hass-configurator-mosquitto-and-tasmoadmin/71882?u=troy)
 
 
