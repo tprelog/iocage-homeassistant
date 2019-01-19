@@ -8,23 +8,12 @@ A somewhat complete "quick start" using this repo can be found in the Home Assis
 
 If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will now need to add a script that creates a custom devfs_ruleset on the FreeNAS host system. This is not difficult to do and a quick how-to can be found in the [FreeNAS forums](https://forums.freenas.org/index.php?threads/usb-z-wave-device-no-longer-shows-up-in-iocage-jail-on-freenas-11-2.71301/post-501866).
 
----
----
-## iocage-plugin-homeassistant
-
- - This script will by default create a plugin-jail for Home-Assistant on FreeNAS 11.2
- - However for Home Assistant I think using this script to install "standard-jail" is my recommended choice 
-
-**Download plugin and install**
-
-    wget -O /mnt/iocage/.plugin_index/homeassistant.json https://raw.githubusercontent.com/tprelog/iocage-homeassistant/master/homeassistant.json
-    sudo iocage fetch -P dhcp=on vnet=on bpf=yes -n /mnt/iocage/.plugin_index/homeassistant.json --branch 'master'
 
 ---
 ---
 ## iocage-jail-homeassistant
 
- - This scrpit can also be used to create a standard-jail for Home-Assistant
+ - This scrpit can be used to create an iocage-jail for Home-Assistant
  - Includes option to install App-Daemon/HA-Dashboard and(or) Hass-Configurator
  
 **Download pkg-list and create a jail using it to install requirements**
@@ -53,7 +42,7 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
 
 ***Profit!***
 
-**Keeping things updated**
+**Includes a simple console menu for updates**
 
     sudo iocage exec homeassistant bash update
     Password:
@@ -67,7 +56,19 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
   - Home Assistant: `http://YOUR.HOMEASSISTANT.IP.ADDRESS:8123`  
   - HADashboard   : `http://YOUR.HOMEASSISTANT.IP.ADDRESS:5050`  
   - Configurator  : `http://YOUR.HOMEASSISTANT.IP.ADDRESS:3218`  
-     
+---
+---
+
+## iocage-plugin-homeassistant
+
+ - This script will by default create a plugin-jail for Home-Assistant on FreeNAS 11.2
+ - However for Home Assistant I think using this script to install "standard-jail" is my recommended choice 
+
+**Download plugin and install**
+
+    wget -O /tmp/homeassistant.json https://raw.githubusercontent.com/tprelog/iocage-homeassistant/master/homeassistant.json
+    sudo iocage fetch -P dhcp=on vnet=on bpf=yes -n /tmp/homeassistant.json --branch 'master'
+
 ---
 
 ###### To see a list of jails as well as their ip address
