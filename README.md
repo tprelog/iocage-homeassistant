@@ -1,13 +1,7 @@
 # iocage-homeassistant
 Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Daemon](https://www.home-assistant.io/docs/ecosystem/appdaemon/) / [HA-Dashboard](https://www.home-assistant.io/docs/ecosystem/hadashboard/) + [Hass-Configurator](https://www.home-assistant.io/docs/ecosystem/hass-configurator/#configuration-ui-for-home-assistant)  
 
-
-A somewhat complete "quick start" using this repo can be found in the Home Assistant forums:  
-[My (almost) complete quick start to installing Home Assistant on FreeNAS 11.2 ](https://community.home-assistant.io/t/my-almost-complete-quick-start-to-installing-home-assistant-on-freenas-11-2-including-appdaemon-ha-dashboard-hass-configurator-mosquitto-and-tasmoadmin/71882?u=troy)
-
-
-If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will now need to add a script that creates a custom devfs_ruleset on the FreeNAS host system. This is not difficult to do and a quick how-to can be found in the [FreeNAS forums](https://forums.freenas.org/index.php?threads/usb-z-wave-device-no-longer-shows-up-in-iocage-jail-on-freenas-11-2.71301/post-501866).
-
+If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will need to create a custom devfs_ruleset on the FreeNAS host system. The steps for this as well as setting up a seperate dataset for the Home Assistant configuration files and additional information for using this repo can be found in this [FreeNAS Resource](https://forums.freenas.org/index.php?resources/fn-11-2-iocage-home-assistant-jail-plugins-for-node-red-mosquitto-amazon-dash-tasmoadmin.102/)
 
 ---
 ---
@@ -56,13 +50,14 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
   - Home Assistant: `http://YOUR.HOMEASSISTANT.IP.ADDRESS:8123`  
   - HADashboard   : `http://YOUR.HOMEASSISTANT.IP.ADDRESS:5050`  
   - Configurator  : `http://YOUR.HOMEASSISTANT.IP.ADDRESS:3218`  
+
 ---
 ---
 
-## iocage-plugin-homeassistant
+#### iocage-plugin-homeassistant
 
- - This script will by default create a plugin-jail for Home-Assistant on FreeNAS 11.2
- - However for Home Assistant I think using this script to install "standard-jail" is my recommended choice 
+ - This script can also be used to create an iocage-plugin for Home Assistant on FreeNAS 11.2
+ - I recommend using this script to install a standard iocage-jail for Home Assistant as shown above
 
 **Download plugin and install**
 
@@ -83,6 +78,6 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
     +-----+-----------------+------+-------+----------+-----------------+---------------------+-----+----------+
 
 
-Last tested on FreeNAS-11.2-RELEASE  
+Last tested on FreeNAS-11.2-U1  
 More information about [iocage plugins](https://doc.freenas.org/11.2/plugins.html) and [iocage jails](https://doc.freenas.org/11.2/jails.html) can be found in the [FreeNAS guide](https://doc.freenas.org/11.2/intro.html#introduction)  
 
