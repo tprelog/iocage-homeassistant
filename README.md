@@ -62,7 +62,7 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
 **Download plugin and install**
 
     wget -O /tmp/homeassistant.json https://raw.githubusercontent.com/tprelog/iocage-homeassistant/master/homeassistant.json
-    sudo iocage fetch -P dhcp=on vnet=on bpf=yes -n /tmp/homeassistant.json --branch 'master'
+    sudo iocage fetch -P boot=on dhcp=on vnet=on bpf=yes -n /tmp/homeassistant.json --branch 'master'
 
 ---
 
