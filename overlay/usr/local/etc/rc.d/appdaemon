@@ -30,6 +30,7 @@ rcvar=${name}_enable
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
+logfile="/var/log/${name}_daemon.log"
 
 load_rc_config ${name}
 : ${appdaemon_enable:="NO"}
@@ -42,7 +43,7 @@ command="/usr/sbin/daemon"
 start_precmd=${name}_precmd
 appdaemon_precmd()
 {
-        rc_flags="-f -P ${pidfile} -p ${pidfile_child} /srv/appdaemon/bin/appdaemon -c ${appdaemon_config_dir} ${rc_flags}"
+        rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} /srv/appdaemon/bin/appdaemon -c ${appdaemon_config_dir} ${rc_flags}"
         
     if [ ! -e "${pidfile_child}" ]; then
             install -g ${appdaemon_group} -o ${appdaemon_user} -- /dev/null "${pidfile_child}";
@@ -51,7 +52,11 @@ appdaemon_precmd()
     if [ ! -e "${pidfile}" ]; then
             install -g ${appdaemon_group} -o ${appdaemon_user} -- /dev/null "${pidfile}";
     fi
-    
+
+    if [ ! -e "${logfile}" ]; then
+        install -g ${appdaemon_group} -o ${appdaemon_user} -- /dev/null "${logfile}";
+    fi
+ 
     if [ ! -d "${appdaemon_config_dir}" ]; then
         install -d -g ${appdaemon_group} -o ${appdaemon_user} -- "${appdaemon_config_dir}";
     fi

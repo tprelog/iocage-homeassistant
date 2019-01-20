@@ -30,6 +30,7 @@ rcvar=${name}_enable
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
+logfile="/var/log/${name}_daemon.log"
 
 load_rc_config ${name}
 : ${configurator_enable:="NO"}
@@ -43,7 +44,7 @@ command="/usr/sbin/daemon"
 start_precmd=${name}_precmd
 configurator_precmd()
 {
-        rc_flags="-f -P ${pidfile} -p ${pidfile_child} /usr/local/bin/python3.6 ${configurator} ${configurator_config} ${rc_flags}"
+        rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} /usr/local/bin/python3.6 ${configurator} ${configurator_config} ${rc_flags}"
         
     if [ ! -e "${pidfile_child}" ]; then
             install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile_child}";
@@ -52,6 +53,11 @@ configurator_precmd()
     if [ ! -e "${pidfile}" ]; then
             install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile}";
     fi
+ 
+    if [ ! -e "${logfile}" ]; then
+        install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${logfile}";
+    fi
+ 
 }
 
 stop_postcmd=${name}_postcmd

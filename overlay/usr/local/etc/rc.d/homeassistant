@@ -30,6 +30,7 @@ rcvar=${name}_enable
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
+logfile="/var/log/${name}_daemon.log"
 
 load_rc_config ${name}
 : ${homeassistant_enable:="NO"}
@@ -42,7 +43,7 @@ command="/usr/sbin/daemon"
 start_precmd=${name}_precmd
 homeassistant_precmd()
 {
-    rc_flags="-f -P ${pidfile} -p ${pidfile_child} /srv/homeassistant/bin/hass --config ${homeassistant_config_dir} ${rc_flags}"
+    rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} /srv/homeassistant/bin/hass --config ${homeassistant_config_dir} ${rc_flags}"
     
     if [ ! -e "${pidfile_child}" ]; then
             install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile_child}";
@@ -52,6 +53,10 @@ homeassistant_precmd()
             install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile}";
     fi
     
+    if [ ! -e "${logfile}" ]; then
+        install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${logfile}";
+    fi
+
     if [ ! -d "${homeassistant_config_dir}" ]; then
         install -d -g ${homeassistant_group} -o ${homeassistant_user} -m 775 -- "${homeassistant_config_dir}"
     fi
