@@ -12,49 +12,24 @@ homeassistant:
   time_zone: America/New_York
   ## Customization file
   customize: !include customize.yaml
-
-## Show links to resources in log and frontend
+  
+## List of components loaded by default_config can be found at the link below:
+## https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/default_config/__init__.py
+default_config:
+  
+## Show links to resources in frontend
 introduction:
 
-## Enables the frontend
-frontend:
-
-## Enables configuration UI
-config:
-
-http:
-  ## Secrets are defined in the file secrets.yaml
-  ## Enable legacy API password
-  api_password: !secret ha_api_key
-  ## Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-  #base_url: example.duckdns.org:8123
-
+# This default password was set so appdaemon/hadashboard can work "out of the box"
+http:       # YOU SHOULD DISABLE THIS OR AT LEAST CHANGE IT TO SOMETHING OF YOUR OWN
+  api_password: !secret ha_api_key # CONSIDER USING A LONG LIVE ACCESS TOKEN INSTEAD
+  
 ## Checks for available updates
-## Note: This component will send some information about your system to
-## the developers to assist with development of Home Assistant.
-## For more information, please see:
-## https://home-assistant.io/blog/2016/10/25/explaining-the-updater
+## Note: This component will send some information about your system to the developers to assist with development of Home Assistant.
+## For more information, please see: https://home-assistant.io/blog/2016/10/25/explaining-the-updater
 updater:
   ## Optional, allows Home Assistant developers to focus on popular components.
-  #include_used_components: true
-
-## Discover some devices automatically
-discovery:
-
-## Allows you to issue voice commands from the frontend in enabled browsers
-conversation:
-
-## Enables support for tracking state changes over time
-history:
-
-## View all events in a logbook
-logbook:
-
-## Enables a map showing the location of tracked devices
-map:
-
-## Track the sun
-sun:
+  include_used_components: false
 
 ## Weather prediction
 sensor:
@@ -64,9 +39,6 @@ sensor:
 tts:
   - platform: google
 
-## Cloud
-cloud:
-
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
@@ -74,6 +46,10 @@ script: !include scripts.yaml
 
 ## Add to the side panel of home assistant
 #panel_iframe:
+  #node-red:
+    #title: Node-RED
+    #icon: mdi:sitemap
+    #url: http://0.0.0.0:1880
   #hadashboard:
     #title: HA Dashboard
     #icon: mdi:view-dashboard-variant
