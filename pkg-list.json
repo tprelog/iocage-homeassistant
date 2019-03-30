@@ -1,9 +1,12 @@
 {
     "pkgs": [
+    "devel/autoconf",
     "shells/bash",
     "security/ca_root_nss",
     "devel/git",
     "devel/gmake",
+    "textproc/libxml2",
+    "textproc/libxslt",
     "lang/python36",
     "databases/py-sqlite3",
     "sysutils/screen",
