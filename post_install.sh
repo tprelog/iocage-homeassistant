@@ -131,11 +131,27 @@ v2env_action () {
     if [ ${mode} = 1 ]; then
       virtualenv -p /usr/local/bin/python3.6 /srv/${v2srv} || exit
     fi
-  source /srv/${v2srv}/bin/activate || exit
+  
+  source /srv/${v2srv}/bin/activate || exit    
+    
     if [ ${mode} = 3 ]; then
      pip3 install --upgrade pip
+    fi  
+    
+    ## This is a workaround -- Due to changes in pyyaml==5.1 Using `!secrets` in appdaemon.yaml fails to load
+    ## Installing pyyaml==3.13 allows `!secrets` to continue working until this issue is resolved
+    ## Rather than downgrade, install this version before appdaemon
+    if [ ${mode} = 1 ] && [ ${v2srv} = "appdaemon" ]; then
+     pip3 install --upgrade pyyaml==3.13
     fi
+  
   pip3 install --upgrade ${v2srv}
+  
+  ## Maunally install PyNaCl in homeassistant virtualenv to avoid permission error
+  if [ ${mode} = 1 ] && [ ${v2srv} = "homeassistant" ]; then
+    pip3 install --upgrade PyNaCl==1.3.0
+  fi
+  
   deactivate && exit
 }
 
