@@ -3,6 +3,8 @@ Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Dae
 
 If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will need to create a custom devfs_ruleset on the FreeNAS host system. The steps for this as well as setting up a separate dataset for the Home Assistant configuration files and additional information for using this repo can be found in this [FreeNAS Resource](https://forums.freenas.org/index.php?resources/fn-11-2-iocage-home-assistant-jail-plugins-for-node-red-mosquitto-amazon-dash-tasmoadmin.102/)
 
+**UPDATE November 04 2019: Unfortunate there are several issues that have appeared being with HA 0.101. I have just in the last week become aware of these issues but due to a busy work schedule, I have not had time to properly investigate and fix. It is still possible to get HA running on FreeNAS but until I have time to update things, extra steps will likely be required before you can access the HA GUI. After installation if you are unable reach HA please see [THIS POST in the HA forums](https://community.home-assistant.io/t/my-almost-complete-quick-start-to-installing-home-assistant-on-freenas-11-2-including-appdaemon-ha-dashboard-hass-configurator-mosquitto-and-tasmoadmin/71882/134?u=troy) for a workaround. Sorry for the inconvenience**
+
 ---
 ---
 ## iocage-jail-homeassistant
