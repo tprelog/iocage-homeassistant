@@ -17,13 +17,6 @@ homeassistant:
 ## https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/default_config/__init__.py
 default_config:
   
-## Show links to resources in frontend
-introduction:
-
-# This default password was set so appdaemon/hadashboard can work "out of the box"
-http:       # YOU SHOULD DISABLE THIS OR AT LEAST CHANGE IT TO SOMETHING OF YOUR OWN
-  api_password: !secret ha_api_key # CONSIDER USING A LONG LIVE ACCESS TOKEN INSTEAD
-  
 ## Checks for available updates
 ## Note: This component will send some information about your system to the developers to assist with development of Home Assistant.
 ## For more information, please see: https://home-assistant.io/blog/2016/10/25/explaining-the-updater
