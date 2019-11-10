@@ -151,6 +151,12 @@ v2env_action () {
   if [ ${mode} = 1 ] && [ ${v2srv} = "homeassistant" ]; then
     pip3 install --upgrade PyNaCl==1.3.0
   fi
+   
+   ## Workaround for known issue in HA 101.x 
+   ## Ensure the home assistant front-end gets installed
+  if [ ${mode} = 1 ] && [ ${v2srv} = "homeassistant" ]; then
+    pip3 install --upgrade home-assistant-frontend
+  fi
   
   deactivate && exit
 }
