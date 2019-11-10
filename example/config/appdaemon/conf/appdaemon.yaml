@@ -9,8 +9,7 @@ appdaemon:
     HASS:
       type: hass
       ha_url: http://127.0.0.1:8123
-     # token: !secret token           # Add your Long Live Access Token here OR in the secrets file
-      ha_key: !secret legacy_api    # DISABLE THIS IN FAVOR OF LONG LIVE ACCESS TOKEN
+      token: !secret token           # Add your Long-Lived Access Token here OR in the secrets file
 hadashboard:
   dash_url: http://127.0.0.1:5050
   dashboard_dir: /home/hass/appdaemon/dashboards
