@@ -7,7 +7,7 @@
     "devel/gmake",
     "textproc/libxml2",
     "textproc/libxslt",
-    "lang/python36",
+    "lang/python37",
     "databases/py-sqlite3",
     "sysutils/screen",
     "ftp/wget"
