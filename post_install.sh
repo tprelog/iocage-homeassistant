@@ -88,7 +88,7 @@ question () {       # What should first_run install
 }
 
 pip_pip () {
-  python3.6 -m ensurepip
+  python3.7 -m ensurepip
   pip3 install --upgrade pip
   pip3 install --upgrade virtualenv
 }
@@ -129,7 +129,7 @@ v2env_action () {
   echo "${grn} ${action} ${v2srv} virtualenv for user `whoami` ${end}"; echo
   sleep 3 # sleep 2 so we check we're the right person above
     if [ ${mode} = 1 ]; then
-      virtualenv -p /usr/local/bin/python3.6 /srv/${v2srv} || exit
+      virtualenv -p /usr/local/bin/python3.7 /srv/${v2srv} || exit
     fi
   
   source /srv/${v2srv}/bin/activate || exit    
