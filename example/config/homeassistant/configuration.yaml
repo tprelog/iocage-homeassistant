@@ -1,43 +1,23 @@
 homeassistant:
-  ## Name of the location where Home Assistant is running
-  name: Home
-  ## Location required to calculate the time the sun rises and sets
-  latitude: !secret home_lat
-  longitude: !secret home_lon
-  ## Impacts weather/sunrise data (altitude above sea level in meters)
-  elevation: 321
-  ## metric for Metric, imperial for Imperial
-  unit_system: imperial
-  ## Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-  time_zone: America/New_York
-  ## Customization file
+  ## Customize: https://www.home-assistant.io/docs/configuration/customizing-devices/
   customize: !include customize.yaml
+  ## Package files: https://www.home-assistant.io/docs/configuration/packages/
+  packages: !include_dir_named packages
   
 ## List of components loaded by default_config can be found at the link below:
 ## https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/default_config/__init__.py
 default_config:
-  
-## Checks for available updates
-## Note: This component will send some information about your system to the developers to assist with development of Home Assistant.
-## For more information, please see: https://home-assistant.io/blog/2016/10/25/explaining-the-updater
-updater:
-  ## Optional, allows Home Assistant developers to focus on popular components.
-  include_used_components: false
-
-## Weather prediction
-sensor:
-  - platform: yr
 
 ## Text to speech
 tts:
-  - platform: google
+  - platform: google_translate
 
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
 
 
-## Add to the side panel of home assistant
+## Add link to the side panel of home assistant
 #panel_iframe:
   #node-red:
     #title: Node-RED
@@ -57,9 +37,13 @@ script: !include scripts.yaml
     #url: http://0.0.0.0
 
 
-## Aeotec ZW090 Z-Stick GEN5 Example for FreeNAS
 ## https://www.home-assistant.io/docs/z-wave/installation/#configuration
 #zwave:
-  #usb_path: /dev/cuaU0
-  #network_key: !secret zwave_key
-  #config_path: /srv/homeassistant/lib/python3.6/site-packages/python_openzwave/ozw_config
+#  usb_path: /dev/cuaU0
+#  network_key: !secret zwave_key
+#  config_path: /srv/homeassistant/lib/python3.7/site-packages/python_openzwave/ozw_config
+
+## https://www.home-assistant.io/components/zha/#configuration
+#zha:
+#  usb_path: /dev/cuaU1
+#  database_path: /home/hass/homeassistant/zigbee.db

@@ -53,10 +53,11 @@ homeassistant_precmd()
             install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile}";
     fi
     
-    if [ ! -e "${logfile}" ]; then
-        install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${logfile}";
+    if [ -e "${logfile}" ]; then
+    	rm -f -- "${logfile}"
     fi
-
+    install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${logfile}";
+    
     if [ ! -d "${homeassistant_config_dir}" ]; then
         install -d -g ${homeassistant_group} -o ${homeassistant_user} -m 775 -- "${homeassistant_config_dir}"
     fi

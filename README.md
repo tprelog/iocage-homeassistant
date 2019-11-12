@@ -78,6 +78,6 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
     +-----+-----------------+------+-------+----------+-----------------+---------------------+-----+----------+
 
 
-Last tested on FreeNAS-11.2-U1  
+Last tested on FreeNAS-11.2-U6  
 More information about [iocage plugins](https://doc.freenas.org/11.2/plugins.html) and [iocage jails](https://doc.freenas.org/11.2/jails.html) can be found in the [FreeNAS guide](https://doc.freenas.org/11.2/intro.html#introduction)  
 

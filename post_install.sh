@@ -45,8 +45,7 @@ first_run () {      # This is the main function to setup homeassistant jail
   ln -s ${0} /root/bin/menu-install     #|- using `iocage exec ${JAIL} update
   ln -s ${0} /root/bin/menu-update      #|- Different names are like using arguments
   ln -s ${0} /root/bin/update           #|- `iocage exec ${JAIL} /root/post_install.sh update'
-                                        
-    
+
   if [ $ex = 1 ]; then
    cp_examples
   fi
@@ -94,9 +93,13 @@ pip_pip () {
 }
 
 add_user () {
+  ## Create the daemon user for the Home Assistant jail
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 775 -- /home/${v2srv_user}
   pw addgroup -g ${v2srv_uid} -n ${v2srv_user}
   pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer -c "Daemon for homeassistant jail"
+  ## This is a workaround to hopefully avoid "/.cache" permission errors
+  install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
+  install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/.cache /.cache
 }
 
 v2srv_action () {
@@ -107,7 +110,7 @@ v2srv_action () {
     else
       echo ${red} "Missing Valid Action! [${mode}]" ${end}; exit
     fi  
-  screen -dmS scrn_env su - hass -c "bash "${script}" "${v2srv}-virt-${mode}"";sleep 1
+  screen -dmS scrn_env su - hass -c "bash "${script}" "${v2srv}-virt-${mode}""; sleep 1
   screen -r scrn_env || exit
     if [ ${mode} = 1 ]; then
       enableStart_v2srv
@@ -133,29 +136,19 @@ v2env_action () {
     fi
   
   source /srv/${v2srv}/bin/activate || exit    
-    
+
     if [ ${mode} = 3 ]; then
-     pip3 install --upgrade pip
-    fi  
-    
-    ## This is a workaround -- Due to changes in pyyaml==5.1 Using `!secrets` in appdaemon.yaml fails to load
-    ## Installing pyyaml==3.13 allows `!secrets` to continue working until this issue is resolved
-    ## Rather than downgrade, install this version before appdaemon
-    if [ ${mode} = 1 ] && [ ${v2srv} = "appdaemon" ]; then
-     pip3 install --upgrade pyyaml==3.13
+      pip3 install --upgrade pip
     fi
   
   pip3 install --upgrade ${v2srv}
-  
-  ## Maunally install PyNaCl in homeassistant virtualenv to avoid permission error
+
+  ## Handle some workarounds when installing Home Assistant 
   if [ ${mode} = 1 ] && [ ${v2srv} = "homeassistant" ]; then
-    pip3 install --upgrade PyNaCl==1.3.0
-  fi
-   
-   ## Workaround for known issue in HA 101.x 
-   ## Ensure the home assistant front-end gets installed
-  if [ ${mode} = 1 ] && [ ${v2srv} = "homeassistant" ]; then
-    pip3 install --upgrade home-assistant-frontend
+    ## Known issue in version 0.101.X -- Ensure the front-end gets installed
+    if [ $(pip3 show homeassistant | grep Version | cut -d'.' -f2) = 101 ]; then
+      pip3 install --upgrade home-assistant-frontend
+    fi
   fi
   
   deactivate && exit

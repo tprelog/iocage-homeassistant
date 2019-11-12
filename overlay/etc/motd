@@ -11,8 +11,9 @@
        deactivate && exit    
     service homeassistant start
 
-- view Home-Assistant log file:
+- view Home-Assistant log files:
     cat /home/hass/homeassistant/home-assistant.log
+    cat /var/log/homeassistant_daemon.log
 
 -------------------------------------------------------------
 
