@@ -37,7 +37,7 @@ first_run () {      # This is the main function to setup this jail
   
   ## Install these extra packages not required by basic Home Assistant install.
   ## However THESE EXTRAS PACKAGES ARE REQUIRED TO USE SOME BUILD IN COMPONENTS
-  #[ -f "${pkglist}" ] && pkgs=$(cat "${pkglist}" | grep -v '^[#;]' | grep .)
+  #[ -f "${pkglist}" ] && pkgs=$(cat "${pkglist}" | grep -v '^[#;]' | grep .) && \
   #[ ! -z "${pkgs}" ] && echo "${pkgs}" | xargs pkg install -y
   
   pip_pip   # Required for this script to work
@@ -142,13 +142,13 @@ enableStart_v2srv () {
 
 cp_examples () {
 
-#   s=/usr/local/etc/sudoers.d
-#   if [ ! -d "${s}" ]; then
-#     mkdir -p ${s}
-#   fi
-#   cp /root/.iocage-homeassistant/overlay/usr/local/etc/sudoers.d/hass /usr/local/etc/sudoers.d/hass
-# 
-#   cp -R iocage-homeassistant/overlay/root/hass.ctrl /root/bin/hass.ctrl
+  s=/usr/local/etc/sudoers.d
+  if [ ! -d "${s}" ]; then
+    mkdir -p ${s}
+  fi
+  cp /root/.iocage-homeassistant/overlay/usr/local/etc/sudoers.d/hass /usr/local/etc/sudoers.d/hass
+
+  cp -R iocage-homeassistant/overlay/root/hass.ctrl /root/bin/hass.ctrl
 
   yaml=/home/${v2srv_user}/homeassistant/configuration.yaml
   if [ $ha = 1 ]; then
@@ -230,6 +230,7 @@ end_report () {     # Status
 if [ "${ctrl}" = "post_install" ]; then
   if [ -z "${1}" ]; then
     first_run
+    echo "Initial Startup Can Take 5-10 Minutes Before Home Assistant is Reachable." > /root/PLUGIN_INFO
   elif [ "${1}" = "standard" ]; then
     plugin=NO
     first_run
