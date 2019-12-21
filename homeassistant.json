@@ -1,9 +1,8 @@
 {
-  "name": "homeassistant",                                                             
-  "release": "11.2-RELEASE",                                                    
-  "artifact": "https://github.com/tprelog/iocage-homeassistant.git", 
-  "properties": { 
-    "boot": "on",
+  "name": "homeassistant",
+  "release": "11.2-RELEASE",
+  "artifact": "https://github.com/tprelog/iocage-homeassistant.git",
+  "properties": {
     "allow_raw_sockets": "1"
   },
   "pkgs": [
@@ -14,8 +13,7 @@
     "textproc/libxml2",
     "textproc/libxslt",
     "lang/python37",
-    "databases/py-sqlite3",
-    "sysutils/screen"
+    "databases/py-sqlite3"
   ],
   "packagesite": "http://pkg.FreeBSD.org/${ABI}/quarterly",
   "fingerprints": {

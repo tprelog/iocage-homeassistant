@@ -1,28 +1,36 @@
 #!/bin/sh
-
+#
 # PROVIDE: homeassistant
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# homeassistant_enable:	Set to YES to enable the homeassistant service.
-#			Default: NO
-# homeassistant_user:	The user account used to run the homeassistant daemon.
-#			This is optional, however do not specifically set this to an
-#			empty string as this will cause the daemon to run as root.
-#			Default: USER_NAME
-# homeassistant_group:	The group account used to run the homeassistant daemon.
-#			This is optional, however do not specifically set this to an
-#			empty string as this will cause the daemon to run with group wheel.
-#			Default: USER_GROUP
-# homeassistant_config_dir:	Directory where homeassistant config is located.
-#			Default: ~/homeassistant
+# homeassistant_enable: Set to YES to enable the homeassistant service.
+#		Default: NO
+# homeassistant_user: The user account used to run the homeassistant daemon.
+#		This is optional, however do not specifically set this to an
+#		empty string as this will cause the daemon to run as root.
+#		Default: hass
+# homeassistant_group: The group account used to run the homeassistant daemon.
+#		This is optional, however do not specifically set this to an
+#		empty string as this will cause the daemon to run with group wheel.
+#		Default: hass
 #
-# copy file to /usr/local/etc/rc.d/homeassistant 
-# chmod +x /usr/local/etc/rc.d/homeassistant
+# homeassistant_venv: Directory where homeassistant virtualenv is located.
+#       Default:  "/usr/local/share/homeassistant"
+#       Change:   `sysrc homeassistant_venv="/srv/homeassistant"`
+#       UnChange: `sysrc -x homeassistant_venv`
 #
-# sysrc homeassistant_enable=yes                        # to enable
-# sysrc homeassistant_config_dir="~/homeassistant"      # to change
-# service homeassistant start                           # to start
+# homeassistant_config_dir: Directory where homeassistant config is located.
+#       Default:  "/home/homeassistant/.homeassistant"
+#       Change:   `sysrc homeassistant_config_dir="/home/hass/homeassistant"`
+#       UnChange: `sysrc -x homeassistant_config_dir`
+
+# -------------------------------------------------------
+# Copy this file to '/usr/local/etc/rc.d/homeassistant' 
+# `chmod +x /usr/local/etc/rc.d/homeassistant`
+# `sysrc homeassistant_enable=yes`
+# `service homeassistant start`
+# -------------------------------------------------------
 
 . /etc/rc.subr
 name=homeassistant
@@ -32,42 +40,86 @@ pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
 logfile="/var/log/${name}_daemon.log"
 
-load_rc_config ${name}
 : ${homeassistant_enable:="NO"}
 : ${homeassistant_user:="hass"}
 : ${homeassistant_group:="hass"}
 : ${homeassistant_config_dir:="/home/hass/homeassistant"}
+: ${homeassistant_venv:="/srv/homeassistant"}
 
 command="/usr/sbin/daemon"
+extra_commands="check_config restart test upgrade"
 
 start_precmd=${name}_precmd
-homeassistant_precmd()
-{
-    rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} /srv/homeassistant/bin/hass --config ${homeassistant_config_dir} ${rc_flags}"
-    
-    if [ ! -e "${pidfile_child}" ]; then
-            install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile_child}";
-    fi
-
-    if [ ! -e "${pidfile}" ]; then
-            install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile}";
-    fi
-    
-    if [ -e "${logfile}" ]; then
-    	rm -f -- "${logfile}"
-    fi
-    install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${logfile}";
-    
+homeassistant_precmd() {
+    rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${homeassistant_venv}/bin/hass --config ${homeassistant_config_dir} ${rc_flags}"
+    [ ! -e "${pidfile_child}" ] && install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile_child}"
+    [ ! -e "${pidfile}" ] && install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${pidfile}"
+    [ -e "${logfile}" ] && rm -f -- "${logfile}"
+    install -g ${homeassistant_group} -o ${homeassistant_user} -- /dev/null "${logfile}"
     if [ ! -d "${homeassistant_config_dir}" ]; then
-        install -d -g ${homeassistant_group} -o ${homeassistant_user} -m 775 -- "${homeassistant_config_dir}"
+      install -d -g ${homeassistant_group} -o ${homeassistant_user} -m 775 -- "${homeassistant_config_dir}"
     fi
 }
 
 stop_postcmd=${name}_postcmd
-homeassistant_postcmd()
-{
+homeassistant_postcmd() {
     rm -f -- "${pidfile}"
     rm -f -- "${pidfile_child}"
 }
 
+upgrade_cmd="${name}_upgrade"
+homeassistant_upgrade() {
+    service ${name} stop
+    su ${homeassistant_user} -c '
+      source ${@}/bin/activate || exit 1
+      pip3 install --upgrade homeassistant
+      deactivate
+    ' _ ${homeassistant_venv} || exit 1
+    [ $? == 0 ] && homeassistant_check_config && service ${name} start
+}
+
+check_config_cmd="${name}_check_config"
+homeassistant_check_config() {
+    [ ! -e "${homeassistant_config_dir}/configuration.yaml" ] && return 0
+    echo "Performing check on Home Assistant configuration:"
+    #eval "${homeassistant_venv}/bin/hass --config ${homeassistant_config_dir} --script check_config"
+    su ${homeassistant_user} -c '
+      source ${1}/bin/activate || exit 1
+      hass --config ${2} --script check_config || exit 2
+      deactivate
+    ' _ ${homeassistant_venv} ${homeassistant_config_dir}
+}
+
+restart_cmd="${name}_restart"
+homeassistant_restart() {
+    homeassistant_check_config || exit 1
+    echo "Restarting Home Assistant"
+    service ${name} stop
+    service ${name} start
+}
+
+test_cmd="${name}_test"
+homeassistant_test() {
+    ## This function servers as a simple test command.
+    echo "TEST FUNCTION"
+
+    ## return 1 if "${homeassistant_venv}" does not exist
+    [ ! -d "${homeassistant_venv}" ] && echo -e " NO DIRECTORY: ${homeassistant_venv}\n" && exit 1
+
+    ## Switch users / activate virtualenv / run a command
+    su "${homeassistant_user}" -c '
+      source ${1}/bin/activate || exit 2
+      echo " $(python --version)" || exit 3
+      echo " Home Assistant $(pip3 show homeassistant | grep Version | cut -d" " -f2)" || exit 4
+      deactivate
+    ' _ ${homeassistant_venv} || exit 1
+
+    local e=$?
+    ## Do something based on the value of e
+    [ $e == 2 ] && echo -e "Failed to activate virtualenv:\n ${homeassistant_venv}" || exit
+    [ $e == 3 ] && echo -e "Failed to get python version" || exit
+    [ $e == 4 ] && echo -e "${name} is not installed" || exit
+}
+
+load_rc_config ${name}
 run_rc_command "$1"

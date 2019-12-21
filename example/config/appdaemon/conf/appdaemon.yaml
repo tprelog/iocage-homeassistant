@@ -1,5 +1,8 @@
+## Create & Add a Long Live Access Token to secrets
+## https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html#secrets
+secrets: /home/hass/homeassistant/secrets.yaml
+
 # https://appdaemon.readthedocs.io/en/latest/INSTALL.html#configuration
-secrets: /home/hass/appdaemon/conf/secrets.yaml
 appdaemon:
   # disable_apps: 1
   threads: 10
@@ -9,7 +12,7 @@ appdaemon:
     HASS:
       type: hass
       ha_url: http://127.0.0.1:8123
-      token: !secret token           # Add your Long-Lived Access Token here OR in the secrets file
+      token: !secret appdaemon_token
 hadashboard:
   dash_url: http://127.0.0.1:5050
   dashboard_dir: /home/hass/appdaemon/dashboards

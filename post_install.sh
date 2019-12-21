@@ -1,178 +1,130 @@
-#!/bin/bash
+#!/usr/local/bin/bash
 
-  # pkg install bash ca_root_nss git gmake python36 py-sqlite3 screen wget
+  # pkg install bash ca_root_nss git-lite gmake python37 py-sqlite3
   # git clone https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
   # bash /root/.iocage-homeassistant/post_install.sh standard
 
 v2srv_user=hass     # Changing this is not tested and will likely break something
 v2srv_uid=8123      # Changing this is not tested but should be OK
+v2env=/srv          # Changing this is yet not tested  
 
-# ------------------------------------------------------------------------------------------------------------------------------------------- ,
-# ------------------------------------------------------------------------------------------------------------------------------------------- ,
+pkglist=/root/pkg_extra
+python=python3.7
 
 ha=1  # homeassistant       ##  [ NOTHING = 0 ]
 ex=0  # example files       ##  [ INSTALL = 1 ]
 ad=0  # appdaemon           ##  [ UPGRADE = 2 ]
-cf=0  # configurator
+hc=0  # hass-configurator
 
-action=   #|--
-v2srv=    #|-These should be blank
-mode=     #|--
-
-plugin=YES # NOTE `post_install.sh standard` will set 'plugin=NO'
+plugin=YES          # `post_install.sh standard` will set 'plugin=NO'
+v2srv_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
 
 script="${0}"
 ctrl="$(basename "${0}" .sh)"
 
-v2srv_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+first_run () {      # This is the main function to setup this jail
 
-first_run () {      # This is the main function to setup homeassistant jail
+  mkdir -p /root/bin                #|- These are like an alais BUT they will also work
+  ln -s ${0} /root/bin/update       #|- using `iocage exec ${JAIL} update
+  ln -s ${0} /root/bin/menu-update  #|- Different names are like using arguments
   
-  mode=1
-  action=Installing
-  
+  sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
+
   if [ "${plugin}" = "NO" ]; then
     question  # Ask what to install
     cp /root/.iocage-homeassistant/overlay/etc/motd /etc/motd
-  fi
-
+  fi  
+  
+  ## Install these extra packages not required by basic Home Assistant install.
+  ## However THESE EXTRAS PACKAGES ARE REQUIRED TO USE SOME BUILD IN COMPONENTS
+  #[ -f "${pkglist}" ] && pkgs=$(cat "${pkglist}" | grep -v '^[#;]' | grep .)
+  #[ ! -z "${pkgs}" ] && echo "${pkgs}" | xargs pkg install -y
+  
   pip_pip   # Required for this script to work
   add_user  # Required for this script to work
-
-  sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
   
-  mkdir -p /root/bin                    #|- These are like an alais BUT they will also work
-  ln -s ${0} /root/bin/menu-install     #|- using `iocage exec ${JAIL} update
-  ln -s ${0} /root/bin/menu-update      #|- Different names are like using arguments
-  ln -s ${0} /root/bin/update           #|- `iocage exec ${JAIL} /root/post_install.sh update'
-
   if [ $ex = 1 ]; then
    cp_examples
   fi
+    
   if [ $ha = 1 ]; then
-   v2srv=homeassistant
-   v2srv_action; sleep 1
+    v2srv=homeassistant
+    install_service
   fi
+  
   if [ $ad = 1 ]; then
-   v2srv=appdaemon
-   v2srv_action; sleep 1
+    v2srv=appdaemon
+    install_service
   fi
-  if [ $cf = 1 ]; then
-   v2srv=configurator
-   configurator_action; sleep 1
+  
+  if [ $hc = 1 ]; then
+    v2srv=configurator
+    install_service
   fi
+  
   if [ "${plugin}" = "NO" ]; then
     end_report
   fi
 }
 
 question () {       # What should first_run install
-    echo
+  echo
   prompt_yes ${cyn}"Install Home Assistant? "${end}
-    if [ "$ANSWER" = "Y" ]; then
-      ha=1
-    fi
+  [ "$ANSWER" = "Y" ] && ha=1
   prompt_yes ${cyn}"Install Hass Configurator? "${end}
-    if [ "$ANSWER" = "Y" ]; then
-      cf=1
-    fi
+  [ "$ANSWER" = "Y" ] && hc=1
   prompt_yes ${cyn}"App-Daemon & HA-Dashboard? "${end}
-    if [ "$ANSWER" = "Y" ]; then
-      ad=1
-    fi
+  [ "$ANSWER" = "Y" ] && ad=1
   prompt_yes ${cyn}"Use the pre-configured examples? "${end}
-    if [ "$ANSWER" = "Y" ]; then
-      ex=1
-    fi
+  [ "$ANSWER" = "Y" ] && ex=1
 }
 
 pip_pip () {
-  python3.7 -m ensurepip
+  ${python} -m ensurepip
   pip3 install --upgrade pip
   pip3 install --upgrade virtualenv
 }
 
 add_user () {
-  ## Create the daemon user for the Home Assistant jail
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 775 -- /home/${v2srv_user}
   pw addgroup -g ${v2srv_uid} -n ${v2srv_user}
-  pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer -c "Daemon for homeassistant jail"
-  ## This is a workaround to hopefully avoid "/.cache" permission errors
+  pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer
+  ## This is a workaround to hopefully avoid pip related "/.cache" permission errors
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
   install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/.cache /.cache
 }
 
-v2srv_action () {
-    if [ ${mode} = 1 ]; then
-      install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- /srv/${v2srv} || exit
-    elif [ ${mode} = 2 ] || [ ${mode} = 3 ]; then
-      service ${v2srv} stop; sleep 1
+install_service() {
+  d="${v2env}/${v2srv}"
+  p=$(which ${python})
+  install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${d} || exit
+  su ${v2srv_user} -c '
+    virtualenv -p ${1} ${2}
+    source ${2}/bin/activate || exit 1
+    
+    if [ ${3} = "homeassistant" ]; then
+      ## Install Home Assistant
+      pip3 install --upgrade ${3}
+      pip3 install --upgrade colorlog
+      
+      ## Known issue in version 0.101.X -- Ensure the front-end gets installed
+      if [ $(pip3 show homeassistant | grep Version | cut -d'.' -f2) = 101 ]; then
+        pip3 install --upgrade home-assistant-frontend
+      fi
+      
+    elif [ ${3} = "appdaemon" ]; then
+      ## Install appdaemon
+      pip3 install --upgrade ${3}
+      
+    elif [ ${3} = "configurator" ]; then
+      ## Install Hass Configurator
+      pip3 install --upgrade hass-configurator
+      
     else
-      echo ${red} "Missing Valid Action! [${mode}]" ${end}; exit
-    fi  
-  screen -dmS scrn_env su - hass -c "bash "${script}" "${v2srv}-virt-${mode}""; sleep 1
-  screen -r scrn_env || exit
-    if [ ${mode} = 1 ]; then
-      enableStart_v2srv
-    elif [ ${mode} = 2 ] || [ ${mode} = 3 ]; then
-      service ${v2srv} start; sleep 1
-    else
-      echo ${red} "INVAILD: Service not set! [${mode}]" ${end}; exit
-    fi  
-}
-
-v2env_action () {
-    if [ ${mode} = 1 ]; then
-      action=Installing
-    elif [ ${mode} = 2 ] || [ ${mode} = 3 ]; then
-      action=Upgrading
-    else
-      echo ${red} "Invalid Mode! [${mode}]" ${end}; exit
+      pip3 install --upgrade ${3}
     fi
-  echo "${grn} ${action} ${v2srv} virtualenv for user `whoami` ${end}"; echo
-  sleep 3 # sleep 2 so we check we're the right person above
-    if [ ${mode} = 1 ]; then
-      virtualenv -p /usr/local/bin/python3.7 /srv/${v2srv} || exit
-    fi
-  
-  source /srv/${v2srv}/bin/activate || exit    
-
-    if [ ${mode} = 3 ]; then
-      pip3 install --upgrade pip
-    fi
-  
-  pip3 install --upgrade ${v2srv}
-
-  ## Handle some workarounds when installing Home Assistant 
-  if [ ${mode} = 1 ] && [ ${v2srv} = "homeassistant" ]; then
-    ## Known issue in version 0.101.X -- Ensure the front-end gets installed
-    if [ $(pip3 show homeassistant | grep Version | cut -d'.' -f2) = 101 ]; then
-      pip3 install --upgrade home-assistant-frontend
-    fi
-  fi
-  
-  deactivate && exit
-}
-
-configurator_action () {                # Install or Update The HASS Configurator
-  # v2srv=configurator
-    echo; echo "${action} the ${v2srv}"; echo; sleep 2
-    if [ ${mode} = 1 ]; then
-      install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- /srv/${v2srv} || exit
-    elif [ ${mode} = 2 ]; then
-      service ${v2srv} stop; sleep 1
-    else
-      echo ${red} "Missing Valid Action! [${mode}]" ${end}; exit
-    fi
-  wget -O /srv/${v2srv}/configurator.py https://raw.githubusercontent.com/danielperna84/hass-configurator/master/configurator.py
-  chmod +x /srv/${v2srv}/configurator.py
-    if [ ${mode} = 1 ]; then
-      enableStart_v2srv
-    elif [ ${mode} = 2 ]; then
-      service ${v2srv} start; sleep 1
-    else
-      echo "${red} INVAILD: Service not set! ["${mode}"] ${end}"; exit
-    fi
+    deactivate
+  ' _ ${p} ${d} ${v2srv} && enableStart_v2srv
 }
 
 enableStart_v2srv () {  
@@ -188,15 +140,25 @@ enableStart_v2srv () {
   service ${v2srv} start; sleep 1
 }
 
-cp_examples () {                             # Copy sample config files
+cp_examples () {
+
+#   s=/usr/local/etc/sudoers.d
+#   if [ ! -d "${s}" ]; then
+#     mkdir -p ${s}
+#   fi
+#   cp /root/.iocage-homeassistant/overlay/usr/local/etc/sudoers.d/hass /usr/local/etc/sudoers.d/hass
+# 
+#   cp -R iocage-homeassistant/overlay/root/hass.ctrl /root/bin/hass.ctrl
+
   yaml=/home/${v2srv_user}/homeassistant/configuration.yaml
   if [ $ha = 1 ]; then
     if [ ! -f "${yaml}" ]; then
         cp -R /root/.iocage-homeassistant/example/config/homeassistant /home/${v2srv_user}/homeassistant
     else
-        echo "${red} ha | example copy skip - file exists! ${end}"
+        echo "${red} HA | example copy skip - file exists! ${end}"
     fi
   fi
+  
   if [ $ad = 1 ]; then
     if [ ! -f  /home/${v2srv_user}/appdaemon/conf/appdaemon.yaml ]; then
         cp -R /root/.iocage-homeassistant/example/config/appdaemon /home/${v2srv_user}/appdaemon
@@ -207,12 +169,13 @@ cp_examples () {                             # Copy sample config files
             s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
             s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050% " ${yaml} > ${yaml}.temp && mv ${yaml}.temp ${yaml}
      else
-        echo "${red} ad | example copy skip - file exists!${end}"
+        echo "${red} AD | example copy skip - file exists!${end}"
      fi     
   fi
-  if [ $cf = 1 ]; then
+  
+  if [ $hc = 1 ]; then
     if [ -f /home/${v2srv_user}/configurator/configurator.conf ]; then
-        echo "${red} cf | example copy rename - file exists!${end}"
+        echo "${red} HC | example copy rename - file exists!${end}"
         cp -i  /home/${v2srv_user}/configurator/configurator.conf /home/${v2srv_user}/configurator/configurator.conf.old
     fi
     cp -R /root/.iocage-homeassistant/example/config/configurator /home/${v2srv_user}/configurator
@@ -223,6 +186,7 @@ cp_examples () {                             # Copy sample config files
         s/#icon: mdi:circle-edit-outline/icon: mdi:circle-edit-outline/
         s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218% " ${yaml} > ${yaml}.temp && mv ${yaml}.temp ${yaml}
   fi
+
   find /home/${v2srv_user} -type f -name ".empty" -depth -exec rm -f {} \;
   chown -R ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/homeassistant && chmod -R g=u /home/${v2srv_user}/homeassistant
 }
@@ -232,20 +196,8 @@ prompt_yes () {     # prompt [YES|no] "default yes"
     read -r -p "${1} [Y/n]: " REPLY
     case $REPLY in
       [qQ]) echo ; echo "Goodbye!"; exit ;;
-      [yY]|[yY][eE][sS]|"") echo ; ANSWER=Y ; return ;;
-      [nN]|[nN][oO]) echo ; ANSWER=N ; return 1 ;;
-      *) printf " \033[31m %s \n\033[0m" " ! Invalid Input Received"
-    esac
-  done
-}
-
-prompt_no () {     # prompt [yes|NO] "default no"  
-  while true; do
-    read -r -p "${1} [y/N]: " REPLY
-    case $REPLY in
-      [qQ]) echo ; echo "Goodbye!"; exit ;;
-      [yY]|[yY][eE][sS]) echo ; ANSWER=Y ; return ;;
-      [nN]|[nN][oO]|"") echo ; ANSWER=N ; return 1 ;;
+      [yY]|[yY][eE][sS]|"") ANSWER=Y; return ;;
+      [nN]|[nN][oO]) ANSWER=N; return 1 ;;
       *) printf " \033[31m %s \n\033[0m" " ! Invalid Input Received"
     esac
   done
@@ -263,7 +215,7 @@ colors () {         # Define Some Colors for Messages
 colors
 
 end_report () {     # Status
-  echo; echo; echo; echo
+  echo; echo; echo
     echo " ${blu}Status Report: ${end}"; echo
     echo "      $(service appdaemon status)"
     echo "  $(service homeassistant status)"
@@ -275,69 +227,40 @@ end_report () {     # Status
    echo; echo
 }
 
-case $@ in
-  appdaemon-virt-*)
-    mode=$(echo $@ | cut -d'-' -f3)
-    v2srv=$(echo $@ | cut -d'-' -f1)
-    v2env_action
-    ;;
-  homeassistant-virt-*)
-    mode=$(echo $@ | cut -d'-' -f3)
-    v2srv=$(echo $@ | cut -d'-' -f1)
-    v2env_action
-    ;;
-esac
-
 if [ "${ctrl}" = "post_install" ]; then
-
-    if [ "${ctrl}" = "post_install" ] && [ -z "${1}" ]; then
-        first_run
-        echo "Initial Startup Can Take 1-2 Minutes Before Home-Assistant is Reachable" 
-        exit
-    elif [ "${ctrl}" = "post_install" ] &&  [ "${1}" = "standard" ]; then
-        plugin=NO
-        first_run
-        echo "Initial Startup Can Take 1-2 Minutes Before Home-Assistant is Reachable"
-        exit
-    else
-        echo "${red}!! post_install.sh !!${end}"
-        echo "script: ${script} "
-        echo "crtl name: ${ctrl} "
-        echo "arguments: ${@} "
-    fi
-    
+  if [ -z "${1}" ]; then
+    first_run
+  elif [ "${1}" = "standard" ]; then
+    plugin=NO
+    first_run
+  else
+    echo "${red}!! post_install.sh !!${end}"
+    echo "script: ${script} "
+    echo "crtl name: ${ctrl} "
+    echo "arguments: ${@} "
+    exit
+  fi
+  echo "${red}Initial Startup Can Take 5-10 Minutes Before Home Assistant is Reachable${end}"; echo 
+  exit
 fi
 
-# ------------------ BELOW THIS LINE IS CODE FOR A "SATNDARD JAIL INSTALL" ------------------------------------------------------------------ ,
+# -------- BELOW THIS LINE IS CODE FOR A "SATNDARD JAIL INSTALL" ----------------- ,
 
 upgrade_menu () {
-  action=Upgrading
   while true; do
     echo
-    mode=2
     PS3="${cyn} Enter Number to Upgrade${end}: "
     select OPT in "Home Assistant" "App Daemon" "Configurator" "FreeBSD" "Status" "Exit"
     do
       case ${OPT} in
         "Home Assistant")
-          v2srv=homeassistant
-            prompt_no "Upgrade PiP First? "
-              if [ "$ANSWER" = "Y" ]; then
-                mode=3
-              fi
-          v2srv_action; sleep 1; break
+          service homeassistant upgrade; break
           ;;
         "App Daemon")
-          v2srv=appdaemon
-            prompt_no "Upgrade PiP First? "
-              if [ "$ANSWER" = "Y" ]; then
-                mode=3
-              fi
-          v2srv_action; sleep 1; break
+          service appdaemon upgrade; break
           ;;
         "Configurator")
-          v2srv=configurator
-          ${v2srv}_action; sleep 1; break
+          service appdaemon upgrade; break
           ;;
         "Status")
           end_report; break
@@ -353,52 +276,7 @@ upgrade_menu () {
   done
 }
 
-install_menu () {    # NOT COMPLETE - "THIS ONLY PRINTS (echo) MESSAGES"
-  action=Installing
-  while true; do
-    echo
-    mode=1
-    PS3="${mag} Enter Number to Install${end}: "
-    select OPT in "Home Assistant" "App Daemon" "Configurator" "Exit"
-    do
-      case "${OPT}" in
-        "Home Assistant")
-           v2srv=homeassistant
-            prompt_no " ! deleting zpool ! "                     # JK
-              if [ "$ANSWER" = "Y" ]; then
-                mode=3
-              fi
-          #v2srv_action; sleep 1; break
-          echo "${red}WHATEVER${end}..."; sleep 1                # JK
-          echo "${red}DELETING ANYWAYS!${end}"; sleep 1; break   # JK    
-          ;;
-        "App Daemon")
-           v2srv=appdaemon
-            prompt_yes " ! kittens will be eaten if you continue ! "
-              if [ "$ANSWER" = "Y" ]; then
-                mode=3
-              fi
-          #v2srv_action; sleep 1; break
-          echo " ${mag}Cat... The other, other white meat${end}"; sleep 1; break
-          ;;
-        "Configurator")
-          v2srv=configurator
-          #${v2srv}_action; sleep 1; break
-          echo "${mag}In the future this menu will actually install things${end}"; sleep 1; break
-          ;;
-        "Exit")
-          echo ${grn} "Goodbye!" ${end}
-          exit
-          ;;
-      esac
-    done
-  done
-}
-
 case $@ in
-  "install")
-    install_menu
-    ;;
   "update")
     upgrade_menu
     ;;
@@ -409,12 +287,9 @@ case $@ in
     ;;
 esac
 
-if [ "${ctrl}" = "menu-update" ] || [ "${ctrl}" = "update" ]; then
+if [ "${ctrl}" = "update" ]; then
     script="$(realpath "$BASH_SOURCE")"
     upgrade_menu
-elif [ "${ctrl}" = "menu-install" ]; then
-    script="$(realpath "$BASH_SOURCE")"
-    install_menu
 else
     echo "${red}! Finished with Nothing To Do !${end}"
     echo "script: ${script} "

@@ -4,25 +4,33 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# configurator_enable:	Set to YES to enable the configurator service.
-#			Default: NO
-# configurator_user:	The user account used to run the configurator daemon.
-#			This is optional, however do not specifically set this to an
-#			empty string as this will cause the daemon to run as root.
-#			Default: USER_NAME
-# configurator_group:	The group account used to run the configurator daemon.
-#			This is optional, however do not specifically set this to an
-#			empty string as this will cause the daemon to run with group wheel.
-#			Default: USER_GROUP
-# configurator_conf:	Hass-Configurator user settings
-#			Default: ~/configurator/configurator.conf
+# configurator_enable: Set to YES to enable the hass-configurator service.
+#		Default: NO
+# configurator_user: The user account used to run the hass-configurator daemon.
+#		This is optional, however do not specifically set this to an
+#		empty string as this will cause the daemon to run as root.
+#		Default: ${USER}
+# configurator_group: The group account used to run the hass-configurator daemon.
+#		This is optional, however do not specifically set this to an
+#		empty string as this will cause the daemon to run with group wheel.
+#		Default: ${USER}
 #
-# copy file to /usr/local/etc/rc.d/configurator 
-# chmod +x /usr/local/etc/rc.d/configurator
+# configurator_venv: Directory where hass-configurator virtualenv is located.
+#       Default:  "/usr/local/share/configurator"
+#       Change:   `sysrc configurator_venv="/srv/configurator"`
+#       UnChange: `sysrc -x configurator_venv`
 #
-# sysrc configurator_enable=yes                      # to enable
-# sysrc configurator_config ="~/.configurator.conf"  # to change
-# service configurator start                         # to start
+# configurator_config:	Full path to hass-configurator settings.conf.
+#       Default:  "/home/${USER}/configurator.conf"
+#       Change:   'sysrc configurator_config="/home/hass/configurator.conf"`
+#       UnChange: `sysrc -x configurator_config`
+#
+# -------------------------------------------------------
+# Copy this file to '/usr/local/etc/rc.d/configurator' 
+# `chmod +x /usr/local/etc/rc.d/configurator`
+# `sysrc configurator_enable=YES`
+# `service configurator start`
+# ---------------------------------------------
 
 . /etc/rc.subr
 name=configurator
@@ -32,39 +40,63 @@ pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
 logfile="/var/log/${name}_daemon.log"
 
-load_rc_config ${name}
 : ${configurator_enable:="NO"}
 : ${configurator_user:="hass"}
 : ${configurator_group:="hass"}
 : ${configurator_config:="/home/hass/configurator/configurator.conf"}
-: ${configurator:="/srv/configurator/configurator.py"}
+: ${configurator_venv:="/srv/configurator"}
 
 command="/usr/sbin/daemon"
+extra_commands="upgrade test"
 
-start_precmd=${name}_precmd
-configurator_precmd()
-{
-        rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} /usr/local/bin/python3.6 ${configurator} ${configurator_config} ${rc_flags}"
-        
-    if [ ! -e "${pidfile_child}" ]; then
-            install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile_child}";
-    fi
-
-    if [ ! -e "${pidfile}" ]; then
-            install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile}";
-    fi
- 
-    if [ ! -e "${logfile}" ]; then
-        install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${logfile}";
-    fi
- 
+start_precmd="${name}_precmd"
+configurator_precmd() {
+    rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${configurator_venv}/bin/hass-configurator ${configurator_config} ${rc_flags}"
+    [ ! -e "${pidfile_child}" ] && install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile_child}"
+    [ ! -e "${pidfile}" ] && install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${pidfile}"
+    [ -e "${logfile}" ] && rm -f -- "${logfile}"
+    install -g ${configurator_group} -o ${configurator_user} -- /dev/null "${logfile}"
 }
 
-stop_postcmd=${name}_postcmd
-configurator_postcmd()
-{
+stop_postcmd="${name}_postcmd"
+configurator_postcmd() {
     rm -f -- "${pidfile}"
     rm -f -- "${pidfile_child}"
 }
 
+upgrade_cmd="${name}_upgrade"
+configurator_upgrade() {
+    service ${name} stop
+    su ${configurator_user} -c '
+      source ${1}/bin/activate || exit 1
+      pip3 install --upgrade hass-configurator
+      deactivate
+    ' _ ${configurator_venv} || exit 1
+    [ $? == 0 ] && service ${name} start
+}
+
+test_cmd="${name}_test"
+configurator_test() {
+    ## This function servers as a simple test command.
+    echo "TEST FUNCTION"
+
+    ## return 1 if "${configurator_venv}" does not exist
+    [ ! -d "${configurator_venv}" ] && echo -e " NO DIRECTORY: ${configurator_venv}\n" && exit 1
+
+    ## Switch users / activate virtualenv / run a command
+    su "${configurator_user}" -c '
+      source ${@}/bin/activate || exit 2
+      echo " $(python --version)" || exit 3
+      echo " Hass Configurator $(pip3 show hass-configurator | grep Version | cut -d" " -f2)" || exit 4
+      deactivate
+    ' _ ${configurator_venv} || exit 1
+
+    local e=$?
+    ## Do something based on the value of e
+    [ $e == 2 ] && echo -e "Failed to activate virtualenv:\n ${configurator_venv}" || exit
+    [ $e == 3 ] && echo -e "Failed to get python version" || exit
+    [ $e == 4 ] && echo -e "${name} is not installed" || exit
+}
+
+load_rc_config ${name}
 run_rc_command "$1"
