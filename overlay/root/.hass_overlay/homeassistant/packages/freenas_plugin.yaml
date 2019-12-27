@@ -1,0 +1,20 @@
+## This package.yaml file was provided with the Home Assistant iocage-plugin for FreeNAS
+
+## Add links to the side panel
+#panel_iframe:
+  #configurator:
+    #title: Configurator
+    #icon: mdi:circle-edit-outline
+    #url: http://0.0.0.0:3218
+  #hadashboard:
+    #title: HA Dashboard
+    #icon: mdi:view-dashboard-variant
+    #url: http://0.0.0.0:5050
+  #node-red:
+    #title: Node-RED
+    #icon: mdi:sitemap
+    #url: http://0.0.0.0:1880
+  #tasmoadmin:
+    #title: TasmoAdmin
+    #icon: mdi:creation
+    #url: http://0.0.0.0

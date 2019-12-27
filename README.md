@@ -14,7 +14,7 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
 
 **Download pkg-list and create a jail using it to install requirements**
 
-    wget -O /tmp/pkglist.json https://gist.githubusercontent.com/tprelog/99b8177aefba1871ad5adc34dbbfb2a6/raw/b7022796d810505af1ba0cc0c2fc435b92e801ff/homeassistant.json
+    wget -O /tmp/pkglist.json https://gist.githubusercontent.com/tprelog/99b8177aefba1871ad5adc34dbbfb2a6/raw/5cb63574ebedc22e7b5620c8ea3e45a8d77faf5b/homeassistant.json
     sudo iocage create -r 11.3-RELEASE dhcp=1 bpf=yes vnet=on boot=on allow_raw_sockets=1 -p /tmp/pkglist.json -n homeassistant
 
 **Optional: mount a dataset inside the jail**

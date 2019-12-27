@@ -20,26 +20,6 @@ group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
 
-## Add links to the side panel
-#panel_iframe:
-  #configurator:
-    #title: Configurator
-    #icon: mdi:circle-edit-outline
-    #url: http://0.0.0.0:3218
-  #hadashboard:
-    #title: HA Dashboard
-    #icon: mdi:view-dashboard-variant
-    #url: http://0.0.0.0:5050
-  #node-red:
-    #title: Node-RED
-    #icon: mdi:sitemap
-    #url: http://0.0.0.0:1880
-  #tasmoadmin:
-    #title: TasmoAdmin
-    #icon: mdi:creation
-    #url: http://0.0.0.0
-
-
 ## https://www.home-assistant.io/docs/z-wave/installation/#configuration
 #zwave:
 #  usb_path: /dev/cuaU0

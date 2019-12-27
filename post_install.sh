@@ -1,6 +1,6 @@
 #!/usr/local/bin/bash
 
-  # pkg install bash ca_root_nss git-lite gmake python37 py-sqlite3
+  # pkg install autoconf bash ca_root_nss git-lite gmake pkgconf python37 py37-sqlite3
   # git clone https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
   # bash /root/.iocage-homeassistant/post_install.sh standard
 
@@ -18,6 +18,7 @@ hc=0  # hass-configurator
 
 plugin=YES          # `post_install.sh standard` will set 'plugin=NO'
 v2srv_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+plugin_overlay="/root/.iocage-homeassistant/overlay"   # Used for `post_install.sh standard`
 
 script="${0}"
 ctrl="$(basename "${0}" .sh)"
@@ -32,7 +33,8 @@ first_run () {      # This is the main function to setup this jail
 
   if [ "${plugin}" = "NO" ]; then
     question  # Ask what to install
-    cp /root/.iocage-homeassistant/overlay/etc/motd /etc/motd
+    cp ${plugin_overlay}/etc/motd /etc/motd
+    [ $ex = 1 ] && cp_overlay
   fi  
   
   ## Install these extra packages not required by basic Home Assistant install.
@@ -42,29 +44,18 @@ first_run () {      # This is the main function to setup this jail
   
   pip_pip   # Required for this script to work
   add_user  # Required for this script to work
+
+  ## Copy all configs before installing or we'll have to restart HA to apply changes
+  [ $ha = 1 ] && [ $ex = 1 ] && cp_config homeassistant
+  [ $hc = 1 ] && [ $ex = 1 ] && cp_config configurator
+  [ $ad = 1 ] && [ $ex = 1 ] && cp_config appdaemon
   
-  if [ $ex = 1 ]; then
-   cp_examples
-  fi
-    
-  if [ $ha = 1 ]; then
-    v2srv=homeassistant
-    install_service
-  fi
+  [ $ha = 1 ] && v2srv=homeassistant && install_service
+  [ $hc = 1 ] && v2srv=configurator && install_service
+  [ $ad = 1 ] && v2srv=appdaemon && install_service
   
-  if [ $ad = 1 ]; then
-    v2srv=appdaemon
-    install_service
-  fi
-  
-  if [ $hc = 1 ]; then
-    v2srv=configurator
-    install_service
-  fi
-  
-  if [ "${plugin}" = "NO" ]; then
-    end_report
-  fi
+  [ "${plugin}" = "NO" ] && end_report
+
 }
 
 question () {       # What should first_run install
@@ -97,7 +88,15 @@ add_user () {
 install_service() {
   d="${v2env}/${v2srv}"
   p=$(which ${python})
-  install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${d} || exit
+  
+  if [ ! -d ${d} ]; then
+    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${d} || exit
+  else
+    echo -e "${red}\nvirtualenv directory found!\n\nIs ${v2srv} already installed?"
+    echo -e "You can remove ${d} and try again${end}\n"
+    exit
+  fi
+  
   su ${v2srv_user} -c '
     virtualenv -p ${1} ${2}
     source ${2}/bin/activate || exit 1
@@ -129,67 +128,108 @@ install_service() {
 
 enableStart_v2srv () {  
   rcd=/usr/local/etc/rc.d
-    if [ ! -d "${rcd}" ]; then
+    if [ ! -d ${rcd} ]; then
         mkdir -p ${rcd}
     fi
-    if [ ! -f "${rcd}/${v2srv}" ]; then
-        cp -n /root/.iocage-homeassistant/overlay/${rcd}/${v2srv} ${rcd}/${v2srv}
+    if [ ! -f ${rcd}/${v2srv} ]; then
+        cp -n ${plugin_overlay}/${rcd}/${v2srv} ${rcd}/${v2srv}
     fi
   chmod +x ${rcd}/${v2srv}
   sysrc -f /etc/rc.conf ${v2srv}_enable=yes
   service ${v2srv} start; sleep 1
 }
 
-cp_examples () {
-
+cp_overlay() {
+    
+  ## If you answer 'Use the pre-configured examples? = YES'
+  ## copy overlay files during a standard jail install.  
   s=/usr/local/etc/sudoers.d
-  if [ ! -d "${s}" ]; then
+  if [ ! -d ${s} ]; then
     mkdir -p ${s}
   fi
-  cp /root/.iocage-homeassistant/overlay/usr/local/etc/sudoers.d/hass /usr/local/etc/sudoers.d/hass
-
-  cp -R iocage-homeassistant/overlay/root/hass.ctrl /root/bin/hass.ctrl
-
-  yaml=/home/${v2srv_user}/homeassistant/configuration.yaml
-  if [ $ha = 1 ]; then
-    if [ ! -f "${yaml}" ]; then
-        cp -R /root/.iocage-homeassistant/example/config/homeassistant /home/${v2srv_user}/homeassistant
-    else
-        echo "${red} HA | example copy skip - file exists! ${end}"
-    fi
-  fi
-  
-  if [ $ad = 1 ]; then
-    if [ ! -f  /home/${v2srv_user}/appdaemon/conf/appdaemon.yaml ]; then
-        cp -R /root/.iocage-homeassistant/example/config/appdaemon /home/${v2srv_user}/appdaemon
-        chown -R ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/appdaemon && chmod -R g=u /home/${v2srv_user}/appdaemon
-        sed -e "s/#panel_iframe:/panel_iframe:/
-            s/#hadashboard:/hadashboard:/
-            s/#title: HA Dashboard/title: HA Dashboard/
-            s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
-            s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050% " ${yaml} > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-     else
-        echo "${red} AD | example copy skip - file exists!${end}"
-     fi     
-  fi
-  
-  if [ $hc = 1 ]; then
-    if [ -f /home/${v2srv_user}/configurator/configurator.conf ]; then
-        echo "${red} HC | example copy rename - file exists!${end}"
-        cp -i  /home/${v2srv_user}/configurator/configurator.conf /home/${v2srv_user}/configurator/configurator.conf.old
-    fi
-    cp -R /root/.iocage-homeassistant/example/config/configurator /home/${v2srv_user}/configurator
-    chown -R ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/configurator && chmod -R g=u /home/${v2srv_user}/configurator
-    sed -e "s/#panel_iframe:/panel_iframe:/
-        s/#configurator:/configurator:/
-        s/#title: Configurator/title: Configurator/
-        s/#icon: mdi:circle-edit-outline/icon: mdi:circle-edit-outline/
-        s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218% " ${yaml} > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-  fi
-
-  find /home/${v2srv_user} -type f -name ".empty" -depth -exec rm -f {} \;
-  chown -R ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/homeassistant && chmod -R g=u /home/${v2srv_user}/homeassistant
+  cp ${plugin_overlay}/usr/local/etc/sudoers.d/hass /usr/local/etc/sudoers.d/hass
+  ln -s ${plugin_overlay}/root/.hass_overlay /root/.hass_overlay
 }
+
+cp_config() {
+    
+  ## ONLY IF ${config_dir} IS EMPTY else nothing is copied.
+  ## copy the example configuration files during an install.
+  ## standard jail install can answer 'Use the pre-configured examples? = NO'
+  ## otherwise these files can modified, replaced or deletd by end users
+  v2srv=$1  
+  hass_overlay="/root/.hass_overlay"
+  ha_confd="/home/${v2srv_user}/homeassistant"
+  
+  # yaml = file containing plugin provided panel_iframes
+  yaml="${ha_confd}/packages/freenas_plugin.yaml"
+  
+  config_dir="/home/${v2srv_user}/${v2srv}"
+  if [ ! -d "${config_dir}" ]; then
+    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- "${config_dir}" || return
+  fi
+  
+  case $1 in
+    
+    ## Home Assistant
+    "homeassistant")
+      ## Copy the example Home Assistant configuration files
+      if [ ! "$(ls -A ${config_dir})" ]; then
+        cp -R "${hass_overlay}/${1}/" "${config_dir}"
+        find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
+        chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
+      else
+        echo -e "${yel}HA ${config_dir} is not empty!\nExample configuration files not copied."
+      fi
+    ;;
+    
+    ## Hass-Configurator
+    "configurator")
+      ## Copy the example Hass-Configurator configuration file
+      if [ ! "$(ls -A ${config_dir})" ]; then
+        cp -R "${hass_overlay}/${1}/" "${config_dir}"
+        find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
+        chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
+      else
+        echo -e "${yel}HC ${config_dir} is not empty!\nExample configuration files not copied."
+        echo "configurator service may fail to start${end}"
+      fi
+      # Enable the Hass-Configurator iframe
+      if [ -f "${yaml}" ]; then
+        sed -e "s/#panel_iframe:/panel_iframe:/
+          s/#configurator:/configurator:/
+          s/#title: Configurator/title: Configurator/
+          s/#icon: mdi:circle-edit-outline/icon: mdi:circle-edit-outline/
+          s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
+        chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
+      fi
+    ;;
+    
+    ## AppDaemon (and HA-Dashboard)
+    "appdaemon")
+      ## Copy the example App-Daemon configuration files
+      if [ ! "$(ls -A ${config_dir})" ]; then
+        cp -R "${hass_overlay}/${1}/" "${config_dir}"
+        find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
+        chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
+      else
+        echo -e "${yel}AD ${config_dir} is not empty!\nExample configuration files not copied."
+        echo "appdaemon service may fail to start${end}"
+      fi
+      # Enable the HA-Dashboard iframe
+      if [ -f "${yaml}" ]; then
+        sed -e "s/#panel_iframe:/panel_iframe:/
+          s/#hadashboard:/hadashboard:/
+          s/#title: HA Dashboard/title: HA Dashboard/
+          s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
+          s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
+        chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
+      fi
+    ;;
+    
+  esac
+}
+
 
 prompt_yes () {     # prompt [YES|no] "default yes"  
   while true; do
@@ -228,12 +268,48 @@ end_report () {     # Status
 }
 
 if [ "${ctrl}" = "post_install" ]; then
+  
   if [ -z "${1}" ]; then
+    ex=1    ## Plugin install uses example config by default
     first_run
     echo "Initial Startup Can Take 5-10 Minutes Before Home Assistant is Reachable." > /root/PLUGIN_INFO
+    
   elif [ "${1}" = "standard" ]; then
     plugin=NO
     first_run
+    
+  elif [ "${1}" = "hass-configurator" ] || [ "${1}" = "configurator" ]; then
+  # This should have some basic testing. Start by determining if the directory
+  # already exist then figure how to proceed. For now this will show a message and exit.
+    v2srv=configurator
+    cp_config ${v2srv}
+    install_service && echo; service ${v2srv} status && \
+    echo -e "\n ${grn}http://${v2srv_ip}:3218${end}\n"
+    echo -e "You may need to restart Home Assistant for all changes to take effect\n"
+    exit
+    
+  elif [ "${1}" = "appdaemon" ]; then
+  # This should have some basic testing. Start by determining if the directory
+  # already exist then figure how to proceed. For now this will show a message and exit.
+    v2srv=appdaemon
+    cp_config ${v2srv}
+    install_service && echo; service ${v2srv} status && \
+    echo -e "\n ${grn}http://${v2srv_ip}:5050${end}\n"
+    echo -e "You may need to restart Home Assistant for all changes to take effect\n"
+    exit
+    
+  elif [ "${1}" = "hacs" ]; then
+  # This should just download the latest version of HACS and extract it to 'homeassistant/custom_components/'
+    [ -d "/home/${v2srv_user}/homeassistant/custom_components/hacs" ] && echo "${red}Already Installed?${end}" && exit
+    [ $(which wget) ] || pkg install -y wget zip
+    su - ${v2srv_user} -c '
+      wget -O /var/tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip && \
+      unzip -d homeassistant/custom_components/hacs /var/tmp/hacs.zip
+    ' _ || exit 1
+    echo -e "\n${red} !! RESTART HOME ASSISTANT BEFORE THE NEXT STEP !!" && \
+    echo -e "${grn}     https://hacs.xyz/docs/configuration/start${end}\n"
+    exit
+     
   else
     echo "${red}!! post_install.sh !!${end}"
     echo "script: ${script} "
@@ -241,6 +317,7 @@ if [ "${ctrl}" = "post_install" ]; then
     echo "arguments: ${@} "
     exit
   fi
+  
   echo "${red}Initial Startup Can Take 5-10 Minutes Before Home Assistant is Reachable${end}"; echo 
   exit
 fi
