@@ -1,4 +1,5 @@
-#!/usr/local/bin/bash
+#!#!/usr/bin/env bash
+
 
 install.extra.pkgs.v1() {
 

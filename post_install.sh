@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/bin/env bash
 
   # pkg install autoconf bash ca_root_nss git-lite gmake pkgconf python37 py37-sqlite3
   # git clone https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
