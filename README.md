@@ -3,13 +3,20 @@ Artifact file(s) for [Home-Assistant](https://www.home-assistant.io/) + [App-Dae
 
 - This branch is for FreeNAS 11.3
 
-If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will need to create a custom devfs_ruleset on the FreeNAS host system. The steps for this as well as setting up a separate dataset for the Home Assistant configuration files and additional information for using this repo can be found in this [FreeNAS Resource](https://forums.freenas.org/index.php?resources/fn-11-2-iocage-home-assistant-jail-plugins-for-node-red-mosquitto-amazon-dash-tasmoadmin.102/)
+## iocage-plugin-homeassistant
+
+ - This script will create an iocage-plugin for Home Assistant on FreeNAS 11.3
+
+**Download plugin and install**
+
+    wget -O /tmp/homeassistant.json https://raw.githubusercontent.com/tprelog/iocage-homeassistant/11.3-RELEASE/homeassistant.json
+    sudo iocage fetch -P /tmp/homeassistant.json
 
 ---
----
-## iocage-jail-homeassistant
 
- - This script can be used to create an iocage-jail for Home-Assistant
+### iocage-jail-homeassistant
+
+ - This script can also be used to create a standard iocage-jail for Home-Assistant
  - Includes option to install App-Daemon/HA-Dashboard and(or) Hass-Configurator
 
 **Download pkg-list and create a jail using it to install requirements**
@@ -35,33 +42,22 @@ If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek 
 
 ***Profit!***
 
-**Includes a simple console menu for updates**
+--- 
 
-    sudo iocage exec homeassistant bash update
-    Password:
+If you are using a Z-Wave or Zigbee controller such as the Aeotec Gen-5, Nortek HUSBZB-1, or similiar USB device, you will need to create a custom devfs_ruleset on the FreeNAS host system. The steps for this as well as setting up a separate dataset for the Home Assistant configuration files and additional information for using this repo can be found in this [FreeNAS Resource](https://forums.freenas.org/index.php?resources/fn-11-2-iocage-home-assistant-jail-plugins-for-node-red-mosquitto-amazon-dash-tasmoadmin.102/)
 
-    1) Home Assistant  3) Configurator    5) Status
-    2) App Daemon      4) FreeBSD         6) Exit
-    Enter Number to Upgrade:
 
----
+**Includes a simple console menu for some common tasks**
 
-  - Home Assistant: `http://YOUR.HOMEASSISTANT.IP.ADDRESS:8123`
-  - HADashboard   : `http://YOUR.HOMEASSISTANT.IP.ADDRESS:5050`
-  - Configurator  : `http://YOUR.HOMEASSISTANT.IP.ADDRESS:3218`
+    iocage exec homeassistant bash update
 
 ---
----
 
-#### iocage-plugin-homeassistant
-
- - This script can also be used to create an iocage-plugin for Home Assistant on FreeNAS 11.3
- - I recommend using this script to install a standard iocage-jail for Home Assistant as shown above
-
-**Download plugin and install**
-
-    wget -O /tmp/homeassistant.json https://raw.githubusercontent.com/tprelog/iocage-homeassistant/11.3-RELEASE/homeassistant.json
-    sudo iocage fetch -P /tmp/homeassistant.json
+SERVICE | DEFAULT PORT |
+--- | :---: |
+Home Assistant | 8123
+Hass Configurator|3218
+HA Dashboard|5050
 
 ---
 
