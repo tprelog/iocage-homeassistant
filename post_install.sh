@@ -149,6 +149,7 @@ cp_overlay() {
   fi
   cp ${plugin_overlay}/usr/local/etc/sudoers.d/hass /usr/local/etc/sudoers.d/hass
   ln -s ${plugin_overlay}/root/.hass_overlay /root/.hass_overlay
+  ln -s ${0} /root/post_install.sh
 }
 
 cp_config() {
@@ -301,7 +302,7 @@ if [ "${ctrl}" = "post_install" ]; then
   elif [ "${1}" = "hacs" ]; then
   # This should just download the latest version of HACS and extract it to 'homeassistant/custom_components/'
     [ -d "/home/${v2srv_user}/homeassistant/custom_components/hacs" ] && echo "${red}Already Installed?${end}" && exit
-    [ $(which wget) ] || pkg install -y wget zip
+    [ $(which wget) ] || [ $(which zip) ] pkg install -y wget zip
     su - ${v2srv_user} -c '
       wget -O /var/tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip && \
       unzip -d homeassistant/custom_components/hacs /var/tmp/hacs.zip
@@ -338,7 +339,7 @@ upgrade_menu () {
           service appdaemon upgrade; break
           ;;
         "Configurator")
-          service appdaemon upgrade; break
+          service configurator upgrade; break
           ;;
         "Status")
           end_report; break
