@@ -48,8 +48,6 @@ upgrade.venv.service() {
 }
 
 
-
-
 sysrc -a | grep hass_extrapkgs
 if [ $? == 0 ]; then
   pkglist=$(sysrc -n hass_extrapkgs)
