@@ -30,8 +30,10 @@ first_run () {      # This is the main function to setup this jail
   ln -s ${0} /root/bin/menu-update  #|- Different names are like using arguments
   
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
+  
+  echo -e "\n# Start hass-help at login" >> /root/.login
   echo "if ( -x /root/bin/hass-helper ) hass-helper" >> /root/.login
-
+  
   if [ "${plugin}" = "NO" ]; then
     question  # Ask what to install
     cp ${plugin_overlay}/etc/motd /etc/motd
