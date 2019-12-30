@@ -273,7 +273,7 @@ if [ "${ctrl}" = "post_install" ]; then
   if [ -z "${1}" ]; then
     ex=1    ## Plugin install uses example config by default
     first_run
-    echo "Initial Startup Can Take 5-10 Minutes Before Home Assistant is Reachable." > /root/PLUGIN_INFO
+    echo "Initial startup can take 5-10 minutes before Home Assistant is reachable." > /root/PLUGIN_INFO
     
   elif [ "${1}" = "standard" ]; then
     plugin=NO
@@ -319,7 +319,7 @@ if [ "${ctrl}" = "post_install" ]; then
     exit
   fi
   
-  echo "${red}Initial Startup Can Take 5-10 Minutes Before Home Assistant is Reachable${end}"; echo 
+  echo "${red}Initial startup can take 5-10 minutes before Home Assistant is reachable${end}"; echo 
   exit
 fi
 

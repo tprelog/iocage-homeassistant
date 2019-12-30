@@ -100,11 +100,9 @@ homeassistant_restart() {
 
 test_cmd="${name}_test"
 homeassistant_test() {
-    ## This function servers as a simple test command.
-    echo "TEST FUNCTION"
-
-    ## return 1 if "${homeassistant_venv}" does not exist
-    [ ! -d "${homeassistant_venv}" ] && echo -e " NO DIRECTORY: ${homeassistant_venv}\n" && exit 1
+    echo -e "\nTesting virtualenv...\n"
+    [ ! -d "${homeassistant_venv}" ] && echo -e " NO DIRECTORY: ${homeassistant_venv}\n" && exit
+    [ ! -f "${homeassistant_venv}/bin/activate" ] && echo -e " NO FILE: ${homeassistant_venv}/bin/activate\n" && exit
 
     ## Switch users / activate virtualenv / run a command
     su "${homeassistant_user}" -c '
@@ -112,13 +110,9 @@ homeassistant_test() {
       echo " $(python --version)" || exit 3
       echo " Home Assistant $(pip3 show homeassistant | grep Version | cut -d" " -f2)" || exit 4
       deactivate
-    ' _ ${homeassistant_venv} || exit 1
+    ' _ ${homeassistant_venv}
 
-    local e=$?
-    ## Do something based on the value of e
-    [ $e == 2 ] && echo -e "Failed to activate virtualenv:\n ${homeassistant_venv}" || exit
-    [ $e == 3 ] && echo -e "Failed to get python version" || exit
-    [ $e == 4 ] && echo -e "${name} is not installed" || exit
+    [ $? != 0 ] && echo "exit $?"
 }
 
 load_rc_config ${name}
