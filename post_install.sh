@@ -30,6 +30,7 @@ first_run () {      # This is the main function to setup this jail
   ln -s ${0} /root/bin/menu-update  #|- Different names are like using arguments
   
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
+  echo "if ( -x /root/bin/hass-helper ) hass-helper" >> /root/.login
 
   if [ "${plugin}" = "NO" ]; then
     question  # Ask what to install
@@ -151,8 +152,6 @@ cp_overlay() {
   ln -s ${plugin_overlay}/root/.hass_overlay /root/.hass_overlay
   ln -s ${0} /root/post_install.sh
   ln -s ${plugin_overlay}/root/bin /root/bin
-  echo "if ( -x /root/bin/hass-helper ) hass-helper" >> /root/.login
-
 }
 
 cp_config() {
