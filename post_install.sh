@@ -150,6 +150,9 @@ cp_overlay() {
   cp ${plugin_overlay}/usr/local/etc/sudoers.d/hass /usr/local/etc/sudoers.d/hass
   ln -s ${plugin_overlay}/root/.hass_overlay /root/.hass_overlay
   ln -s ${0} /root/post_install.sh
+  ln -s ${plugin_overlay}/root/bin /root/bin
+  echo "if ( -x /root/bin/hass-helper ) hass-helper" >> /root/.login
+
 }
 
 cp_config() {
