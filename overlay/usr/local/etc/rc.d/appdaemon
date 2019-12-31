@@ -89,7 +89,7 @@ appdaemon_test() {
     su "${appdaemon_user}" -c '
       source ${@}/bin/activate || exit 2
       echo " $(python --version)" || exit 3
-      echo " Hass Configurator $(pip3 show appdaemon | grep Version | cut -d" " -f2)" || exit 4
+      echo " AppDaemon $(pip3 show appdaemon | grep Version | cut -d" " -f2)" || exit 4
       deactivate
     ' _ ${appdaemon_venv}
 
