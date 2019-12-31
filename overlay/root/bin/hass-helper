@@ -112,12 +112,22 @@ service_menu() {
   local _default_actions
   local _extra_actions
   local _action
+  local _confirm
   
   # Default actions that all services (in this jail) should have
   _default_actions="status restart upgrade start stop test"
   
-  # Home Assistant an extra check config option
+  # Home Assistant has an extra check config option
   [[ "${1}" == "homeassistant" ]] && _extra_actions="check_config"
+  
+  # Other services can be installed or removed depending on existing state
+  if [ "${1}" != "homeassistant" ]; then
+    if [ ! -d "${SRV_DIR}/${1}" ]; then
+      _extra_actions="install"
+    else # (toggle install/remove)
+      _extra_actions="remove"
+    fi
+  fi
   
   PS3=""$'\n'"${blu}Select: ${end}"
   echo
@@ -125,6 +135,22 @@ service_menu() {
     case "${_action}" in
       "Main Menu")
         m_true="N"
+        break
+        ;;
+      "install")
+        /root/post_install.sh ${1}
+        pause
+        break
+        ;;
+      "remove")
+        echo -e "\n${red} DELETING ${SRV_DIR}/${1}${end}"
+        read -p " Type 'YES' to continue: " _confirm
+        [[ ${_confirm} == [Yy][Ee][Ss] ]] || break
+        echo
+        sysrc "${1}_enable=NO"
+        service "${1}" stop
+        rm -rf "${SRV_DIR}/${1}"
+        pause
         break
         ;;
       *)
