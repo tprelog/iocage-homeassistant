@@ -94,9 +94,9 @@ install_service() {
   
   if [ ! -d ${d} ]; then
     install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${d} || exit
-  else
-    echo -e "${red}\nvirtualenv directory found!\n\nIs ${v2srv} already installed?"
-    echo -e "You can remove ${d} and try again${end}\n"
+  elif [ ! -z "$(ls -A ${d})" ]; then  
+    echo -e "${red}\nvirtualenv directory found and it's not empty!\n${orn} Is ${v2srv} already installed?"
+    echo -e " You can remove ${d} and try again${end}\n"
     exit
   fi
   
@@ -196,8 +196,7 @@ cp_config() {
         find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
         chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
       else
-        echo -e "${yel}HC ${config_dir} is not empty!\nExample configuration files not copied."
-        echo "configurator service may fail to start${end}"
+        _config_warning "${1}"
       fi
       # Enable the Hass-Configurator iframe
       if [ -f "${yaml}" ]; then
@@ -218,8 +217,7 @@ cp_config() {
         find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
         chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
       else
-        echo -e "${yel}AD ${config_dir} is not empty!\nExample configuration files not copied."
-        echo "appdaemon service may fail to start${end}"
+        _config_warning "${1}"
       fi
       # Enable the HA-Dashboard iframe
       if [ -f "${yaml}" ]; then
@@ -235,6 +233,13 @@ cp_config() {
   esac
 }
 
+_config_warning() {
+  ## called by cp_config function
+  echo -e " \n${red}${config_dir} is not empty!\n"
+  echo    " ${yel}Example configuration files not copied."
+  echo -e " ${1} service may fail to start with invalid or missing configuration${end}\n"
+  sleep 1
+}
 
 prompt_yes () {     # prompt [YES|no] "default yes"  
   while true; do
@@ -252,9 +257,11 @@ colors () {         # Define Some Colors for Messages
   red=$'\e[1;31m'
   grn=$'\e[1;32m'
   yel=$'\e[1;33m'
-  blu=$'\e[1;34m'
+  bl1=$'\e[1;34m'
   mag=$'\e[1;35m'
   cyn=$'\e[1;36m'
+  blu=$'\e[38;5;39m'
+  orn=$'\e[38;5;208m'
   end=$'\e[0m'
 }
 colors
