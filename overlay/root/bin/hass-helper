@@ -138,34 +138,40 @@ service_menu() {
 
 show_menu_0() {
 # clear --> moved to show_banner
-  echo " 1) Console (EXIT)"
-  echo " 2) Home Assistant"
-  echo " 3) Hass Configurator"
-  echo " 4) AppDaemon"
-  echo " 5) Other Stuff"
+  echo " 1) Home Assistant"
+  echo " 2) Hass Configurator"
+  echo " 3) AppDaemon"
+  echo
+  echo " 0) EXIT"
+  #echo " 4) Miscellaneous"
   echo
 }
 
+
 read_options(){
   local choice
-  read -p ":" choice
+  echo "${blu}"
+  read -p "Select: " choice
+  echo "${end}"
   case "${choice}" in
-    "1") clear; exit 0;;
-    "2") # Home Assistant
+    [eE]|[eE][xX][iI][tT]|[qQ]|[cC]|[cC]|[oN][sS][oO][lL][eE]|"0")
+      clear; exit 0
+      ;;
+    "1") # Home Assistant
       m_true="Y"
       while [ ${m_true} == "Y" ]; do
         show_banner_1
         service_menu homeassistant
       done
       ;;
-    "3") # Hass Configurator
+    "2") # Hass Configurator
       m_true="Y"
       while [ ${m_true} == "Y" ]; do
         show_banner_2
         service_menu configurator
       done
       ;;
-    "4") # AppDaemon
+    "3") # AppDaemon
       m_true="Y"
       while [ ${m_true} == "Y" ]; do
         show_banner_3
