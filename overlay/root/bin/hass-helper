@@ -178,7 +178,27 @@ read_options(){
         service_menu appdaemon
       done
       ;;
-    *) echo -e "${red}Invalid..${end}" && sleep 1
+    "phoenix") # Shit for me
+      m_true="Y"
+      while [ ${m_true} == "Y" ]; do
+        show_banner_0
+        show_menu_1
+      done
+      ;;
+    "watch ha") # Shit for me
+      log_watch="Y"
+      while [ ${log_watch} == "Y" ]; do
+      tail -F /var/log/homeassistant_daemon.log
+      #  show_banner_0
+      #  show_menu_1
+      done
+      ;;
+      [iI]"nstall "[hH][aA][cC][sS])
+        /root/post_install.sh hacs
+        pause
+        break
+        ;;
+    *) echo -e "${red}Sorry, wrong number..${end}" && sleep 1
   esac
 }
 
@@ -188,11 +208,11 @@ set_false() {
 
 show_colors() {
 # Test function to see how colors look
-  echo "${red}! ALERT !"
-  echo "${orn}Warning "
-  echo "${yel}Caution "
+  echo
+  echo " ${red}ALERT"
+  echo " ${orn}Warning "
+  echo " ${yel}Caution "
   echo "${end}"
-  pause
 }
 
 
