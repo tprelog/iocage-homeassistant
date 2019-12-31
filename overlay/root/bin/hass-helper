@@ -136,6 +136,57 @@ service_menu() {
   done
 }
 
+
+show_menu_1() {
+
+  local _extra_actions
+  local _zwave_key
+  
+  _extra_actions="install-HACS zip-hass-home generate-zwave-key"
+  PS3=""$'\n'"${blu}Select: ${end}"
+  echo
+  select _action in "Main Menu" "Show Colors" ${_extra_actions}; do
+    case "${_action}" in
+      "Main Menu")
+        m_true="N"
+        break
+        ;;
+      "Show Colors")
+        show_colors
+        pause
+        break
+        ;;
+      "install-HACS")
+        /root/post_install.sh hacs
+        pause
+        break
+        ;;
+      "generate-zwave-key")
+        # Blah...
+        echo -e "\n ${red}sed${end}\n"
+        su - hass -c '
+          echo $(cat /dev/urandom | tr -dc '0-9A-F' | fold -w 32 | head -n 1 | sed -e 's/\(..\)/0x\1, /g')
+        ' # Mind the (') there
+        pause
+        break
+        ;;
+      "zip-hass-home")
+        echo -e "\n${orn}Creating zip. This can take a few minutes to complete...\n"
+        su - hass -c '
+          zip -9 -q -r /tmp/hass-backup.temp /home/hass/ -x"*/components/*" -x"*/deps/*" -x"*/home-assistant.log" -x"*/.cache/*" -x"*/__pycache__*/"
+        '  # Mind the (') there
+        [ ! -d /root/.hass_backups ] && mkdir /root/.hass_backups
+        [ -f /tmp/hass-backup.temp ] && mv /tmp/hass-backup.temp /root/.hass_backups/hass_$(date +%F_%T).zip \
+        && echo -e "\n${grn} Created backup in /root/.hass_backups/"
+        echo ${end}
+        pause
+        break
+        ;;
+    esac
+  done
+}
+
+
 show_menu_0() {
 # clear --> moved to show_banner
   echo " 1) Home Assistant"
