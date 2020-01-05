@@ -153,10 +153,12 @@ service_menu() {
         pause
         break
         ;;
-      *)
+      "status"|"restart"|"upgrade"|"start"|"stop"|"test")
         service "${1}" "${_action}"
         pause
         break
+        ;;
+      *) echo -e "${red}Sorry, [ ${_action} ] is not an option${end}" && sleep 1
         ;;
     esac
   done

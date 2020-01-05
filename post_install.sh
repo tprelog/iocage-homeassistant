@@ -45,7 +45,6 @@ first_run () {      # This is the main function to setup this jail
   #[ -f "${pkglist}" ] && pkgs=$(cat "${pkglist}" | grep -v '^[#;]' | grep .) && \
   #[ ! -z "${pkgs}" ] && echo "${pkgs}" | xargs pkg install -y
   
-  pip_pip   # Required for this script to work
   add_user  # Required for this script to work
 
   ## Copy all configs before installing or we'll have to restart HA to apply changes
@@ -73,12 +72,6 @@ question () {       # What should first_run install
   [ "$ANSWER" = "Y" ] && ex=1
 }
 
-pip_pip () {
-  ${python} -m ensurepip
-  pip3 install --upgrade pip
-  pip3 install --upgrade virtualenv
-}
-
 add_user () {
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 775 -- /home/${v2srv_user}
   pw addgroup -g ${v2srv_uid} -n ${v2srv_user}
@@ -101,13 +94,14 @@ install_service() {
   fi
   
   su ${v2srv_user} -c '
-    virtualenv -p ${1} ${2}
+    ${1} -m venv ${2}
     source ${2}/bin/activate || exit 1
+    pip3 install --upgrade pip
     
     if [ ${3} = "homeassistant" ]; then
       ## Install Home Assistant
-      pip3 install --upgrade ${3}
       pip3 install --upgrade colorlog
+      pip3 install --upgrade ${3}
       
       ## Known issue in version 0.101.X -- Ensure the front-end gets installed
       if [ $(pip3 show homeassistant | grep Version | cut -d'.' -f2) = 101 ]; then
