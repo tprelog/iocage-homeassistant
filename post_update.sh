@@ -29,6 +29,12 @@ install.extra.pkgs.v1() {
   fi
 }
 
+update.post_install() {
+  ## This doesn't seem to get updated on it's own. Likely it's only files in the overlay
+  ## I will probably move stuff out of the post_install script to avoid this in the future.
+  wget -O /root/post_install.sh https://raw.githubusercontent.com/tprelog/iocage-homeassistant/11.3-RELEASE/post_install.sh \
+  && chmod +x /root/post_install.sh
+}
 
 upgrade.venv.service() {
 
@@ -57,6 +63,7 @@ if [ $? == 0 ]; then
   else
     echo "hass_extrapkgs is not set!"
   fi
-else
-  echo -e "\npost_update.sh Finished OK!\nNothing to do!\n"
 fi
+
+update.post_install
+echo -e "\npost_update.sh Finished\n"
