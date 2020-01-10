@@ -18,3 +18,7 @@
     #title: TasmoAdmin
     #icon: mdi:creation
     #url: http://0.0.0.0
+  #esphome:
+    #title: ESPHome
+    #icon: mdi:memory
+    #url: http://0.0.0.0:6052

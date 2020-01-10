@@ -106,6 +106,18 @@ show_banner_3() {
   echo -e "${end}"
 }
 
+show_banner_4() {
+  clear
+  echo "${blu}"
+  echo '                  ___ ___ ___ _  _  ___  __  __ ___  '
+  echo '                 | __/ __| _ \ || |/ _ \|  \/  | __| '
+  echo '                 | _|\__ \  _/ __ | (_) | |\/| | _|  '
+  echo '                 |___|___/_| |_||_|\___/|_|  |_|___| '
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo "                      MANAGE THE ESPHOME SERVICE                       "
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo -e "${end}"
+}
 
 service_menu() {
 
@@ -220,6 +232,7 @@ show_menu_0() {
   echo " 1) Home Assistant"
   echo " 2) Hass Configurator"
   echo " 3) AppDaemon"
+  echo " 4) ESPHome"
   echo
   echo " 0) EXIT"
   #echo " 4) Miscellaneous"
@@ -255,6 +268,13 @@ read_options(){
       while [ ${m_true} == "Y" ]; do
         show_banner_3
         service_menu appdaemon
+      done
+      ;;
+    "4") # ESPHome
+      m_true="Y"
+      while [ ${m_true} == "Y" ]; do
+        show_banner_4
+        service_menu esphome
       done
       ;;
     "phoenix") # Shit for me
