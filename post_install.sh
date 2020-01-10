@@ -234,7 +234,7 @@ cp_config() {
         sed -e "s/#panel_iframe:/panel_iframe:/
           s/#esphome:/esphome:/
           s/#title: ESPHome/title: ESPHome/
-          s/#icon: mdi:memory/icon: mdi:memory/
+          s/#icon: mdi:chip/icon: mdi:chip/
           s%#url: http://0.0.0.0:6052%url: http://${v2srv_ip}:6052%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
         chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
       fi

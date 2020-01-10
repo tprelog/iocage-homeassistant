@@ -20,5 +20,5 @@
     #url: http://0.0.0.0
   #esphome:
     #title: ESPHome
-    #icon: mdi:memory
+    #icon: mdi:chip
     #url: http://0.0.0.0:6052
