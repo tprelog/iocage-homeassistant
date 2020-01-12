@@ -1,5 +1,4 @@
- 
-# HADashboad for Fire 7 tablet
+# HADashboad example for Fire 7 tablet
 # Screen size: 1024x600
 
 # These small widget are really good for an icon only (ie.. switch or lamp)
@@ -24,24 +23,29 @@ hello:
     widget_type: label
     text: Hello Fire!
 
-box1:
-  widget_type: label
-  text: "1"
-
 boxA:
   widget_type: label
   text: "A"
-
 
 boxB:
   widget_type: label
   text: "B"
 
-
 boxC:
   widget_type: label
   text: "C"
 
+boxL:
+    widget_type: label
+    text: "L"
+
+boxR:
+    widget_type: label
+    text: "R"
+
+box1:
+  widget_type: label
+  text: "1"
 
 box10:
   widget_type: label
@@ -50,10 +54,6 @@ box10:
 box15:
   widget_type: label
   text: "15"
-
-alive:
-    widget_type: label
-    text: "Its alive!"
 
 welcome:
     widget_type: label
@@ -83,16 +83,13 @@ reload:
   widget_type: reload
   title2: "RELOAD"
 
-smallRelaod:
-  widget_type: small_reload
-
 layout:
   - box1 (1x1), welcome (13x1),                                                       box15 (1x1)
-  -          
+  -
   - spacer (1x1), boxA (2x1), spacer,  dashboard (9x1)
-  - spacer (1x1), boxB  
+  - spacer (1x1), boxB
   - spacer (5x1),                                  clock.clock (5x2), spacer (2x1),  reload (2x2)
-  - spacer (1x1), boxC (2x1)  
-  - 
-  - spacer (1x1),      configurator (13x1)
-  - box10 (1x1), wallpanel (13x1),                                               smallRelaod (1x1)
+  - spacer (1x1), boxC (2x1)
+  -
+  - boxL (1x2),      configurator (13x1),                                             boxR (1x2)
+  -                  wallpanel (13x1)
