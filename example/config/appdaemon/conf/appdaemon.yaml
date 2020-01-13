@@ -5,8 +5,8 @@ secrets: /home/hass/homeassistant/secrets.yaml
 # https://appdaemon.readthedocs.io/en/latest/INSTALL.html#configuration
 appdaemon:
   # disable_apps: 1
-  latitude: 41.029885
-  longitude: -80.614263
+  latitude: 41.024250
+  longitude: -80.614595
   elevation: 321
   time_zone: America/New_York
   threads: 10
