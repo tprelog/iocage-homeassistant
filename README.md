@@ -51,8 +51,8 @@ yourself. Who wants to do all that when you can just press a button instead?
 
 **Make a pkglist and create a jail using it to install requirements**
 ```bash
-echo '{"pkgs":["autoconf","bash","ca_root_nss","git-lite","gmake","pkgconf","python37","py37-sqlite3"]}' >> /tmp/pkglist.json
-iocage create -r 11.3-RELEASE dhcp=1 bpf=yes vnet=on boot=on allow_raw_sockets=1 -p /tmp/pkglist.json -n homeassistant
+echo '{"pkgs":["autoconf","bash","ca_root_nss","git-lite","gmake","pkgconf","python37","py37-sqlite3"]}' > /tmp/pkglist.json
+iocage create -r 11.3-RELEASE dhcp=on bpf=yes vnet=on boot=on allow_raw_sockets=1 -p /tmp/pkglist.json -n homeassistant
 ```
 
 **Git script and begin install**
