@@ -17,6 +17,8 @@ appdaemon:
       type: hass
       ha_url: http://127.0.0.1:8123
       token: !secret appdaemon_token
+#admin:
+http:
+  url: http://127.0.0.1:5050
 hadashboard:
-  dash_url: http://127.0.0.1:5050
   dashboard_dir: /home/hass/appdaemon/dashboards

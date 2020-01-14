@@ -115,6 +115,18 @@ install_service() {
     elif [ ${3} = "configurator" ]; then
       ## Install Hass Configurator
       pip3 install --upgrade hass-configurator
+    
+    elif [ ${3} = "esphome" ]; then
+      ## Install esphome
+      pip3 install --upgrade ${3}
+      
+      ## Download and install extra files needed for esp32 support on *BSD
+      ## Thanks @CyanoFresh for figuring this out! (link below)
+      ## https://github.com/tprelog/iocage-homeassistant/issues/5#issuecomment-573179387
+      pkg=toolchain-xtensa32-FreeBSD.11.amd64-2.50200.80.tar.gz
+      wget -O /tmp/${pkg} https://github.com/trombik/toolchain-xtensa32/releases/download/0.2.0/${pkg}
+      mkdir -p ~/esphome/.platformio/packages/toolchain-xtensa32
+      tar -x -C ~/esphome/.platformio/packages/toolchain-xtensa32 -f /tmp/${pkg}
       
     else
       pip3 install --upgrade ${3}
