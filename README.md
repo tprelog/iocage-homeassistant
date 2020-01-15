@@ -3,7 +3,7 @@ Artifact file(s) for [Home Assistant](https://www.home-assistant.io/) + [AppDaem
 
 **This branch is intended for FreeNAS 11.3 but should work with FreeNAS-11.2-U7 or later**
 
-- This will will create an 11.3-RELEASE iocage-jail for Home Assistant on FreeNAS 11
+- This will create an 11.3-RELEASE iocage-jail for Home Assistant on FreeNAS 11
 - The script will [install Home Assistant in a Python virtualenv](https://www.home-assistant.io/docs/installation/virtualenv/). *This is not [Hass.io](https://www.home-assistant.io/hassio/)*
 - Includes options to create and install seperate Python virtualenvs for the following
     - ESPHome *added by request and with the help of @CyanoFresh*
