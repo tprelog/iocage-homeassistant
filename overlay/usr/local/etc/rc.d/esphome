@@ -70,8 +70,11 @@ esphome_upgrade() {
     su ${esphome_user} -c '
       source ${1}/bin/activate || exit 1
       pip3 install --upgrade esphome
+      export PLATFORMIO_CORE_DIR="${2}/.platformio"
+      platformio upgrade
+      platformio update
       deactivate
-    ' _ ${esphome_venv} || exit 1
+    ' _ ${esphome_venv} ${esphome_config_dir} || exit 1
     [ $? == 0 ] && service ${name} start
 }
 
