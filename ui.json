@@ -1,4 +1,4 @@
 {
   "adminportal": "http://%%IP%%:8123",
-  "docurl": "https://github.com/tprelog/iocage-homeassistant/blob/11.3-RELEASE/docs/README.md"
+  "docurl": "https://tprelog.github.io/iocage-homeassistant/"
 }
