@@ -6,19 +6,24 @@
     #title: Configurator
     #icon: mdi:circle-edit-outline
     #url: http://0.0.0.0:3218
+    #require_admin: true
   #hadashboard:
     #title: HA Dashboard
     #icon: mdi:view-dashboard-variant
     #url: http://0.0.0.0:5050
+    #require_admin: true
   #node-red:
     #title: Node-RED
     #icon: mdi:sitemap
     #url: http://0.0.0.0:1880
+    #require_admin: true
   #tasmoadmin:
     #title: TasmoAdmin
     #icon: mdi:creation
     #url: http://0.0.0.0
+    #require_admin: true
   #esphome:
     #title: ESPHome
     #icon: mdi:chip
     #url: http://0.0.0.0:6052
+    #require_admin: true
