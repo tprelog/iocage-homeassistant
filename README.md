@@ -15,7 +15,7 @@ The previous branch was [11.2-RELEASE][11.2]
 - *The 11.2-RELEASE is no longer being updated*
 - Please consider using the current branch instead
 
-[11.3]: https://github.com/tprelog/iocage-homeassistant/blob/11.3-RELEASE/README.md
-[11.2]: https://github.com/tprelog/iocage-homeassistant/blob/11.2-RELEASE/README.md
+[11.3]: https://github.com/tprelog/iocage-homeassistant/tree/11.3-RELEASE
+[11.2]: https://github.com/tprelog/iocage-homeassistant/tree/11.2-RELEASE
 
 [github_pages]: https://tprelog.github.io/iocage-homeassistant/
