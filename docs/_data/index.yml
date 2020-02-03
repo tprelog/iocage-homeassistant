@@ -1,0 +1,8 @@
+docs_list_title: INDEX
+docs:
+
+- title: Home
+  url: ./index.html
+
+- title: USB Z-Wave and Zigbee devices
+  url: ./custom_ruleset.html
