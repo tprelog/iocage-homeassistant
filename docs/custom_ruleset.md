@@ -98,7 +98,7 @@ iocage restart homeassistant
 
 [Home][home]
 
-[home]: index.md
+[home]: ./index.html
 
 [devfs_ruleset]: img/add_ruleset_11.2.png
 [devfs_ruleset_raw]: https://github.com/tprelog/iocage-homeassistant/raw/master/docs/img/add_ruleset_11.2.png

@@ -1,0 +1,32 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+/* OVERRIDE VALUES */
+
+/* https://github.com/pages-themes/architect/blob/master/_sass/jekyll-theme-architect.scss */
+
+header h1 {
+  font-size: 48px;
+  color: #fff;
+}
+
+#main-content h1:before {
+content: "";
+}
+#main-content h2:before {
+content: "";
+}
+#main-content h3:before {
+content: "";
+}
+h4:before {
+  content: "";
+}
+h5:before {
+  content: "";
+}
+h6:before {
+  content: "";
+}

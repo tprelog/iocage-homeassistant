@@ -8,4 +8,4 @@ layout: default
 
 
 
-[add_ruleset]: custom_ruleset.md
+[add_ruleset]: ./custom_ruleset.html
