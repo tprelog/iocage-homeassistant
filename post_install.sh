@@ -166,6 +166,7 @@ cp_config() {
           s/#configurator:/configurator:/
           s/#title: Configurator/title: Configurator/
           s/#icon: mdi:circle-edit-outline/icon: mdi:circle-edit-outline/
+          s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
         chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
       fi
@@ -187,6 +188,7 @@ cp_config() {
           s/#hadashboard:/hadashboard:/
           s/#title: HA Dashboard/title: HA Dashboard/
           s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
+          s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
         chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
       fi
@@ -203,6 +205,7 @@ cp_config() {
           s/#esphome:/esphome:/
           s/#title: ESPHome/title: ESPHome/
           s/#icon: mdi:chip/icon: mdi:chip/
+          s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:6052%url: http://${v2srv_ip}:6052%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
         chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
       fi
