@@ -1,29 +1,22 @@
-## This package.yaml file was provided with the Home Assistant iocage-plugin for FreeNAS
+## This package.yaml file is provided by the Home Assistant Core iocage-jail for FreeNAS
+# https://www.home-assistant.io/docs/configuration/packages/
 
-## Add links to the side panel
+## Used by the FreeNAS plugin to add links in the side panel.
+# https://www.home-assistant.io/integrations/panel_iframe/
+
 #panel_iframe:
+  #appdaemon:
+    #title: AppDaemon
+    #icon: mdi:view-dashboard-variant
+    #require_admin: true
+    #url: http://0.0.0.0:5050
   #configurator:
     #title: Configurator
-    #icon: mdi:circle-edit-outline
+    #icon: mdi:wrench
+    #require_admin: true
     #url: http://0.0.0.0:3218
-    #require_admin: true
-  #hadashboard:
-    #title: HA Dashboard
-    #icon: mdi:view-dashboard-variant
-    #url: http://0.0.0.0:5050
-    #require_admin: true
-  #node-red:
-    #title: Node-RED
-    #icon: mdi:sitemap
-    #url: http://0.0.0.0:1880
-    #require_admin: true
-  #tasmoadmin:
-    #title: TasmoAdmin
-    #icon: mdi:creation
-    #url: http://0.0.0.0
-    #require_admin: true
   #esphome:
     #title: ESPHome
     #icon: mdi:chip
-    #url: http://0.0.0.0:6052
     #require_admin: true
+    #url: http://0.0.0.0:6052

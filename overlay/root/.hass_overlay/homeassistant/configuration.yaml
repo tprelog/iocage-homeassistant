@@ -1,32 +1,26 @@
+## This configuration.yaml file is provided by the Home Assistant Core iocage-jail for FreeNAS
+# https://www.home-assistant.io/docs/configuration
+
 homeassistant:
-  ## Customize: https://www.home-assistant.io/docs/configuration/customizing-devices/
+  # https://www.home-assistant.io/docs/configuration/customizing-devices/
   customize: !include customize.yaml
-  ## Package files: https://www.home-assistant.io/docs/configuration/packages/
+  # https://www.home-assistant.io/docs/configuration/packages/#create-a-packages-folder
   packages: !include_dir_named packages
 
-#http:
-#  ip_ban_enabled: True
-#  login_attempts_threshold: 5
+# https://www.home-assistant.io/integrations/http/#ip_ban_enabled
+http:
+  ip_ban_enabled: False
+  login_attempts_threshold: 5
 
-## List of components loaded by default_config can be found at the link below:
-## https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/default_config/__init__.py
+## Configure a default setup of Home Assistant Core (frontend, api, etc)
+# https://www.home-assistant.io/integrations/default_config
 default_config:
 
-## Text to speech
+# Text to speech
 tts:
   - platform: google_translate
 
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
-
-## https://www.home-assistant.io/docs/z-wave/installation/#configuration
-#zwave:
-#  usb_path: /dev/cuaU0
-#  network_key: !secret zwave_key
-#  config_path: /srv/homeassistant/lib/python3.7/site-packages/python_openzwave/ozw_config
-
-## https://www.home-assistant.io/components/zha/#configuration
-#zha:
-#  usb_path: /dev/cuaU1
-#  database_path: /home/hass/homeassistant/zigbee.db
+scene: !include scenes.yaml

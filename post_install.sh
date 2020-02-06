@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
   # pkg install autoconf bash ca_root_nss git-lite gmake pkgconf python37 py37-sqlite3
-  # git clone https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
+  # git clone -b 11.3-RELEASE https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
   # bash /root/.iocage-homeassistant/post_install.sh standard
 
 v2srv_user=hass     # Changing this is not tested
 v2srv_uid=8123      # Changing this is not tested but should be OK
-v2env=/srv          # Changing this is yet not tested  
+v2env=/srv          # Changing this is not tested
 
 pkglist=/root/pkg_extra
 python=python3.7
@@ -19,10 +19,10 @@ ctrl="$(basename "${0}" .sh)"
 
 first_run () {
   
-  ## Install these extra packages not required by basic Home Assistant install.
+  ## Install these extra packages not required by the Home Assistant Core install.
   ## However THESE EXTRAS PACKAGES ARE REQUIRED TO USE SOME BUILD IN COMPONENTS
-  #[ -f "${pkglist}" ] && pkgs=$(cat "${pkglist}" | grep -v '^[#;]' | grep .) && \
-  #[ ! -z "${pkgs}" ] && echo "${pkgs}" | xargs pkg install -y
+  #[ -f "${pkglist}" ] && pkgs=$(cat "${pkglist}" | grep -v '^[#;]' | grep .) \
+  #&& [ ! -z "${pkgs}" ] && echo "${pkgs}" | xargs pkg install -y
   
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
   echo -e "\n# Start hass-helper after login." >> /root/.login
@@ -119,7 +119,7 @@ cp_overlay() {
 }
 
 cp_config() {
-    
+  
   ## ONLY IF ${config_dir} IS EMPTY else nothing is copied.
   ## copy the example configuration files during an install.
   ## These files should be modified or replaced by end users
@@ -165,16 +165,16 @@ cp_config() {
         sed -e "s/#panel_iframe:/panel_iframe:/
           s/#configurator:/configurator:/
           s/#title: Configurator/title: Configurator/
-          s/#icon: mdi:circle-edit-outline/icon: mdi:circle-edit-outline/
+          s/#icon: mdi:wrench/icon: mdi:wrench/
           s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
         chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
       fi
     ;;
     
-    ## AppDaemon (and HA-Dashboard)
+    ## AppDaemon (includes HADashboard)
     "appdaemon")
-      ## Copy the example App-Daemon configuration files
+      ## Copy the example AppDaemon configuration files
       if [ ! "$(ls -A ${config_dir})" ]; then
         cp -R "${hass_overlay}/${1}/" "${config_dir}"
         find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
@@ -182,11 +182,11 @@ cp_config() {
       else
         _config_warning "${1}"
       fi
-      # Enable the HA-Dashboard iframe
+      # Enable the AppDaemon iframe
       if [ -f "${yaml}" ]; then
         sed -e "s/#panel_iframe:/panel_iframe:/
-          s/#hadashboard:/hadashboard:/
-          s/#title: HA Dashboard/title: HA Dashboard/
+          s/#appdaemon:/appdaemon:/
+          s/#title: AppDaemon/title: AppDaemon/
           s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
           s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
@@ -285,8 +285,8 @@ if [ "${ctrl}" = "post_install" ]; then
     [ -d "/home/${v2srv_user}/homeassistant/custom_components/hacs" ] && echo "${red}Is HACS already installed?${end}" && exit
     pkg install -y wget zip || exit
     su - ${v2srv_user} -c '
-      wget -O /var/tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip && \
-      unzip -d homeassistant/custom_components/hacs /var/tmp/hacs.zip
+      wget -O /var/tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip \
+      && unzip -d homeassistant/custom_components/hacs /var/tmp/hacs.zip
     ' _ || exit 1
     echo -e "\n${red} !! RESTART HOME ASSISTANT BEFORE THE NEXT STEP !!"
     echo -e "${grn}     https://hacs.xyz/docs/configuration/start${end}\n"
