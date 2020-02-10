@@ -20,7 +20,7 @@ To directly access devices like the Aeotec Gen-5 USB Stick, Nortek HUSZB-1 or si
 ---
 
 #### Home Assistant Community thread
-- [My (rebranded) Quick Start to Home Assistant Core (python virtualenv) on FreeNAS 11.3][ha_forum_qs]
+- [Home Assistant Core -- FreeNAS Community Plugin][ha_forum_qs]
 
 ---
 
@@ -30,7 +30,7 @@ To directly access devices like the Aeotec Gen-5 USB Stick, Nortek HUSZB-1 or si
 - All of my FreeNAS plugin manifests can be found [HERE][3]
 
 
-[ha_forum_qs]: https://community.home-assistant.io/t/my-never-complete-quick-start-to-home-assistant-core-python-virtualenv-on-freenas-11-3/71882?u=troy
+[ha_forum_qs]: https://community.home-assistant.io/t/home-assistant-core-freenas-community-plugin/170542?u=troy
 
 [add_ruleset]: ./custom_ruleset.html
 
