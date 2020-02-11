@@ -72,6 +72,7 @@ install_service() {
       
     elif [ ${3} = "appdaemon" ]; then
       ## Install appdaemon
+      pip3 install --upgrade astral==1.10
       pip3 install --upgrade ${3}
       
     elif [ ${3} = "configurator" ]; then
@@ -80,16 +81,9 @@ install_service() {
     
     elif [ ${3} = "esphome" ]; then
       ## Install esphome
-      pip3 install --upgrade ${3}
-      
-      ## Download and install extra files needed for esp32 support on *BSD
-      ## Thanks @CyanoFresh for figuring this out! (link below)
-      ## https://github.com/tprelog/iocage-homeassistant/issues/5#issuecomment-573179387
-      pkg=toolchain-xtensa32-FreeBSD.11.amd64-2.50200.80.tar.gz
-      wget -O /tmp/${pkg} https://github.com/trombik/toolchain-xtensa32/releases/download/0.2.0/${pkg}
-      mkdir -p ~/esphome/.platformio/packages/toolchain-xtensa32
-      tar -x -C ~/esphome/.platformio/packages/toolchain-xtensa32 -f /tmp/${pkg}
-      
+      echo -e "\n A seperate FreeNAS plugin for ESPHome is now available"
+      echo -e "\n Installing ESPHome in this jail has be disabled"
+
     else
       pip3 install --upgrade ${3}
     fi
@@ -188,25 +182,7 @@ cp_config() {
           s/#appdaemon:/appdaemon:/
           s/#title: AppDaemon/title: AppDaemon/
           s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
-          s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-        chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
-      fi
-    ;;
-    
-    ## ESPHome
-    "esphome")
-      ## This is a workaround to avoid "/.platformio" permission errors
-      install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/esphome/.platformio
-      install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/esphome/.platformio /.platformio
-      # Enable the ESPHome iframe
-      if [ -f "${yaml}" ]; then
-        sed -e "s/#panel_iframe:/panel_iframe:/
-          s/#esphome:/esphome:/
-          s/#title: ESPHome/title: ESPHome/
-          s/#icon: mdi:chip/icon: mdi:chip/
-          s/#require_admin: true/require_admin: true/
-          s%#url: http://0.0.0.0:6052%url: http://${v2srv_ip}:6052%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
         chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
       fi
     ;;
