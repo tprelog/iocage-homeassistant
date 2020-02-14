@@ -15,3 +15,8 @@
     #icon: mdi:wrench
     #require_admin: true
     #url: http://0.0.0.0:3218
+  #esphome:
+    #title: ESPHome
+    #icon: mdi:chip
+    #require_admin: true
+    #url: http://0.0.0.0:6052
