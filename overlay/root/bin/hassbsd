@@ -3,7 +3,6 @@
 ## HASS-HELPER
 
 # A menu driven shell script hacked together from internet samples and other shit.
-# It works but it's still very new, in fact it's barely more than just an idea!
 
 ## ----------------------------------
 # Step #1: Define variables
@@ -57,12 +56,8 @@ pause(){
 show_banner_0() {
   clear
   echo "${blu}"
-  echo '           _  _   _   ___ ___     _  _ ___ _    ___ ___ ___  '
-  echo '          | || | /_\ / __/ __|___| || | __| |  | _ \ __| _ \ '
-  echo '          | __ |/ _ \\__ \__ \___| __ | _|| |__|  _/ _||   / '
-  echo '          |_||_/_/ \_\___/___/   |_||_|___|____|_| |___|_|_\ '
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  echo "                   A SIMPLE MENU FOR COMMON COMMANDS                   "
+  echo "          Home Assistant Core - FreeNAS Plugin Service Menu           "
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   echo -e "${end}\n"
 }

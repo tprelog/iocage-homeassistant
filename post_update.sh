@@ -15,6 +15,16 @@ update.post_install() {
   && chmod +x /root/post_install.sh
 }
 
+rename.hasshelper() {
+## hass-helper is now hassbsd -- This should handle that change.
+if [ -f /root/bin/hass-helper ] && [ -f /root/bin/hassbsd ]; then
+  sed -e "s/hass-helper/hassbsd/g" /root/.login > /root/.loginTemp \
+  && mv /root/.loginTemp /root/.login \
+  && rm /root/bin/hass-helper
+fi
+}
+
+rename.hasshelper
 install.extra.pkgs
 update.post_install
 echo -e "\npost_update.sh Finished\n"
