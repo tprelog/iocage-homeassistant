@@ -25,8 +25,8 @@ first_run () {
   #&& [ ! -z "${pkgs}" ] && echo "${pkgs}" | xargs pkg install -y
   
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
-  echo -e "\n# Start hass-helper after login." >> /root/.login
-  echo "if ( -x /root/bin/hass-helper ) hass-helper" >> /root/.login
+  echo -e "\n# Start hassbsd (console menu) after login." >> /root/.login
+  echo "if ( -x /root/bin/hassbsd ) hassbsd" >> /root/.login
   
   add_user
   v2srv=homeassistant
@@ -109,7 +109,7 @@ cp_overlay() {
   ln -s ${0} /root/bin/update
   ln -s ${0} /root/post_install.sh
   ln -s ${plugin_overlay}/root/.hass_overlay /root/.hass_overlay
-  ln -s ${plugin_overlay}/root/bin/hass-helper /root/bin/hass-helper
+  ln -s ${plugin_overlay}/root/bin/hassbsd /root/bin/hassbsd
   
   mkdir -p /usr/local/etc/rc.d
   mkdir -p /usr/local/etc/sudoers.d
