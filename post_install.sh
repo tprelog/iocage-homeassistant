@@ -72,6 +72,7 @@ install_service() {
       
     elif [ ${3} = "appdaemon" ]; then
       ## Install appdaemon
+      pip3 install astral==1.10
       pip3 install --upgrade ${3}
       
     elif [ ${3} = "configurator" ]; then
