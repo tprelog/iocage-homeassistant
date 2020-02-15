@@ -8,15 +8,10 @@
   #appdaemon:
     #title: AppDaemon
     #icon: mdi:view-dashboard-variant
-    #require_admin: true
+    #require_admin: false
     #url: http://0.0.0.0:5050
   #configurator:
     #title: Configurator
     #icon: mdi:wrench
     #require_admin: true
     #url: http://0.0.0.0:3218
-  #esphome:
-    #title: ESPHome
-    #icon: mdi:chip
-    #require_admin: true
-    #url: http://0.0.0.0:6052

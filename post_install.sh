@@ -188,7 +188,7 @@ cp_config() {
           s/#appdaemon:/appdaemon:/
           s/#title: AppDaemon/title: AppDaemon/
           s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
-          s/#require_admin: true/require_admin: true/
+          s/#require_admin: false/require_admin: true/
           s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
         chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
       fi
@@ -199,16 +199,6 @@ cp_config() {
       ## This is a workaround to avoid "/.platformio" permission errors
       install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/esphome/.platformio
       install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/esphome/.platformio /.platformio
-      # Enable the ESPHome iframe
-      if [ -f "${yaml}" ]; then
-        sed -e "s/#panel_iframe:/panel_iframe:/
-          s/#esphome:/esphome:/
-          s/#title: ESPHome/title: ESPHome/
-          s/#icon: mdi:chip/icon: mdi:chip/
-          s/#require_admin: true/require_admin: true/
-          s%#url: http://0.0.0.0:6052%url: http://${v2srv_ip}:6052%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-        chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
-      fi
     ;;
     
   esac
