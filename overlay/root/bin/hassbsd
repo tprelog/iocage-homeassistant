@@ -13,11 +13,18 @@ PASSWD=/etc/passwd
 RED='\033[0;41;30m'
 STD='\033[0;0;39m'
 
+
+main_menu="0"
+
+## Enable ESPHome if this $var set to anything
+sysrc esphome_menu 2> /dev/null
+if [ $? == 0 ]; then main_menu="esp0"; fi
+
 #  virtualenv_service:
 #     Application installed in a virtualenv and
 #     running as a service (using sysrc scripts)
 
-# Directory containing virtualenvs 
+# Directory containing virtualenvs
 SRV_DIR=/srv
 
 # The application installed inside a virtualenv
@@ -154,8 +161,8 @@ service_menu() {
         read -p " Type 'YES' to continue: " _confirm
         [[ ${_confirm} == [Yy][Ee][Ss] ]] || break
         echo
-        sysrc "${1}_enable=NO"
-        service "${1}" stop
+        service "${1}" stop 2> /dev/null
+        sysrc -x "${1}_enable" 2> /dev/null
         rm -rf "${SRV_DIR}/${1}"
         pause
         break
@@ -227,13 +234,20 @@ show_menu_0() {
   echo " 1) Home Assistant"
   echo " 2) Hass Configurator"
   echo " 3) AppDaemon"
-  echo " 4) ESPHome"
   echo
   echo " 0) EXIT"
-  #echo " 4) Miscellaneous"
   echo
 }
 
+show_menu_esp0() {
+  echo " 1) Home Assistant"
+  echo " 2) Hass Configurator"
+  echo " 3) AppDaemon"
+  echo " 4) ESPHome"
+  echo
+  echo " 0) EXIT"
+  echo
+}
 
 read_options(){
   local choice
@@ -339,5 +353,5 @@ show_colors() {
 load_colors # Only need to load colors once
 
 while true; do
-  show_banner_0 && show_menu_0 && read_options
+  show_banner_0 && show_menu_${main_menu} && read_options
 done
