@@ -17,7 +17,7 @@ STD='\033[0;0;39m'
 main_menu="0"
 
 ## Enable ESPHome if this $var set to anything
-sysrc esphome_menu 2> /dev/null
+sysrc esphome_menu 2>/dev/null
 if [ $? == 0 ]; then main_menu="esp0"; fi
 
 #  virtualenv_service:
@@ -161,8 +161,8 @@ service_menu() {
         read -p " Type 'YES' to continue: " _confirm
         [[ ${_confirm} == [Yy][Ee][Ss] ]] || break
         echo
-        service "${1}" stop 2> /dev/null
-        sysrc -x "${1}_enable" 2> /dev/null
+        service "${1}" stop 2>/dev/null
+        sysrc -x "${1}_enable" 2>/dev/null
         rm -rf "${SRV_DIR}/${1}"
         pause
         break
