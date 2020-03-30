@@ -62,6 +62,10 @@ install_service() {
     
     if [ ${3} = "homeassistant" ]; then
       ## Install Home Assistant
+
+      ## Workaround Invaild Config ( HA 0.107.x )
+      pip3 install --upgrade SQLAlchemy
+
       pip3 install --upgrade colorlog
       pip3 install --upgrade ${3}
       
