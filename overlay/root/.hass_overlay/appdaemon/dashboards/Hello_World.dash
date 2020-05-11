@@ -1,0 +1,97 @@
+## This Hello_World.dash file is provided by the Home Assistant Core iocage-jail for FreeNAS
+
+# HADashboad example for Fire 7 tablet
+# Screen size: 1024x600
+
+# These small widget are really good for an icon only (ie.. switch or lamp)
+# If you try to add a title or other text your results may vary!
+
+# small Widgets (1x1): 60x58
+# small Matrix (1x1): 15x10
+
+title: Main Panel
+widget_dimensions: [60,58]    # sized for fire 7 based default: [122,114]
+widget_size: [2,2]            # sized for fire 7 based default: [1,1]
+widget_margins: [7,7]         # sized for fire 7 based default: [5,5]
+rows: 10                      # sized for fire 7 based default: 'unset'
+columns: 15                   # sized for fire 7 based default: 8
+global_parameters:
+    use_comma: 0
+    precision: 1
+    use_hass_icon: 1
+    namespace: default
+
+hello:
+    widget_type: label
+    text: Hello Fire!
+
+boxA:
+  widget_type: label
+  text: "A"
+
+boxB:
+  widget_type: label
+  text: "B"
+
+boxC:
+  widget_type: label
+  text: "C"
+
+boxL:
+    widget_type: label
+    text: "L"
+
+boxR:
+    widget_type: label
+    text: "R"
+
+box1:
+  widget_type: label
+  text: "1"
+
+box10:
+  widget_type: label
+  text: "10"
+
+box15:
+  widget_type: label
+  text: "15"
+
+welcome:
+    widget_type: label
+    title: "This example is just to show its working. Please visit the links below"
+    title2:  " https://www.home-assistant.io/docs/ecosystem/hadashboard "
+
+configurator:
+    widget_type: label
+    title: "Check out the Configurator to help edit configuration files"
+    title2: " https://www.home-assistant.io/docs/ecosystem/hass-configurator "
+    
+dashboard:
+    widget_type: label
+    title: "Did you know -- HADashboard is included with AppDaemon"
+    title2: " https://www.home-assistant.io/docs/ecosystem/appdaemon "
+
+wallpanel:
+    widget_type: label
+    title: "This example is already sized to fit a Fire 7 Tablet but you'll still want a  ' Full Screen '  browser"
+    title2: " https://community.home-assistant.io/t/wallpanel-for-android-redux/59756 "
+
+weather:
+    widget_type: weather
+    units: "&deg;F"
+
+reload:
+  widget_type: reload
+  title2: "RELOAD"
+
+layout:
+  - box1 (1x1), welcome (13x1),                                                       box15 (1x1)
+  -
+  - spacer (1x1), boxA (2x1), spacer,  dashboard (9x1)
+  - spacer (1x1), boxB
+  - spacer (5x1),                                  clock.clock (5x2), spacer (2x1),  reload (2x2)
+  - spacer (1x1), boxC (2x1)
+  -
+  - boxL (1x2),      configurator (13x1),                                             boxR (1x2)
+  -                  wallpanel (13x1)

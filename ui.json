@@ -1,0 +1,4 @@
+{
+  "adminportal": "http://%%IP%%:8123",
+  "docurl": "https://tprelog.github.io/iocage-homeassistant/"
+}

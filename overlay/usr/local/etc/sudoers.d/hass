@@ -1,0 +1,8 @@
+## /usr/local/etc/sudoers.d/hass
+
+## Allow user "hass" to use `sudo` without a password for
+## the following commands. Hint: Trigger from Home Assistant
+
+hass ALL= NOPASSWD: /usr/sbin/service appdaemon *
+hass ALL= NOPASSWD: /usr/sbin/service configurator *
+hass ALL= NOPASSWD: /usr/sbin/service homeassistant *

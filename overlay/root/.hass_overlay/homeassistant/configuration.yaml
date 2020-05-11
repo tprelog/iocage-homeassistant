@@ -1,0 +1,26 @@
+## This configuration.yaml file is provided by the Home Assistant Core iocage-jail for FreeNAS
+# https://www.home-assistant.io/docs/configuration
+
+homeassistant:
+  # https://www.home-assistant.io/docs/configuration/customizing-devices/
+  customize: !include customize.yaml
+  # https://www.home-assistant.io/docs/configuration/packages/#create-a-packages-folder
+  packages: !include_dir_named packages
+
+# https://www.home-assistant.io/integrations/http/#ip_ban_enabled
+http:
+  ip_ban_enabled: False
+  login_attempts_threshold: 5
+
+## Configure a default setup of Home Assistant Core (frontend, api, etc)
+# https://www.home-assistant.io/integrations/default_config
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml

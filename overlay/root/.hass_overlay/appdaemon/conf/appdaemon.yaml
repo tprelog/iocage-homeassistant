@@ -1,0 +1,25 @@
+## This appdaemon.yaml file is provided by the Home Assistant Core iocage-jail for FreeNAS
+
+# https://appdaemon.readthedocs.io/en/latest/CONFIGURE.html#secrets
+secrets: /home/hass/homeassistant/secrets.yaml
+
+# https://appdaemon.readthedocs.io/en/latest/INSTALL.html#configuration
+appdaemon:
+  #disable_apps: 1
+  latitude: !secret appdaemon_latitude
+  longitude: !secret appdaemon_longitude
+  elevation: !secret appdaemon_elevation
+  time_zone: !secret appdaemon_time_zone
+  threads: 10
+  production_mode: true
+  app_dir: /home/hass/appdaemon/apps
+  plugins:
+    HASS:
+      type: hass
+      ha_url: http://127.0.0.1:8123
+      token: !secret appdaemon_token
+#admin:
+http:
+  url: http://127.0.0.1:5050
+hadashboard:
+  dashboard_dir: /home/hass/appdaemon/dashboards

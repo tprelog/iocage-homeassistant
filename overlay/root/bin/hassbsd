@@ -1,0 +1,357 @@
+#!/usr/bin/env bash
+
+## HASS-HELPER
+
+# A menu driven shell script hacked together from internet samples and other shit.
+
+## ----------------------------------
+# Step #1: Define variables
+# ----------------------------------
+
+EDITOR=ee
+PASSWD=/etc/passwd
+RED='\033[0;41;30m'
+STD='\033[0;0;39m'
+
+
+main_menu="0"
+
+## Enable ESPHome if this $var set to anything
+sysrc esphome_menu 2>/dev/null
+if [ $? == 0 ]; then main_menu="esp0"; fi
+
+#  virtualenv_service:
+#     Application installed in a virtualenv and
+#     running as a service (using sysrc scripts)
+
+# Directory containing virtualenvs
+SRV_DIR=/srv
+
+# The application installed inside a virtualenv
+#SRV_APP = [ homeassistant | hass-configurator | appdaemon ]
+
+# _id=8123      # Set '_uid' and '_gid'
+# _uid="${_id}" # user id
+# _gid="${_id}" # group id
+
+# _user=hass    # user name
+# _group=hass   # group name
+
+# ----------------------------------
+# Step #2: User defined function
+# ----------------------------------
+
+load_colors() {
+  red=$'\e[1;31m'
+  grn=$'\e[1;32m'
+  yel=$'\e[1;33m'
+  bl1=$'\e[1;34m'
+  mag=$'\e[1;35m'
+  cyn=$'\e[1;36m'
+  blu=$'\e[38;5;39m'
+  orn=$'\e[38;5;208m'
+  end=$'\e[0m'
+}
+
+
+pause(){
+  echo
+  read -p "Press ENTER to continue..." fackEnterKey
+}
+
+
+show_banner_0() {
+  clear
+  echo "${blu}"
+  echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo "          Home Assistant Core - FreeNAS Plugin Service Menu           "
+  echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+  echo -e "${end}\n"
+}
+
+show_banner_1() {
+  clear
+  echo "${blu}"
+  echo '   _  _  ___  __  __ ___   _   ___ ___ ___ ___ _____ _   _  _ _____  '
+  echo '  | || |/ _ \|  \/  | __| /_\ / __/ __|_ _/ __|_   _/_\ | \| |_   _| '
+  echo '  | __ | (_) | |\/| | _| / _ \\__ \__ \| |\__ \ | |/ _ \| .` | | |   '
+  echo '  |_||_|\___/|_|  |_|___/_/ \_\___/___/___|___/ |_/_/ \_\_|\_| |_|   '
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo "                  MANAGE THE HOME ASSISTANT SERVICE                     "
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo -e "${end}"
+}
+
+show_banner_2() {
+  clear
+  echo "${blu}"
+  echo '        ___ ___  _  _ ___ ___ ___ _   _ ___    _ _____ ___  ___  '
+  echo '       / __/ _ \| \| | __|_ _/ __| | | | _ \  /_\_   _/ _ \| _ \ '
+  echo '      | (_| (_) | .` | _| | | (_ | |_| |   / / _ \| || (_) |   / '
+  echo '       \___\___/|_|\_|_| |___\___|\___/|_|_\/_/ \_\_| \___/|_|_\ '
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo "                 MANAGE THE HASS CONFIGURATOR SERVICE                  "
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo -e "${end}"
+}
+
+show_banner_3() {
+  clear
+  echo "${blu}"
+  echo '              _   ___ ___ ___   _   ___ __  __  ___  _  _  '
+  echo '             /_\ | _ \ _ \   \ /_\ | __|  \/  |/ _ \| \| | '
+  echo '            / _ \|  _/  _/ |) / _ \| _|| |\/| | (_) | .` | '
+  echo '           /_/ \_\_| |_| |___/_/ \_\___|_|  |_|\___/|_|\_| '
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo "                     MANAGE THE APPDAEMON SERVICE                      "
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo -e "${end}"
+}
+
+show_banner_4() {
+  clear
+  echo "${blu}"
+  echo '                  ___ ___ ___ _  _  ___  __  __ ___  '
+  echo '                 | __/ __| _ \ || |/ _ \|  \/  | __| '
+  echo '                 | _|\__ \  _/ __ | (_) | |\/| | _|  '
+  echo '                 |___|___/_| |_||_|\___/|_|  |_|___| '
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo "                      MANAGE THE ESPHOME SERVICE                       "
+  echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
+  echo -e "${end}"
+}
+
+service_menu() {
+
+  local _default_actions
+  local _extra_actions
+  local _action
+  local _confirm
+  
+  # Default actions that all services (in this jail) should have
+  _default_actions="status restart upgrade start stop test"
+  
+  # Home Assistant has an extra check config option
+  [[ "${1}" == "homeassistant" ]] && _extra_actions="check_config"
+  
+  # Other services can be installed or removed depending on existing state
+  if [ "${1}" != "homeassistant" ]; then
+    if [ ! -d "${SRV_DIR}/${1}" ]; then
+      _extra_actions="install"
+    else # (toggle install/remove)
+      _extra_actions="remove"
+    fi
+  fi
+  
+  PS3=""$'\n'"${blu}Select: ${end}"
+  echo
+  select _action in "Main Menu" ${_default_actions} ${_extra_actions}; do
+    case "${_action}" in
+      "Main Menu")
+        m_true="N"
+        break
+        ;;
+      "install")
+        /root/post_install.sh ${1}
+        pause
+        break
+        ;;
+      "remove")
+        echo -e "\n${red} DELETING ${SRV_DIR}/${1}${end}"
+        read -p " Type 'YES' to continue: " _confirm
+        [[ ${_confirm} == [Yy][Ee][Ss] ]] || break
+        echo
+        service "${1}" stop 2>/dev/null
+        sysrc -x "${1}_enable" 2>/dev/null
+        rm -rf "${SRV_DIR}/${1}"
+        pause
+        break
+        ;;
+      "status"|"restart"|"upgrade"|"start"|"stop"|"test"|"check_config")
+        service "${1}" "${_action}"
+        pause
+        break
+        ;;
+      *) echo -e "${red}Sorry, [ ${_action} ] is not an option${end}" && sleep 1
+        ;;
+    esac
+  done
+}
+
+
+show_menu_1() {
+
+  local _extra_actions
+  local _zwave_key
+  
+  _extra_actions="install-HACS zip-hass-home generate-zwave-key"
+  PS3=""$'\n'"${blu}Select: ${end}"
+  echo
+  select _action in "Main Menu" "Show Colors" ${_extra_actions}; do
+    case "${_action}" in
+      "Main Menu")
+        m_true="N"
+        break
+        ;;
+      "Show Colors")
+        show_colors
+        pause
+        break
+        ;;
+      "install-HACS")
+        /root/post_install.sh hacs
+        pause
+        break
+        ;;
+      "generate-zwave-key")
+        # Blah...
+        echo -e "\n ${red}sed${end}\n"
+        su - hass -c '
+          echo $(cat /dev/urandom | tr -dc '0-9A-F' | fold -w 32 | head -n 1 | sed -e 's/\(..\)/0x\1, /g')
+        ' # Mind the (') there
+        pause
+        break
+        ;;
+      "zip-hass-home")
+        echo -e "\n${orn}Creating zip. This can take a few minutes to complete...\n"
+        su - hass -c '
+          zip -9 -q -r /tmp/hass-backup.temp /home/hass/ -x"*/components/*" -x"*/deps/*" -x"*/home-assistant.log" -x"*/.cache/*" -x"*/__pycache__*/"
+        '  # Mind the (') there
+        [ ! -d /root/.hass_backups ] && mkdir /root/.hass_backups
+        [ -f /tmp/hass-backup.temp ] && mv /tmp/hass-backup.temp /root/.hass_backups/hass_$(date +%F_%T).zip \
+        && echo -e "\n${grn} Created backup in /root/.hass_backups/"
+        echo ${end}
+        pause
+        break
+        ;;
+    esac
+  done
+}
+
+
+show_menu_0() {
+# clear --> moved to show_banner
+  echo " 1) Home Assistant"
+  echo " 2) Hass Configurator"
+  echo " 3) AppDaemon"
+  echo
+  echo " 0) EXIT"
+  echo
+}
+
+show_menu_esp0() {
+  echo " 1) Home Assistant"
+  echo " 2) Hass Configurator"
+  echo " 3) AppDaemon"
+  echo " 4) ESPHome"
+  echo
+  echo " 0) EXIT"
+  echo
+}
+
+read_options(){
+  local choice
+  echo "${blu}"
+  read -p "Select: " choice
+  echo "${end}"
+  case "${choice}" in
+    [eE]|[eE][xX][iI][tT]|[qQ]|[cC]|[cC]|[oN][sS][oO][lL][eE]|"0")
+      clear; exit 0
+      ;;
+    "1") # Home Assistant
+      m_true="Y"
+      while [ ${m_true} == "Y" ]; do
+        show_banner_1
+        service_menu homeassistant
+      done
+      ;;
+    "2") # Hass Configurator
+      m_true="Y"
+      while [ ${m_true} == "Y" ]; do
+        show_banner_2
+        service_menu configurator
+      done
+      ;;
+    "3") # AppDaemon
+      m_true="Y"
+      while [ ${m_true} == "Y" ]; do
+        show_banner_3
+        service_menu appdaemon
+      done
+      ;;
+    "4") # ESPHome
+      m_true="Y"
+      while [ ${m_true} == "Y" ]; do
+        show_banner_4
+        service_menu esphome
+      done
+      ;;
+    "phoenix") # Shit for me
+      m_true="Y"
+      while [ ${m_true} == "Y" ]; do
+        show_banner_0
+        show_menu_1
+      done
+      ;;
+    "watch ha") # Shit for me
+      log_watch="Y"
+      while [ ${log_watch} == "Y" ]; do
+      tail -F /var/log/homeassistant_daemon.log
+      #  show_banner_0
+      #  show_menu_1
+      done
+      ;;
+      [iI]"nstall "[hH][aA][cC][sS])
+        /root/post_install.sh hacs
+        pause
+        break
+        ;;
+    *) echo -e "${red}Sorry, wrong number..${end}" && sleep 1
+  esac
+}
+
+set_false() {
+  log_watch="N"
+}
+
+show_colors() {
+# Test function to see how colors look
+  echo
+  echo " ${red}ALERT"
+  echo " ${orn}Warning "
+  echo " ${yel}Caution "
+  echo "${end}"
+}
+
+
+# ----------------------------------------------
+# Step #3: Trap CTRL+C, CTRL+Z and quit singles
+# ----------------------------------------------
+# Included from original example
+#trap '' SIGINT SIGQUIT SIGTSTP
+
+## TODO Expand using this example instead
+##      to call a function when signal is caught.
+
+# Define and use traps to clean up all temp files
+   # Trap on:  Use 'kill -l' to list all
+   # 1 = SIGHUP (Hangup of controlling terminal or death of parent)
+   # 2 = SIGINT (Interrupted by the keyboard)
+   # 3 = SIGQUIT (Quit signal from keyboard)
+   # 6 = SIGABRT (Aborted by abort(3))
+   # 9 = SIGKILL (Sent a kill command)
+
+   # Create Trap for ^\ & Others: Call Funtion CleanExit
+#   trap CleanExit 1 3 6 9
+   trap set_false 2
+
+
+# -----------------------------------
+# Step #4: Main logic - infinite loop
+# ------------------------------------
+
+load_colors # Only need to load colors once
+
+while true; do
+  show_banner_0 && show_menu_${main_menu} && read_options
+done

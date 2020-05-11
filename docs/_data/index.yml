@@ -1,8 +1,8 @@
 docs_list_title: INDEX
 docs:
 
-- title: Home
-  url: ./index.html
+- title: Quick Start Wiki
+  url: https://github.com/tprelog/iocage-homeassistant/wiki
 
 - title: USB Z-Wave and Zigbee devices
-  url: ./custom_ruleset.html
+  url: https://github.com/tprelog/iocage-homeassistant/wiki/Using-a-USB-Z-Wave-or-Zigbee-controller
