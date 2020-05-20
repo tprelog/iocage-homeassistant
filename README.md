@@ -47,16 +47,24 @@ iocage fetch -P dhcp=on vnet=on vnet_default_interface=auto bpf=yes boot=on -n /
 
 ---
 
-##### Using USB Z-Wave and Zigbee controllers
-
-To directly access devices like the Aeotec Gen-5 USB Stick, Nortek HUSZB-1 or similar USB controllers inside an iocage-jail, you will need to use a custom devfs_ruleset. Before a jail can use the custom ruleset, it must first be created on the FreeNAS host. These steps can be found [HERE][ruleset]
+**You might find some additional information in the [project wiki](https://github.com/tprelog/iocage-homeassistant/wiki)**
 
 ---
 
-###### This branch is the source for https://tprelog.github.io/iocage-homeassistant/
+**Home Assistant Community Forum**
+- [Home Assistant Core -- FreeNAS Community Plugin][ha_forum_qs]
+
+---
+
+##### Using USB Z-Wave and Zigbee controllers
+
+To directly access devices like the Aeotec Gen-5 USB Stick, Nortek HUSZB-1 or similar USB controllers inside an iocage-jail, you will need to use a custom devfs_ruleset. Before a jail can use the custom ruleset, it must first be created on the FreeNAS host. These steps can be found [HERE][ruleset_wiki]
+
+---
 
 ###### Current artifact files can be found in the [11.3-RELEASE branch][4]
 
+[ha_forum_qs]: https://community.home-assistant.io/t/home-assistant-core-freenas-community-plugin/170542?u=troy
 [FreeNAS_plugins]: _img/FreeNAS_homeassistant.png
 
 [1]: https://homeassistant.io/
@@ -71,4 +79,5 @@ To directly access devices like the Aeotec Gen-5 USB Stick, Nortek HUSZB-1 or si
 
 [github_pages]: https://tprelog.github.io/iocage-homeassistant/
 [ruleset]: https://tprelog.github.io/iocage-homeassistant/custom_ruleset.html
+[ruleset_wiki]: https://github.com/tprelog/iocage-homeassistant/wiki/Using-a-USB-Z-Wave-or-Zigbee-controller
 [config]: https://github.com/tprelog/iocage-homeassistant/tree/11.3-RELEASE/overlay/root/.hass_overlay
