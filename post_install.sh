@@ -19,12 +19,11 @@ ctrl="$(basename "${0}" .sh)"
 
 first_run () {
   
-  ## Install these extra packages not required by the Home Assistant Core install.
-  ## However THESE EXTRAS PACKAGES ARE REQUIRED TO USE SOME BUILD IN COMPONENTS
-  #[ -f "${pkglist}" ] && pkgs=$(cat "${pkglist}" | grep -v '^[#;]' | grep .) \
-  #&& [ ! -z "${pkgs}" ] && echo "${pkgs}" | xargs pkg install -y
-  
+  ## It can be helpful to allow group write permission when the config is shared over a network
+  ## Set `umask 2` so the Home Assistant service will create files with group write permission
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
+  
+  ## Start the console menu upon login
   echo -e "\n# Start hassbsd (console menu) after login." >> /root/.login
   echo "if ( -x /root/bin/hassbsd ) hassbsd" >> /root/.login
   
@@ -35,8 +34,11 @@ first_run () {
 }
 
 add_user () {
+
+  ## Create a home directory
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 775 -- /home/${v2srv_user}
-  pw addgroup -g ${v2srv_uid} -n ${v2srv_user}
+  
+  ## Add user
   pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer
   ## This is a workaround to hopefully avoid pip related "/.cache" permission errors
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
