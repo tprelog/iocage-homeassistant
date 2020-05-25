@@ -60,21 +60,12 @@ install_service() {
   su ${v2srv_user} -c '
     ${1} -m venv ${2}
     source ${2}/bin/activate || exit 1
-    pip3 install --upgrade pip
+    pip install --upgrade pip
     
     if [ ${3} = "homeassistant" ]; then
-      ## Install Home Assistant
-
-      ## Workaround Invaild Config ( HA 0.107.x )
-      pip3 install --upgrade SQLAlchemy
-
-      pip3 install --upgrade colorlog
-      pip3 install --upgrade ${3}
-      
-      ## Known issue in version 0.101.X -- Ensure the front-end gets installed
-      if [ $(pip3 show homeassistant | grep Version | cut -d'.' -f2) = 101 ]; then
-        pip3 install --upgrade home-assistant-frontend
-      fi
+      ## Install Home Assistant Core
+      pip install wheel
+      pip install colorlog SQLAlchemy homeassistant
       
     elif [ ${3} = "appdaemon" ]; then
       ## Install appdaemon
