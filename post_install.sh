@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-  # pkg install autoconf bash ca_root_nss git-lite gmake pkgconf python37 py37-sqlite3
+  # pkg install autoconf bash ca_root_nss git-lite gmake openssl pkgconf python37 py37-sqlite3
   # git clone -b 11.3-RELEASE https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
   # bash /root/.iocage-homeassistant/post_install.sh standard
 
@@ -40,6 +40,17 @@ add_user () {
   
   ## Add user
   pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer
+  
+  ## Create a `.profile` and set some variables to make Home Assistant use openssl-1.1.1
+  ## https://github.com/tprelog/iocage-homeassistant/issues/14#issuecomment-633141287
+  ## NOTE: These (indented) "here-doc" lines must begin with a `tab` in order to "function" correctly
+  cat > /home/${v2srv_user}/.profile <<-ENTRY
+	export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:~/bin
+	export CFLAGS=-I/usr/local/include
+	export LDFLAGS=-I/usr/local/include
+	
+	ENTRY
+  
   ## This is a workaround to hopefully avoid pip related "/.cache" permission errors
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
   install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/.cache /.cache
@@ -58,6 +69,9 @@ install_service() {
   fi
   
   su ${v2srv_user} -c '
+
+    [ -f ${HOME}/.profile ] && source ${HOME}/.profile
+  
     ${1} -m venv ${2}
     source ${2}/bin/activate || exit 1
     pip install --upgrade pip
