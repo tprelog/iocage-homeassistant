@@ -61,8 +61,14 @@ homeassistant_precmd() {
     fi
 }
 
-stop_postcmd=${name}_postcmd
-homeassistant_postcmd() {
+start_postcmd=${name}_poststart
+homeassistant_poststart() {
+  echo; sleep 1
+  run_rc_command status
+}
+
+stop_postcmd=${name}poststop
+homeassistant_poststop() {
     rm -f -- "${pidfile}"
     rm -f -- "${pidfile_child}"
 }
