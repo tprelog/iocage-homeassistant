@@ -75,13 +75,13 @@ homeassistant_poststop() {
 
 upgrade_cmd="${name}_upgrade"
 homeassistant_upgrade() {
-    service ${name} stop
+    run_rc_command stop
     su ${homeassistant_user} -c '
       source ${@}/bin/activate || exit 1
       pip3 install --upgrade homeassistant
       deactivate
     ' _ ${homeassistant_venv} || exit 1
-    [ $? == 0 ] && homeassistant_check_config && service ${name} start
+    [ $? == 0 ] && run_rc_command check_config && run_rc_command start
 }
 
 check_config_cmd="${name}_check_config"
@@ -98,10 +98,9 @@ homeassistant_check_config() {
 
 restart_cmd="${name}_restart"
 homeassistant_restart() {
-    homeassistant_check_config || exit 1
-    echo "Restarting Home Assistant"
-    service ${name} stop
-    service ${name} start
+    run_rc_command check_config || exit 1
+    run_rc_command stop  # >/dev/null 2>&1
+    run_rc_command start # >/dev/null 2>&1
 }
 
 test_cmd="${name}_test"
