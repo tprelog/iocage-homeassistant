@@ -86,12 +86,11 @@ homeassistant_upgrade() {
 
 check_config_cmd="${name}_check_config"
 homeassistant_check_config() {
-    [ ! -e "${homeassistant_config_dir}/configuration.yaml" ] && return 0
-    echo "Performing check on Home Assistant configuration:"
-    #eval "${homeassistant_venv}/bin/hass --config ${homeassistant_config_dir} --script check_config"
+    local config="${homeassistant_config_dir}/configuration.yaml"
+    [ ! -e "${config}" ] && { echo "Not Found: ${config}"; exit 1; }
     su ${homeassistant_user} -c '
       source ${1}/bin/activate || exit 1
-      hass --config ${2} --script check_config || exit 2
+      hass --config ${2} --script check_config
       deactivate
     ' _ ${homeassistant_venv} ${homeassistant_config_dir}
 }
