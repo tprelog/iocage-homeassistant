@@ -50,6 +50,7 @@ add_user () {
 	export LDFLAGS=-I/usr/local/include
 	
 	ENTRY
+  chown ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/.profile
   
   ## This is a workaround to hopefully avoid pip related "/.cache" permission errors
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
