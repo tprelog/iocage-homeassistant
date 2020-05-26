@@ -49,6 +49,10 @@ logfile="/var/log/${name}_daemon.log"
 command="/usr/sbin/daemon"
 extra_commands="check_config restart test upgrade"
 
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:~/bin
+export CFLAGS=-I/usr/local/include
+export LDFLAGS=-I/usr/local/include
+
 start_precmd=${name}_precmd
 homeassistant_precmd() {
     rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${homeassistant_venv}/bin/hass --config ${homeassistant_config_dir} ${rc_flags}"
