@@ -108,19 +108,28 @@ homeassistant_restart() {
 
 test_cmd="${name}_test"
 homeassistant_test() {
-    echo -e "\nTesting virtualenv...\n"
-    [ ! -d "${homeassistant_venv}" ] && echo -e " NO DIRECTORY: ${homeassistant_venv}\n" && exit
-    [ ! -f "${homeassistant_venv}/bin/activate" ] && echo -e " NO FILE: ${homeassistant_venv}/bin/activate\n" && exit
-
+    echo -e "\nChecking Service\n"
+    ## Check for venv directory
+    [ ! -d "${homeassistant_venv}" ] \
+    && { echo -e " NO DIRECTORY: ${homeassistant_venv}\n"; exit; }
+    ## Check for activate script
+    [ ! -f "${homeassistant_venv}/bin/activate" ] \
+    && { echo -e " NO FILE: ${homeassistant_venv}/bin/activate\n"; exit; }
     ## Switch users / activate virtualenv / run a command
     su "${homeassistant_user}" -c '
-      source ${1}/bin/activate || exit 2
-      echo " $(python --version)" || exit 3
-      echo " Home Assistant $(pip3 show homeassistant | grep Version | cut -d" " -f2)" || exit 4
+      #[ -f ${HOME}/.profile ] && source ${HOME}/.profile
+      source ${1}/bin/activate || exit 20
+      ## Some checks for openssl111
+      echo " Using $(openssl version)"
+      echo " CFLAGS = ${CFLAGS}"
+      echo -e " LDFLAGS = ${LDFLAGS}\n"
+      ## Check versions of python and homeassistant
+      echo " $(python --version)" || exit 21
+      echo " Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)" || exit 22
+      echo
       deactivate
-    ' _ ${homeassistant_venv}
-
-    [ $? != 0 ] && echo "exit $?"
+    ' _ ${homeassistant_venv} || { echo ${?}; exit; }
+     [ $? != 0 ] && echo "exit ${?}"
 }
 
 load_rc_config ${name}
