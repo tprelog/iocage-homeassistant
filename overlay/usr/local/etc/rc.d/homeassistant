@@ -71,7 +71,7 @@ homeassistant_poststart() {
   run_rc_command status
 }
 
-stop_postcmd=${name}poststop
+stop_postcmd=${name}_poststop
 homeassistant_poststop() {
     rm -f -- "${pidfile}"
     rm -f -- "${pidfile_child}"
