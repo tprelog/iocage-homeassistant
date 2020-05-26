@@ -47,7 +47,7 @@ logfile="/var/log/${name}_daemon.log"
 : ${homeassistant_venv:="/srv/homeassistant"}
 
 command="/usr/sbin/daemon"
-extra_commands="check_config restart test upgrade"
+extra_commands="check_config reinstall restart test upgrade"
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:~/bin
 export CFLAGS=-I/usr/local/include
@@ -97,6 +97,31 @@ homeassistant_check_config() {
       hass --config ${2} --script check_config
       deactivate
     ' _ ${homeassistant_venv} ${homeassistant_config_dir}
+}
+
+reinstall_cmd="${name}_reinstall ${@}"
+homeassistant_reinstall() {
+    run_rc_command stop
+    su ${homeassistant_user} -c '
+      [ -d ${HOME}/.cache ] && rm -rf -- ${HOME}/.cache
+      source ${1}/bin/activate || exit 3
+        ## Try to get currently installed version
+        _ver=$(pip show homeassistant | grep Version | cut -d" " -f2)
+        ## If version is not set, default to "upgrade"
+        [ ! -z ${_ver} ] || _ver=upgrade
+        ## If provided, set a version from the argument
+        [ ! -z ${2} ] && _ver="${2}"
+        ## Reinstall Home Assistant Core
+        if [ "${_ver}" == "upgrade" ]; then
+          echo -e "\nReinstalling with latest version\n"
+          pip install --force-reinstall homeassistant || exit 2
+        else
+          echo -e "\nReinstalling with version: ${_ver}\n"
+          pip install --force-reinstall homeassistant=="${_ver}" || exit 2
+        fi
+      deactivate
+    ' _ ${homeassistant_venv} ${2} || exit ${?}
+    [ ${?} == 0 ] && run_rc_command check_config && run_rc_command start
 }
 
 restart_cmd="${name}_restart"
