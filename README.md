@@ -3,10 +3,12 @@ Artifact file(s) for [Home Assistant Core][1] (python virtualenv)
 
 ### This is a [FreeNAS Community Plugin][2]
 
+
 **The current release is intended for FreeNAS 11.3 but should work with FreeNAS 11.2-U7 or later**
 
 - This will create an 11.3-RELEASE iocage-jail for [Home Assistant Core][1]
 - Includes options to create and install separate python virtualenvs for the following
+
 
 NAME | SERVICE | VIRTUALENV | PORT | USER | CONFIG DIR
 :---: | :---: | :---: | :---: | :---: | :---: |
@@ -17,7 +19,11 @@ NAME | SERVICE | VIRTUALENV | PORT | USER | CONFIG DIR
 
 **The FreeNAS Community Plugin [provides this basic configuration][config] to help get started**
 
----
+**Home Assistant Community Guide**
+- [Home Assistant Core -- FreeNAS Community Plugin][ha_forum_qs]
+
+**You may find some additional information in the [project wiki](https://github.com/tprelog/iocage-homeassistant/wiki)**
+
 
 ## Installation
 
@@ -25,40 +31,7 @@ NAME | SERVICE | VIRTUALENV | PORT | USER | CONFIG DIR
 
 ![img][FreeNAS_plugins]
 
----
 
-**FreeNAS 11.2-U7**
-<details><summary>Click Here</summary>
-<p>
-
-##### plugin-jail
-
-*The 11.3-RELEASE should work on FreeNAS 11.2-U7 or later*
-
-It is possible to install this plugin on FreeNAS 11.2-U7 using the console.
-
-```bash
-wget -O /tmp/homeassistant.json https://raw.githubusercontent.com/tprelog/freenas-plugin-index/11.3-RELEASE/homeassistant.json
-iocage fetch -P dhcp=on vnet=on vnet_default_interface=auto bpf=yes boot=on -n /tmp/homeassistant.json --branch 11.3-RELEASE
-```
-
-</p>
-</details>
-
----
-
-**You might find some additional information in the [project wiki](https://github.com/tprelog/iocage-homeassistant/wiki)**
-
----
-
-**Home Assistant Community Forum**
-- [Home Assistant Core -- FreeNAS Community Plugin][ha_forum_qs]
-
----
-
-##### Using USB Z-Wave and Zigbee controllers
-
-To directly access devices like the Aeotec Gen-5 USB Stick, Nortek HUSZB-1 or similar USB controllers inside an iocage-jail, you will need to use a custom devfs_ruleset. Before a jail can use the custom ruleset, it must first be created on the FreeNAS host. These steps can be found [HERE][ruleset_wiki]
 
 ---
 
