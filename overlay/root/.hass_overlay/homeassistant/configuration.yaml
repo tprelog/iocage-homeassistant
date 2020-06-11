@@ -12,6 +12,10 @@ http:
   ip_ban_enabled: False
   login_attempts_threshold: 5
 
+# https://www.home-assistant.io/integrations/logger/
+logger:
+  default: info
+
 ## Configure a default setup of Home Assistant Core (frontend, api, etc)
 # https://www.home-assistant.io/integrations/default_config
 default_config:

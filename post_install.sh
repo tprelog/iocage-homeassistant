@@ -79,9 +79,10 @@ install_service() {
     
     if [ ${3} = "homeassistant" ]; then
       ## Install Home Assistant Core
-      pip install wheel
-      pip install colorlog SQLAlchemy homeassistant
-      
+      pip install wheel colorlog packaging SQLAlchemy
+      pip install  homeassistant
+      hass --config /home/hass/homeassistant --script check_config
+
     elif [ ${3} = "appdaemon" ]; then
       ## Install appdaemon
       pip3 install astral==1.10
