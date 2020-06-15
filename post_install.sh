@@ -178,7 +178,7 @@ cp_config() {
       if [ -f "${yaml}" ]; then
         sed -e "s/#panel_iframe:/panel_iframe:/
           s/#configurator:/configurator:/
-          s/#title: Configurator/title: Configurator/
+          s/#title: File Editor/title: File Editor/
           s/#icon: mdi:wrench/icon: mdi:wrench/
           s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
