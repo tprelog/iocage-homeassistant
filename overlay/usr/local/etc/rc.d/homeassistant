@@ -49,9 +49,9 @@ logfile="/var/log/${name}_daemon.log"
 command="/usr/sbin/daemon"
 extra_commands="check_config reinstall restart test upgrade"
 
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:~/bin
-export CFLAGS=-I/usr/local/include
-export LDFLAGS=-I/usr/local/include
+export PATH=/usr/local/sbin:/usr/local/bin:${PATH}
+export CPATH=/usr/local/include
+export LIBRARY_PATH=/usr/local/lib
 
 start_precmd=${name}_precmd
 homeassistant_precmd() {
@@ -146,8 +146,8 @@ homeassistant_test() {
       source ${1}/bin/activate || exit 20
       ## Some checks for openssl111
       echo " Using $(openssl version)"
-      echo " CFLAGS = ${CFLAGS}"
-      echo -e " LDFLAGS = ${LDFLAGS}\n"
+      echo " CPATH = ${CPATH}"
+      echo -e " LIBRARY_PATH = ${LIBRARY_PATH}\n"
       ## Check versions of python and homeassistant
       echo " $(python --version)" || exit 21
       echo " Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)" || exit 22

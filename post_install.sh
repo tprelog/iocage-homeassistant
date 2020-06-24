@@ -46,8 +46,8 @@ add_user () {
   ## NOTE: These (indented) "here-doc" lines must begin with a `tab` in order to "function" correctly
   cat > /home/${v2srv_user}/.profile <<-ENTRY
 	export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:~/bin
-	export CFLAGS=-I/usr/local/include
-	export LDFLAGS=-I/usr/local/include
+	export CPATH=/usr/local/include
+	export LIBRARY_PATH=/usr/local/lib
 	
 	ENTRY
   chown ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/.profile
