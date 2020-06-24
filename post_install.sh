@@ -24,8 +24,8 @@ first_run () {
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
   
   ## Start the console menu upon login
-  echo -e "\n# Start hassbsd (console menu) after login." >> /root/.login
-  echo "if ( -x /root/bin/hassbsd ) hassbsd" >> /root/.login
+  echo -e "\n# Start console menu after login." >> /root/.login
+  echo "if ( -x /root/bin/menu ) menu" >> /root/.login
   
   add_user
   v2srv=homeassistant
@@ -75,22 +75,20 @@ install_service() {
   
     ${1} -m venv ${2}
     source ${2}/bin/activate || exit 1
-    pip install --upgrade pip
+    pip install --upgrade pip wheel
     
     if [ ${3} = "homeassistant" ]; then
       ## Install Home Assistant Core
-      pip install wheel colorlog packaging SQLAlchemy
       pip install  homeassistant
       hass --config /home/hass/homeassistant --script check_config
 
     elif [ ${3} = "appdaemon" ]; then
       ## Install appdaemon
-      pip3 install astral==1.10
-      pip3 install --upgrade ${3}
+      pip install appdaemon
       
     elif [ ${3} = "configurator" ]; then
       ## Install Hass Configurator
-      pip3 install --upgrade hass-configurator
+      pip install hass-configurator
     
     elif [ ${3} = "esphome" ]; then
       ## Install esphome
@@ -123,7 +121,7 @@ cp_overlay() {
   ln -s ${0} /root/bin/update
   ln -s ${0} /root/post_install.sh
   ln -s ${plugin_overlay}/root/.hass_overlay /root/.hass_overlay
-  ln -s ${plugin_overlay}/root/bin/hassbsd /root/bin/hassbsd
+  ln -s ${plugin_overlay}/root/bin/menu /root/bin/menu
   
   mkdir -p /usr/local/etc/rc.d
   mkdir -p /usr/local/etc/sudoers.d
