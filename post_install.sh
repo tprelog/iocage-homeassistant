@@ -9,7 +9,7 @@ v2srv_uid=8123      # Changing this is not tested but should be OK
 v2env=/srv          # Changing this is not tested
 
 pkglist=/root/pkg_extra
-python=python3.7
+python=python3.8
 
 v2srv_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
 plugin_overlay="/root/.iocage-homeassistant/overlay"   # Used for `post_install.sh standard`
@@ -46,8 +46,8 @@ add_user () {
   ## NOTE: These (indented) "here-doc" lines must begin with a `tab` in order to "function" correctly
   cat > /home/${v2srv_user}/.profile <<-ENTRY
 	export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:~/bin
-	export CPATH=/usr/local/include
-	export LIBRARY_PATH=/usr/local/lib
+	#export CPATH=/usr/local/include
+	#export LIBRARY_PATH=/usr/local/lib
 	
 	ENTRY
   chown ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/.profile
@@ -58,15 +58,24 @@ add_user () {
 }
 
 install_service() {
-  d="${v2env}/${v2srv}"
-  p=$(which ${python})
+  local _venv_="${v2env}/${v2srv}"
+  local _python_=$(which ${python})
   
-  if [ ! -d ${d} ]; then
-    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${d} || exit
-  elif [ ! -z "$(ls -A ${d})" ]; then  
+  if [ ! -d ${_venv_} ]; then
+    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${_venv_} || exit
+  elif [ ! -z "$(ls -A ${_venv_})" ]; then  
     echo -e "${red}\nvirtualenv directory found and it's not empty!\n${orn} Is ${v2srv} already installed?"
-    echo -e " You can remove ${d} and try again${end}\n"
+    echo -e " You can remove ${_venv_} and try again${end}\n"
     exit
+  fi
+  
+  if [ "${v2srv}" == "homeassistant" ]; then
+    ## Temporary patch to use V3 rc service
+    sysrc homeassistant_python="${_python_}"
+    sysrc homeassistant_venv="${_venv_}"
+    sysrc homeassistant_user="${v2srv_user}"
+    sysrc homeassistant_config_dir="/home/${v2srv_user}/homeassistant"
+    sysrc homeassistant_backup_dir="/home/${v2srv_user}/backups"
   fi
   
   su ${v2srv_user} -c '
@@ -106,7 +115,7 @@ install_service() {
       pip3 install --upgrade ${3}
     fi
     deactivate
-  ' _ ${p} ${d} ${v2srv} && enableStart_v2srv
+  ' _ ${_python_} ${_venv_} ${v2srv} && enableStart_v2srv
 }
 
 enableStart_v2srv () {
