@@ -90,17 +90,17 @@ install_service() {
       ## Install Hass Configurator
       pip install hass-configurator
     
-    elif [ ${3} = "esphome" ]; then
-      ## Install esphome
-      pip3 install --upgrade ${3}
-      
-      ## Download and install extra files needed for esp32 support on *BSD
-      ## Thanks @CyanoFresh for figuring this out! (link below)
-      ## https://github.com/tprelog/iocage-homeassistant/issues/5#issuecomment-573179387
-      pkg=toolchain-xtensa32-FreeBSD.11.amd64-2.50200.80.tar.gz
-      wget -O /tmp/${pkg} https://github.com/trombik/toolchain-xtensa32/releases/download/0.2.0/${pkg}
-      mkdir -p ~/esphome/.platformio/packages/toolchain-xtensa32
-      tar -x -C ~/esphome/.platformio/packages/toolchain-xtensa32 -f /tmp/${pkg}
+#     elif [ ${3} = "esphome" ]; then
+#       ## Install esphome
+#       pip3 install --upgrade ${3}
+#       
+#       ## Download and install extra files needed for esp32 support on *BSD
+#       ## Thanks @CyanoFresh for figuring this out! (link below)
+#       ## https://github.com/tprelog/iocage-homeassistant/issues/5#issuecomment-573179387
+#       pkg=toolchain-xtensa32-FreeBSD.11.amd64-2.50200.80.tar.gz
+#       wget -O /tmp/${pkg} https://github.com/trombik/toolchain-xtensa32/releases/download/0.2.0/${pkg}
+#       mkdir -p ~/esphome/.platformio/packages/toolchain-xtensa32
+#       tar -x -C ~/esphome/.platformio/packages/toolchain-xtensa32 -f /tmp/${pkg}
       
     else
       pip3 install --upgrade ${3}
@@ -206,12 +206,12 @@ cp_config() {
       fi
     ;;
     
-    ## ESPHome
-    "esphome")
-      ## This is a workaround to avoid "/.platformio" permission errors
-      install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/esphome/.platformio
-      install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/esphome/.platformio /.platformio
-    ;;
+#     ## ESPHome
+#     "esphome")
+#       ## This is a workaround to avoid "/.platformio" permission errors
+#       install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/esphome/.platformio
+#       install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/esphome/.platformio /.platformio
+#     ;;
     
   esac
 }
@@ -271,16 +271,16 @@ if [ "${ctrl}" = "post_install" ]; then
     echo -e "\n ${grn}http://${v2srv_ip}:5050${end}\n"
     echo -e "You may need to restart Home Assistant for all changes to take effect\n"
     
-  elif [ "${1}" = "esphome" ]; then
-  # This should have some basic testing. Start by determining if the directory
-  # already exist then figure how to proceed. For now this will show a message and exit.
-    pkg install -y gcc wget || exit
-    v2srv=esphome
-    cp_config ${v2srv}
-    install_service && echo; service ${v2srv} status && \
-    ln -s /srv/esphome/bin/esphome /usr/local/bin/esphome && \
-    echo -e "\n ${grn}http://${v2srv_ip}:6052${end}\n"
-    echo -e "You may need to restart Home Assistant for all changes to take effect\n"
+#   elif [ "${1}" = "esphome" ]; then
+#   # This should have some basic testing. Start by determining if the directory
+#   # already exist then figure how to proceed. For now this will show a message and exit.
+#     pkg install -y gcc wget || exit
+#     v2srv=esphome
+#     cp_config ${v2srv}
+#     install_service && echo; service ${v2srv} status && \
+#     ln -s /srv/esphome/bin/esphome /usr/local/bin/esphome && \
+#     echo -e "\n ${grn}http://${v2srv_ip}:6052${end}\n"
+#     echo -e "You may need to restart Home Assistant for all changes to take effect\n"
     
   elif [ "${1}" = "hacs" ]; then
   # This should just download the latest version of HACS and extract it to 'homeassistant/custom_components/'

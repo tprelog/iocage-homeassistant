@@ -51,7 +51,14 @@ if [ "${_plugin_ver}" == "0.0.0" ]; then
       && mv /root/.loginTemp /root/.login && rm -f "/root/bin/hassbsd"
     fi
   }
+  disable_esphome_menu () {
+    ## ESPHome has been moved to a seperate FreeNAS plugin. 
+    ## The console menu is no longer available for this service
+    sysrc -x esphome_menu 2>/dev/null
+    return 0
+  }
   echo -e "\nRunning pre-update functions for version 0.0.0"
+  disable_esphome_menu; echo " disable_esphome_menu: $?"
   update_post_install; echo " update_post_install: $?"
   update_compile_linking; echo " update_compile_linking: $?"
   rename_console_menu; echo " rename_console_menu: $?"
