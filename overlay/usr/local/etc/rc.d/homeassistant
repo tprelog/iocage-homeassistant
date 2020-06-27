@@ -46,12 +46,14 @@ logfile="/var/log/${name}_daemon.log"
 : ${homeassistant_config_dir:="/home/hass/homeassistant"}
 : ${homeassistant_venv:="/srv/homeassistant"}
 
+export PATH=/usr/local/sbin:/usr/local/bin:${PATH}
+
+_ssl_from=`sysrc -n homeassistant_openssl 2>/dev/null`
+[ ${_ssl_from:="base"} == "package" ] \
+&& { export CPATH=/usr/local/include; export LIBRARY_PATH=/usr/local/lib; }
+
 command="/usr/sbin/daemon"
 extra_commands="check_config reinstall restart test upgrade"
-
-export PATH=/usr/local/sbin:/usr/local/bin:${PATH}
-export CPATH=/usr/local/include
-export LIBRARY_PATH=/usr/local/lib
 
 start_precmd=${name}_precmd
 homeassistant_precmd() {

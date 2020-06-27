@@ -57,11 +57,22 @@ if [ "${_plugin_ver}" == "0.0.0" ]; then
     sysrc -x esphome_menu 2>/dev/null
     return 0
   }
+  check_openssl () {
+      ## Assume to keep using package version of openssl, if it's already installed
+      ## Manual intervention will be required if you are not using 
+      ## HomeKit and you want to fix Z-Wave. ( Sorrry for the inconvenience )
+    if [ -f "/usr/local/bin/openssl" ]; then
+      sysrc homeassistant_openssl="package"
+      return 3
+    fi
+    return 0
+  }
   echo -e "\nRunning pre-update functions for version 0.0.0"
   disable_esphome_menu; echo " disable_esphome_menu: $?"
   update_post_install; echo " update_post_install: $?"
   update_compile_linking; echo " update_compile_linking: $?"
   rename_console_menu; echo " rename_console_menu: $?"
+  check_openssl; echo " check_openssl: $?"
 fi
 
 

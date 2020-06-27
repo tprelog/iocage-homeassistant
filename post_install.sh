@@ -18,7 +18,19 @@ script="${0}"
 ctrl="$(basename "${0}" .sh)"
 
 first_run () {
+  ## Effective immediately, this should remove openssl if it is still in the plugin manifest.
+  ## The current solution to use openssl from pkgs, in the 11.3-RELEASE, breaks Z-Wave for everyone.
+  ## For this reason, the updated openssl should no longer be included by default in this plugin. 
+  if [ -f "/usr/local/bin/openssl" ]; then
+    local _plugin_ver=0.3b.pr2
+    pkg delete -y openssl
+  else
+    local plugin_ver=0.3b.pr3
+  fi
   
+  sysrc plugin_version="${_plugin_ver}"
+  sysrc plugin_ini="${_plugin_ver}_$(date +%y%m%d)"
+
   ## It can be helpful to allow group write permission when the config is shared over a network
   ## Set `umask 2` so the Home Assistant service will create files with group write permission
   sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
@@ -41,16 +53,16 @@ add_user () {
   ## Add user
   pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer
   
-  ## Create a `.profile` and set some variables to make Home Assistant use openssl-1.1.1
-  ## https://github.com/tprelog/iocage-homeassistant/issues/14#issuecomment-633141287
-  ## NOTE: These (indented) "here-doc" lines must begin with a `tab` in order to "function" correctly
-  cat > /home/${v2srv_user}/.profile <<-ENTRY
-	export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:~/bin
-	export CPATH=/usr/local/include
-	export LIBRARY_PATH=/usr/local/lib
-	
-	ENTRY
-  chown ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/.profile
+#  ## Create a `.profile` and set some variables to make Home Assistant use openssl-1.1.1
+#  ## https://github.com/tprelog/iocage-homeassistant/issues/14#issuecomment-633141287
+#  ## NOTE: These (indented) "here-doc" lines must begin with a `tab` in order to "function" correctly
+#  cat > /home/${v2srv_user}/.profile <<-ENTRY
+#	export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:~/bin
+#	export CPATH=/usr/local/include
+#	export LIBRARY_PATH=/usr/local/lib
+#	
+#	ENTRY
+#  chown ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/.profile
   
   ## This is a workaround to hopefully avoid pip related "/.cache" permission errors
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
