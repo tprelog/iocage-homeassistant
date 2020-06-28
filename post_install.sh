@@ -104,7 +104,7 @@ cp_overlay() {
   mkdir -p /root/bin
   ln -s ${0} /root/bin/update
   ln -s ${0} /root/post_install.sh
-  ln -s ${plugin_overlay}/root/.hass_overlay /root/.hass_overlay
+  ln -s ${plugin_overlay}/usr/local/etc/plugin/sample_config/ /usr/local/etc/plugin/sample_config/
   ln -s ${plugin_overlay}/root/bin/menu /root/bin/menu
   
   mkdir -p /usr/local/etc/rc.d
@@ -121,7 +121,7 @@ cp_config() {
   ## These files should be modified or replaced by end users
   
   v2srv=$1
-  hass_overlay="/root/.hass_overlay"
+  hass_overlay="/usr/local/etc/plugin/sample_config/"
   ha_confd="/home/${v2srv_user}/homeassistant"
   
   # yaml = file containing plugin provided panel_iframes
