@@ -40,17 +40,6 @@ add_user () {
   ## Add user
   pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer
   
-  ## Create a `.profile` and set some variables to make Home Assistant use openssl-1.1.1
-  ## https://github.com/tprelog/iocage-homeassistant/issues/14#issuecomment-633141287
-  ## NOTE: These (indented) "here-doc" lines must begin with a `tab` in order to "function" correctly
-  cat > /home/${v2srv_user}/.profile <<-ENTRY
-	export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:~/bin
-	#export CPATH=/usr/local/include
-	#export LIBRARY_PATH=/usr/local/lib
-	
-	ENTRY
-  chown ${v2srv_user}:${v2srv_user} /home/${v2srv_user}/.profile
-  
   ## This is a workaround to hopefully avoid pip related "/.cache" permission errors
   install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
   install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/.cache /.cache
@@ -94,24 +83,11 @@ install_service() {
       ## Install appdaemon
       pip install appdaemon
       
-    elif [ ${3} = "configurator" ]; then
+    else
+      [ ${3} = "configurator" ]; then
       ## Install Hass Configurator
       pip install hass-configurator
-    
-#     elif [ ${3} = "esphome" ]; then
-#       ## Install esphome
-#       pip3 install --upgrade ${3}
-#       
-#       ## Download and install extra files needed for esp32 support on *BSD
-#       ## Thanks @CyanoFresh for figuring this out! (link below)
-#       ## https://github.com/tprelog/iocage-homeassistant/issues/5#issuecomment-573179387
-#       pkg=toolchain-xtensa32-FreeBSD.11.amd64-2.50200.80.tar.gz
-#       wget -O /tmp/${pkg} https://github.com/trombik/toolchain-xtensa32/releases/download/0.2.0/${pkg}
-#       mkdir -p ~/esphome/.platformio/packages/toolchain-xtensa32
-#       tar -x -C ~/esphome/.platformio/packages/toolchain-xtensa32 -f /tmp/${pkg}
-      
-    else
-      pip3 install --upgrade ${3}
+
     fi
     deactivate
   ' _ ${_python_} ${_venv_} ${v2srv} && enableStart_v2srv
@@ -214,13 +190,6 @@ cp_config() {
       fi
     ;;
     
-#     ## ESPHome
-#     "esphome")
-#       ## This is a workaround to avoid "/.platformio" permission errors
-#       install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/esphome/.platformio
-#       install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/esphome/.platformio /.platformio
-#     ;;
-    
   esac
 }
 
@@ -276,17 +245,6 @@ if [ "${ctrl}" = "post_install" ]; then
     install_service && echo; service ${v2srv} status && \
     echo -e "\n ${grn}http://${v2srv_ip}:5050${end}\n"
     echo -e "You may need to restart Home Assistant for all changes to take effect\n"
-    
-#   elif [ "${1}" = "esphome" ]; then
-#   # This should have some basic testing. Start by determining if the directory
-#   # already exist then figure how to proceed. For now this will show a message and exit.
-#     pkg install -y gcc wget || exit
-#     v2srv=esphome
-#     cp_config ${v2srv}
-#     install_service && echo; service ${v2srv} status && \
-#     ln -s /srv/esphome/bin/esphome /usr/local/bin/esphome && \
-#     echo -e "\n ${grn}http://${v2srv_ip}:6052${end}\n"
-#     echo -e "You may need to restart Home Assistant for all changes to take effect\n"
     
   elif [ "${1}" = "hacs" ]; then
   # This should just download the latest version of HACS and extract it to 'homeassistant/custom_components/'
