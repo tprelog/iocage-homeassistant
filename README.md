@@ -1,21 +1,13 @@
 # iocage-homeassistant
-Artifact file(s) for [Home Assistant Core][1] (python virtualenv)
+Artifact file(s) for [Home Assistant Core][1] (Python Virtualenv)
 
-### This is a [FreeNAS Community Plugin][2]
-
-
-**The current release is intended for FreeNAS 11.3 but should work with FreeNAS 11.2-U7 or later**
-
-- This will create an 11.3-RELEASE iocage-jail for [Home Assistant Core][1]
-- Includes options to create and install separate python virtualenvs for the following
+### This is a FreeNAS / TrueNAS Core Community Plugin
 
 
-NAME | SERVICE | VIRTUALENV | PORT | USER | CONFIG DIR
-:---: | :---: | :---: | :---: | :---: | :---: |
-[Home Assistant Core][1] |homeassistant | /srv/homeassistant | 8123 | hass | /home/hass/homeassistant
-[Hass Configurator][HC] | configurator | /srv/configurator | 3218 | hass | /home/hass/configurator
-[AppDaemon][AD] | appdaemon | /srv/appdaemon |  5050  | hass | /home/hass/appdaemon
-[HA Dashboard][HD] | appdaemon | /srv/appdaemon | ^^^^ | hass | /home/hass/appdaemon
+**This release is intended for TrueNAS Core 12**
+
+- This plugin will create a 12.1-RELEASE iocage jail and install [Home Assistant Core][1] using a Pyton Virtualenv
+- Includes option to install the [Hass Configurator](https://github.com/danielperna84/hass-configurator#hass-configurator) ( :wrench: File Editor) in a separate Python Virtualenv
 
 **The FreeNAS Community Plugin [provides this basic configuration][config] to help get started**
 
@@ -27,7 +19,7 @@ NAME | SERVICE | VIRTUALENV | PORT | USER | CONFIG DIR
 
 ## Installation
 
-**Home Assistant Core is available from the Community Plugins page on FreeNAS 11.3**
+**Home Assistant Core is available from the Community Plugins page on FreeNAS and TrueNAS Core**
 
 ![img][FreeNAS_plugins]
 
@@ -35,20 +27,18 @@ NAME | SERVICE | VIRTUALENV | PORT | USER | CONFIG DIR
 
 ---
 
-###### Current artifact files can be found in the [11.3-RELEASE branch][4]
+###### Current artifact files can be found in the [12.1-RELEASE branch][4]
 
 [ha_forum_qs]: https://community.home-assistant.io/t/home-assistant-core-freenas-community-plugin/170542?u=troy
-[FreeNAS_plugins]: _img/FreeNAS_homeassistant.png
+[FreeNAS_plugins]: _img/TrueNAS_homeassistant.png
 
 [1]: https://homeassistant.io/
 [2]: https://www.freenas.org/plugins/
 [3]: https://github.com/tprelog/freenas-plugin-index
-[4]: https://github.com/tprelog/iocage-homeassistant/tree/11.3-RELEASE
+[4]: https://github.com/tprelog/iocage-homeassistant/tree/12.1-RELEASE
 
 
-[HC]: https://www.home-assistant.io/docs/ecosystem/hass-configurator/
-[AD]: https://www.home-assistant.io/docs/ecosystem/appdaemon/
-[HD]: https://www.home-assistant.io/docs/ecosystem/hadashboard/
+[HC]: https://github.com/danielperna84/hass-configurator#hass-configurator
 
 [github_pages]: https://tprelog.github.io/iocage-homeassistant/
 [ruleset]: https://tprelog.github.io/iocage-homeassistant/custom_ruleset.html
