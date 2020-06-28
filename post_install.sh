@@ -4,6 +4,11 @@
   # git clone -b 12.1-RELEASE https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
   # bash /root/.iocage-homeassistant/post_install.sh standard
 
+_plugin_ver=v.3b.pr4
+
+sysrc plugin="${_plugin_ver}"
+sysrc plugin_ini="${_plugin_ver}_$(date +%y%m%d)"
+
 v2srv_user=hass     # Changing this is not tested
 v2srv_uid=8123
 v2env=/usr/local/srv
