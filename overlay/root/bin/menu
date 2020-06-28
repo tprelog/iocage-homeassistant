@@ -1,41 +1,16 @@
 #!/usr/bin/env bash
 
-## HASS-HELPER
-
-# A menu driven shell script hacked together from internet samples and other shit.
+## Console menu for the Home Assistant Core FreeNAS / TrueNAS Core Community plugins
+## A menu driven shell script hacked together from internet samples and other shit.
 
 ## ----------------------------------
 # Step #1: Define variables
 # ----------------------------------
 
-EDITOR=ee
-PASSWD=/etc/passwd
 RED='\033[0;41;30m'
 STD='\033[0;0;39m'
 
-
 main_menu="0"
-
-# ## Enable ESPHome if this $var set to anything
-# sysrc esphome_menu 2>/dev/null
-# if [ $? == 0 ]; then main_menu="esp0"; fi
-
-#  virtualenv_service:
-#     Application installed in a virtualenv and
-#     running as a service (using sysrc scripts)
-
-# Directory containing virtualenvs
-SRV_DIR=/srv
-
-# The application installed inside a virtualenv
-#SRV_APP = [ homeassistant | hass-configurator | appdaemon ]
-
-# _id=8123      # Set '_uid' and '_gid'
-# _uid="${_id}" # user id
-# _gid="${_id}" # group id
-
-# _user=hass    # user name
-# _group=hass   # group name
 
 # ----------------------------------
 # Step #2: User defined function
@@ -165,57 +140,6 @@ service_menu() {
   done
 }
 
-
-show_menu_1() {
-
-  local _extra_actions
-  local _zwave_key
-  
-  _extra_actions="install-HACS zip-hass-home generate-zwave-key"
-  PS3=""$'\n'"${blu}Select: ${end}"
-  echo
-  select _action in "Main Menu" "Show Colors" ${_extra_actions}; do
-    case "${_action}" in
-      "Main Menu")
-        m_true="N"
-        break
-        ;;
-      "Show Colors")
-        show_colors
-        pause
-        break
-        ;;
-      "install-HACS")
-        /root/post_install.sh hacs
-        pause
-        break
-        ;;
-      "generate-zwave-key")
-        # Blah...
-        echo -e "\n ${red}sed${end}\n"
-        su - hass -c '
-          echo $(cat /dev/urandom | tr -dc '0-9A-F' | fold -w 32 | head -n 1 | sed -e 's/\(..\)/0x\1, /g')
-        ' # Mind the (') there
-        pause
-        break
-        ;;
-      "zip-hass-home")
-        echo -e "\n${orn}Creating zip. This can take a few minutes to complete...\n"
-        su - hass -c '
-          zip -9 -q -r /tmp/hass-backup.temp /home/hass/ -x"*/components/*" -x"*/deps/*" -x"*/home-assistant.log" -x"*/.cache/*" -x"*/__pycache__*/"
-        '  # Mind the (') there
-        [ ! -d /root/.hass_backups ] && mkdir /root/.hass_backups
-        [ -f /tmp/hass-backup.temp ] && mv /tmp/hass-backup.temp /root/.hass_backups/hass_$(date +%F_%T).zip \
-        && echo -e "\n${grn} Created backup in /root/.hass_backups/"
-        echo ${end}
-        pause
-        break
-        ;;
-    esac
-  done
-}
-
-
 show_menu_0() {
 # clear --> moved to show_banner
   echo " 1) Home Assistant"
@@ -254,13 +178,6 @@ read_options(){
       while [ ${m_true} == "Y" ]; do
         show_banner_3
         service_menu appdaemon
-      done
-      ;;
-    "phoenix") # Shit for me
-      m_true="Y"
-      while [ ${m_true} == "Y" ]; do
-        show_banner_0
-        show_menu_1
       done
       ;;
     "watch ha") # Shit for me
