@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
-  # pkg install autoconf bash ca_root_nss git-lite gmake openssl pkgconf python37 py37-sqlite3
-  # git clone -b 11.3-RELEASE https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
+  # pkg install autoconf bash ca_root_nss git-lite gmake pkgconf python38 py38-sqlite3 wget zip
+  # git clone -b 12.1-RELEASE https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
   # bash /root/.iocage-homeassistant/post_install.sh standard
 
 v2srv_user=hass     # Changing this is not tested
 v2srv_uid=8123      # Changing this is not tested but should be OK
 v2env=/srv          # Changing this is not tested
 
-pkglist=/root/pkg_extra
 python=python3.8
 
 v2srv_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
@@ -251,8 +250,7 @@ if [ "${ctrl}" = "post_install" ]; then
   if [ -z "${1}" ]; then
     # Install Home Assistant in a plugin-jail
     first_run
-    echo -e "\n Initial startup can take 5-10 minutes before Home Assistant is reachable."
-    echo "Initial startup can take 5-10 minutes before Home Assistant is reachable." > /root/PLUGIN_INFO
+    echo "Have Fun!" > /root/PLUGIN_INFO
     
   elif [ "${1}" = "standard" ]; then
     # Install Home Assistant in a standard-jail
@@ -260,7 +258,6 @@ if [ "${ctrl}" = "post_install" ]; then
     first_run || exit 1
     service ${v2srv} status && \
     echo -e "\n ${grn}http://${v2srv_ip}:8123${end}\n"
-    echo -e "${red}Initial startup can take 5-10 minutes before Home Assistant is reachable${end}\n"
     
   elif [ "${1}" = "hass-configurator" ] || [ "${1}" = "configurator" ]; then
   # This should have some basic testing. Start by determining if the directory
