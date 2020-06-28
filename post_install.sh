@@ -5,8 +5,8 @@
   # bash /root/.iocage-homeassistant/post_install.sh standard
 
 v2srv_user=hass     # Changing this is not tested
-v2srv_uid=8123      # Changing this is not tested but should be OK
-v2env=/srv          # Changing this is not tested
+v2srv_uid=8123
+v2env=/usr/local/srv
 
 python=python3.8
 
