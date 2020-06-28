@@ -83,8 +83,7 @@ install_service() {
       ## Install appdaemon
       pip install appdaemon
       
-    else
-      [ ${3} = "configurator" ]; then
+    elif [ ${3} = "configurator" ]; then
       ## Install Hass Configurator
       pip install hass-configurator
 
