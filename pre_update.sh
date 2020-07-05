@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 
-## Start using some versions for the plugin
-## If no version is assigned we start from zero
-_plugin_ver="$(sysrc -n plugin_ver 2>/dev/null)"
-if [ -z "${_plugin_ver}" ]; then
+## Check for a version and be sure it's assigned to plugin_ver
+## If no version is assigned start from zero
+if [ ! -z $(sysrc -n plugin 2>/dev/null) ]; then
+  _plugin_ver=$(sysrc -n plugin)
+  sysrc plugin_ver=${_plugin_ver}
+  sysrc -x plugin
+elif [ ! -z $(sysrc -n plugin_version 2>/dev/null) ]; then
+  _plugin_ver=$(sysrc -n plugin_version)
+  sysrc plugin_ver=${_plugin_ver}
+  sysrc -x plugin_version
+elif [ ! -z $(sysrc -n plugin_ver 2>/dev/null) ]; then
+  _plugin_ver=$(sysrc -n plugin_ver)
+else
   _plugin_ver="0.0.0"
   sysrc plugin_ver="${_plugin_ver}"
 fi
+
 sysrc plugin_ini 2>/dev/null \
 || sysrc plugin_ini="${_plugin_ver}_$(date +%y%m%d)"
 
@@ -17,7 +27,6 @@ if [ "${_plugin_ver}" == "0.0.0" ]; then
     ## Future versions of this plugin should not require any updates to `post_install.sh` after installation
     wget -q -O /root/post_install.sh https://raw.githubusercontent.com/tprelog/iocage-homeassistant/master/post_install.sh \
     && chmod +x /root/post_install.sh || return 1
-    return 0
   }
   update_compile_linking() {
     ## https://homepages.inf.ed.ac.uk/imurray2/compnotes/library_linking.txt
@@ -27,10 +36,12 @@ if [ "${_plugin_ver}" == "0.0.0" ]; then
       _user_="hass"
     fi
     local _profile_="/home/${_user_}/.profile"
-    sed -e "s%export LDFLAGS=-I/usr/local/include%export LIBRARY_PATH=/usr/local/lib%
-            s%export CFLAGS=-I/usr/local/include%export CPATH=/usr/local/include%" "${_profile_}" > "${_profile_}.temp" \
-    && mv "${_profile_}.temp" "${_profile_}" || return 1
-    chown "${_user_}" "${_profile_}" && return 0 || return 2
+    if [ -f "${_profile_}" ]; then
+      sed -e "s%export LDFLAGS=-I/usr/local/include%export LIBRARY_PATH=/usr/local/lib%
+              s%export CFLAGS=-I/usr/local/include%export CPATH=/usr/local/include%" "${_profile_}" > "${_profile_}.temp" \
+      && mv "${_profile_}.temp" "${_profile_}" || return 1
+      chown "${_user_}" "${_profile_}" || return 2
+    fi
   }
   rename_console_menu() {
     ## This should handle renaming to the console menu.            
@@ -63,9 +74,7 @@ if [ "${_plugin_ver}" == "0.0.0" ]; then
       ## HomeKit and you want to fix Z-Wave. ( Sorrry for the inconvenience )
     if [ -f "/usr/local/bin/openssl" ]; then
       sysrc homeassistant_openssl="package"
-      return 3
     fi
-    return 0
   }
   echo -e "\nRunning pre-update functions for version 0.0.0"
   disable_esphome_menu; echo " disable_esphome_menu: $?"
@@ -82,6 +91,71 @@ if [ "${_plugin_ver}" == "0.0.1" ]; then
   }
   echo -e "\nRunning pre-update functions for version 0.0.1"
   do_something; echo " do_something: $?"
+fi
+
+## Check for and set any missing rc vars to original defaults in the 11.3-RELEASE plugin
+## Recent versions of the plugin should set these during installation
+## These default values may change for the 12.1-RELEASE plugin installation
+check_rcvar() {
+  ## AppDaemon
+  if [ ! -z $(sysrc -n appdaemon_enable 2>/dev/null) ];then
+    if [ -z $(sysrc -n appdaemon_python 2>/dev/null) ];then
+      sysrc appdaemon_python="$(which python3.7)"
+    fi
+    if [ -z $(sysrc -n appdaemon_venv 2>/dev/null) ];then
+      sysrc appdaemon_venv="/srv/appdaemon"
+    fi
+    if [ -z $(sysrc -n appdaemon_user 2>/dev/null) ];then
+      sysrc appdaemon_user="hass"
+    fi
+    if [ -z $(sysrc -n appdaemon_group 2>/dev/null) ];then
+      sysrc appdaemon_group="hass"
+    fi
+    if [ -z $(sysrc -n appdaemon_config_dir 2>/dev/null) ];then
+      sysrc appdaemon_config_dir="/home/hass/appdaemon/conf"
+    fi
+  fi
+  ## Configurator -- File Editor
+  if [ ! -z $(sysrc -n configurator_enable 2>/dev/null) ];then
+    if [ -z $(sysrc -n configurator_python 2>/dev/null) ];then
+      sysrc configurator_python="$(which python3.7)"
+    fi
+    if [ -z $(sysrc -n configurator_venv 2>/dev/null) ];then
+      sysrc configurator_venv="/srv/configurator"
+    fi
+    if [ -z $(sysrc -n configurator_user 2>/dev/null) ];then
+      sysrc configurator_user="hass"
+    fi
+    if [ -z $(sysrc -n configurator_group 2>/dev/null) ];then
+      sysrc configurator_group="hass"
+    fi
+    if [ -z $(sysrc -n configurator_config 2>/dev/null) ];then
+      sysrc configurator_config="/home/hass/configurator/configurator.conf"
+    fi
+  fi
+  ## Home Assistant Core
+  if [ ! -z $(sysrc -n homeassistant_enable 2>/dev/null) ];then
+    if [ -z $(sysrc -n homeassistant_python 2>/dev/null) ];then
+      sysrc homeassistant_python="$(which python3.7)"
+    fi
+    if [ -z $(sysrc -n homeassistant_venv 2>/dev/null) ];then
+      sysrc homeassistant_venv="/srv/homeassistant"
+    fi
+    if [ -z $(sysrc -n homeassistant_user 2>/dev/null) ];then
+      sysrc homeassistant_user="hass"
+    fi
+    if [ -z $(sysrc -n homeassistant_group 2>/dev/null) ];then
+      sysrc homeassistant_group="hass"
+    fi
+    if [ -z $(sysrc -n homeassistant_config_dir 2>/dev/null) ];then
+      sysrc homeassistant_config_dir="/home/hass/homeassistant"
+    fi
+  fi
+}
+
+if [ $(echo ${_plugin_ver} | cut -d "-" -f "2") != "1" ]; then
+  check_rcvar; echo " check_rcvar: $?"
+  sysrc plugin_ver="${_plugin_ver}-1"
 fi
 
 ## Generate a list of manually installed packages

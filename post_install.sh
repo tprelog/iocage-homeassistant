@@ -22,13 +22,13 @@ first_run () {
   ## The current solution to use openssl from pkgs, in the 11.3-RELEASE, breaks Z-Wave for everyone.
   ## For this reason, the updated openssl should no longer be included by default in this plugin. 
   if [ -f "/usr/local/bin/openssl" ]; then
-    local _plugin_ver=0.3b.pr2
+    local _plugin_ver=0.3b.pr2-1
     pkg delete -y openssl
   else
-    local plugin_ver=0.3b.pr3
+    local _plugin_ver=0.3b.pr3-1
   fi
   
-  sysrc plugin_version="${_plugin_ver}"
+  sysrc plugin_ver="${_plugin_ver}"
   sysrc plugin_ini="${_plugin_ver}_$(date +%y%m%d)"
 
   ## It can be helpful to allow group write permission when the config is shared over a network
@@ -70,20 +70,47 @@ add_user () {
 }
 
 install_service() {
-  d="${v2env}/${v2srv}"
-  p=$(which ${python})
+  local _venv_="${v2env}/${v2srv}"
+  local _python_=$(which ${python})
   
-  if [ ! -d ${d} ]; then
-    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${d} || exit
-  elif [ ! -z "$(ls -A ${d})" ]; then  
+  if [ ! -d ${_venv_} ]; then
+    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${_venv_} || exit
+  elif [ ! -z "$(ls -A ${_venv_})" ]; then  
     echo -e "${red}\nvirtualenv directory found and it's not empty!\n${orn} Is ${v2srv} already installed?"
-    echo -e " You can remove ${d} and try again${end}\n"
+    echo -e " You can remove ${_venv_} and try again${end}\n"
     exit
+  fi
+  
+  if [ "${v2srv}" == "appdaemon" ]; then
+    ## Temporary patch to use V3 rc service
+    sysrc appdaemon_python="${_python_}"
+    sysrc appdaemon_venv="${_venv_}"
+    sysrc appdaemon_user="${v2srv_user}"
+    sysrc appdaemon_group="${v2srv_user}"
+    sysrc appdaemon_config_dir="/home/${v2srv_user}/appdaemon/conf"
+  fi
+  
+    if [ "${v2srv}" == "configurator" ]; then
+    ## Temporary patch to use V3 rc service
+    sysrc configurator_python="${_python_}"
+    sysrc configurator_venv="${_venv_}"
+    sysrc configurator_user="${v2srv_user}"
+    sysrc configurator_group="${v2srv_user}"
+    sysrc configurator_config="/home/${v2srv_user}/configurator/configurator.conf"
+  fi
+  
+  if [ "${v2srv}" == "homeassistant" ]; then
+    ## Temporary patch to use V3 rc service
+    sysrc homeassistant_python="${_python_}"
+    sysrc homeassistant_venv="${_venv_}"
+    sysrc homeassistant_user="${v2srv_user}"
+    sysrc homeassistant_group="${v2srv_user}"
+    sysrc homeassistant_config_dir="/home/${v2srv_user}/homeassistant"
   fi
   
   su ${v2srv_user} -c '
 
-    [ -f ${HOME}/.profile ] && source ${HOME}/.profile
+    #[ -f ${HOME}/.profile ] && source ${HOME}/.profile
   
     ${1} -m venv ${2}
     source ${2}/bin/activate || exit 1
@@ -118,7 +145,7 @@ install_service() {
       pip3 install --upgrade ${3}
     fi
     deactivate
-  ' _ ${p} ${d} ${v2srv} && enableStart_v2srv
+  ' _ ${_python_} ${_venv_} ${v2srv} && enableStart_v2srv
 }
 
 enableStart_v2srv () {

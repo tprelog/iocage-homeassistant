@@ -14,14 +14,14 @@ install_extra_pkgs() {
   echo "${pkgs}" | xargs pkg install -y
 }
 
-if [ "${_plugin_ver}" == "0.0.0" ]; then
+if [ "${_plugin_ver}" == "0.0.0" ] || [ "${_plugin_ver}" == "0.0.0-1" ]; then
   check_openssl() {
     if [ `sysrc -n homeassistant_openssl 2>/dev/null` != "pkg" ] \
     && [ -f "/usr/local/bin/openssl" ]; then
         pkg delete openssl && pkg autoremove
     fi
   }
-  sysrc plugin_ver="0.3b.pr1"
+  sysrc plugin_ver="0.3b.pr1-1"
 fi
 
 install_extra_pkgs
