@@ -20,14 +20,15 @@ fi
 sysrc plugin_ini 2>/dev/null \
 || sysrc plugin_ini="${_plugin_ver}_$(date +%y%m%d)"
 
-
+update_post_install() {
+  ## `post_install.sh` is not updated after the initial installation. Likely it's only files in the overlay
+  ## Future versions of this plugin should not require any updates to `post_install.sh` after installation
+  wget -q -O /root/post_install.sh https://raw.githubusercontent.com/tprelog/iocage-homeassistant/11.3-RELEASE/post_install.sh \
+  && chmod +x /root/post_install.sh || return 1
+}
+update_post_install; echo " update_post_install: $?"
+ 
 if [ "${_plugin_ver}" == "0.0.0" ]; then
-  update_post_install() {
-    ## `post_install.sh` is not updated after the initial installation. Likely it's only files in the overlay
-    ## Future versions of this plugin should not require any updates to `post_install.sh` after installation
-    wget -q -O /root/post_install.sh https://raw.githubusercontent.com/tprelog/iocage-homeassistant/master/post_install.sh \
-    && chmod +x /root/post_install.sh || return 1
-  }
   update_compile_linking() {
     ## https://homepages.inf.ed.ac.uk/imurray2/compnotes/library_linking.txt
     ## Use openssl 1.1.1 in Home Assistant Core on BSD 11.3-RELEASE
@@ -78,7 +79,6 @@ if [ "${_plugin_ver}" == "0.0.0" ]; then
   }
   echo -e "\nRunning pre-update functions for version 0.0.0"
   disable_esphome_menu; echo " disable_esphome_menu: $?"
-  update_post_install; echo " update_post_install: $?"
   update_compile_linking; echo " update_compile_linking: $?"
   rename_console_menu; echo " rename_console_menu: $?"
   check_openssl; echo " check_openssl: $?"
