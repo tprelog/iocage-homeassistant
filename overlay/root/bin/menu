@@ -1,41 +1,26 @@
 #!/usr/bin/env bash
 
-## HASS-HELPER
-
-# A menu driven shell script hacked together from internet samples and other shit.
+## Console menu for the Home Assistant Core -- FreeNAS / TrueNAS Core Community plugins
+## A menu driven shell script hacked together from internet samples and other shit.
+## Just a simple menu, nothing more than a shortcut to use basic service commands.
 
 ## ----------------------------------
 # Step #1: Define variables
 # ----------------------------------
-
-EDITOR=ee
-PASSWD=/etc/passwd
-RED='\033[0;41;30m'
-STD='\033[0;0;39m'
-
+# TODO plugin_srv_prefix = $rcvar
+plugin_srv_prefix="/srv"
+# plugin_srv_prefix: Directory where virtualenv directories are located.
+#       Default:  "/usr/local/share"
+#       FreeNAS 11.x is using hass legacy
+#       Set to legacy:    `sysrc plugin_srv_prefix=/srv`
+#       Reset to default: `sysrc -x plugin_srv_prefix`
+#
+# ( Hopefully ) sane default for *BSD / FreeNAS / TrueNAS Core
+# FIXME ONLY IF $service_venv == EMPTY, then use plugin_srv_prefix
+#srv_prefix="$(sysrc -n plugin_srv_prefix 2>/dev/null)"
+srv_prefix="${plugin_srv_prefix}"
 
 main_menu="0"
-
-# ## Enable ESPHome if this $var set to anything
-# sysrc esphome_menu 2>/dev/null
-# if [ $? == 0 ]; then main_menu="esp0"; fi
-
-#  virtualenv_service:
-#     Application installed in a virtualenv and
-#     running as a service (using sysrc scripts)
-
-# Directory containing virtualenvs
-SRV_DIR=/srv
-
-# The application installed inside a virtualenv
-#SRV_APP = [ homeassistant | hass-configurator | appdaemon ]
-
-# _id=8123      # Set '_uid' and '_gid'
-# _uid="${_id}" # user id
-# _gid="${_id}" # group id
-
-# _user=hass    # user name
-# _group=hass   # group name
 
 # ----------------------------------
 # Step #2: User defined function
@@ -52,7 +37,6 @@ load_colors() {
   orn=$'\e[38;5;208m'
   end=$'\e[0m'
 }
-
 
 pause(){
   echo
@@ -77,7 +61,7 @@ show_banner_1() {
   echo '  | __ | (_) | |\/| | _| / _ \\__ \__ \| |\__ \ | |/ _ \| .` | | |   '
   echo '  |_||_|\___/|_|  |_|___/_/ \_\___/___/___|___/ |_/_/ \_\_|\_| |_|   '
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-  echo "                  MANAGE THE HOME ASSISTANT SERVICE                     "
+  echo "               MANAGE THE HOME ASSISTANT CORE SERVICE                   "
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
   echo -e "${end}"
 }
@@ -90,7 +74,7 @@ show_banner_2() {
   echo '      | (_| (_) | .` | _| | | (_ | |_| |   / / _ \| || (_) |   / '
   echo '       \___\___/|_|\_|_| |___\___|\___/|_|_\/_/ \_\_| \___/|_|_\ '
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-  echo "                 MANAGE THE HASS CONFIGURATOR SERVICE                  "
+  echo "                    MANAGE THE FILE EDITOR SERVICE                     "
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
   echo -e "${end}"
 }
@@ -108,35 +92,18 @@ show_banner_3() {
   echo -e "${end}"
 }
 
-# show_banner_4() {
-#   clear
-#   echo "${blu}"
-#   echo '                  ___ ___ ___ _  _  ___  __  __ ___  '
-#   echo '                 | __/ __| _ \ || |/ _ \|  \/  | __| '
-#   echo '                 | _|\__ \  _/ __ | (_) | |\/| | _|  '
-#   echo '                 |___|___/_| |_||_|\___/|_|  |_|___| '
-#   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-#   echo "                      MANAGE THE ESPHOME SERVICE                       "
-#   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-#   echo -e "${end}"
-# }
-
 service_menu() {
 
-  local _default_actions
-  local _extra_actions
-  local _action
-  local _confirm
-  
+  local _default_actions _extra_actions _action _confirm
   # Default actions that all services (in this jail) should have
   _default_actions="status restart upgrade start stop test"
-  
   # Home Assistant has an extra check config option
   [[ "${1}" == "homeassistant" ]] && _extra_actions="check_config"
   
+  ## NOTE - ${srv_prefix} can be set using `sysrc plugin_srv_prefix=/usr/local/share`
   # Other services can be installed or removed depending on existing state
   if [ "${1}" != "homeassistant" ]; then
-    if [ ! -d "${SRV_DIR}/${1}" ]; then
+    if [ ! -d "${srv_prefix}/${1}" ]; then
       _extra_actions="install"
     else # (toggle install/remove)
       _extra_actions="remove"
@@ -151,19 +118,22 @@ service_menu() {
         m_true="N"
         break
         ;;
-      "install")
+      "install") ## FreeNAS 11.x is using hass legacy
+        ## installing using the service, should default to sane *BSD settings
+        #service ${1} oneinstall ${1} || err 1 "return $?"
+        ## installing via post_install will default to hass legacy settings
         /root/post_install.sh ${1}
         pause
         break
         ;;
       "remove")
-        echo -e "\n${red} DELETING ${SRV_DIR}/${1}${end}"
+        echo -e "\n${red} DELETING ${srv_prefix}/${1}${end}"
         read -p " Type 'YES' to continue: " _confirm
         [[ ${_confirm} == [Yy][Ee][Ss] ]] || break
         echo
         service "${1}" stop 2>/dev/null
         sysrc -x "${1}_enable" 2>/dev/null
-        rm -rf "${SRV_DIR}/${1}"
+        rm -rf "${srv_prefix}/${1}"
         pause
         break
         ;;
@@ -178,76 +148,15 @@ service_menu() {
   done
 }
 
-
-show_menu_1() {
-
-  local _extra_actions
-  local _zwave_key
-  
-  _extra_actions="install-HACS zip-hass-home generate-zwave-key"
-  PS3=""$'\n'"${blu}Select: ${end}"
-  echo
-  select _action in "Main Menu" "Show Colors" ${_extra_actions}; do
-    case "${_action}" in
-      "Main Menu")
-        m_true="N"
-        break
-        ;;
-      "Show Colors")
-        show_colors
-        pause
-        break
-        ;;
-      "install-HACS")
-        /root/post_install.sh hacs
-        pause
-        break
-        ;;
-      "generate-zwave-key")
-        # Blah...
-        echo -e "\n ${red}sed${end}\n"
-        su - hass -c '
-          echo $(cat /dev/urandom | tr -dc '0-9A-F' | fold -w 32 | head -n 1 | sed -e 's/\(..\)/0x\1, /g')
-        ' # Mind the (') there
-        pause
-        break
-        ;;
-      "zip-hass-home")
-        echo -e "\n${orn}Creating zip. This can take a few minutes to complete...\n"
-        su - hass -c '
-          zip -9 -q -r /tmp/hass-backup.temp /home/hass/ -x"*/components/*" -x"*/deps/*" -x"*/home-assistant.log" -x"*/.cache/*" -x"*/__pycache__*/"
-        '  # Mind the (') there
-        [ ! -d /root/.hass_backups ] && mkdir /root/.hass_backups
-        [ -f /tmp/hass-backup.temp ] && mv /tmp/hass-backup.temp /root/.hass_backups/hass_$(date +%F_%T).zip \
-        && echo -e "\n${grn} Created backup in /root/.hass_backups/"
-        echo ${end}
-        pause
-        break
-        ;;
-    esac
-  done
-}
-
-
 show_menu_0() {
 # clear --> moved to show_banner
   echo " 1) Home Assistant"
-  echo " 2) Hass Configurator"
+  echo " 2) Configurator"
   echo " 3) AppDaemon"
   echo
-  echo " 0) EXIT"
+  echo " 0) Exit Menu"
   echo
 }
-
-# show_menu_esp0() {
-#   echo " 1) Home Assistant"
-#   echo " 2) Hass Configurator"
-#   echo " 3) AppDaemon"
-#   echo " 4) ESPHome"
-#   echo
-#   echo " 0) EXIT"
-#   echo
-# }
 
 read_options(){
   local choice
@@ -258,14 +167,14 @@ read_options(){
     [eE]|[eE][xX][iI][tT]|[qQ]|[cC]|[cC]|[oN][sS][oO][lL][eE]|"0")
       clear; exit 0
       ;;
-    "1") # Home Assistant
+    "1") # Home Assistant Core
       m_true="Y"
       while [ ${m_true} == "Y" ]; do
         show_banner_1
         service_menu homeassistant
       done
       ;;
-    "2") # Hass Configurator
+    "2") # Hass-configurator ( File Editor )
       m_true="Y"
       while [ ${m_true} == "Y" ]; do
         show_banner_2
@@ -279,30 +188,14 @@ read_options(){
         service_menu appdaemon
       done
       ;;
-#     "4") # ESPHome
-#       m_true="Y"
-#       while [ ${m_true} == "Y" ]; do
-#         show_banner_4
-#         service_menu esphome
-#       done
-#       ;;
-    "phoenix") # Shit for me
-      m_true="Y"
-      while [ ${m_true} == "Y" ]; do
-        show_banner_0
-        show_menu_1
-      done
-      ;;
-    "watch ha") # Shit for me
-      log_watch="Y"
+    [hH][aA]" logs")
+      tail_log="Y"
       while [ ${log_watch} == "Y" ]; do
-      tail -F /var/log/homeassistant_daemon.log
-      #  show_banner_0
-      #  show_menu_1
+        service homeassistant logs -f
       done
       ;;
       [iI]"nstall "[hH][aA][cC][sS])
-        /root/post_install.sh hacs
+        service homeassistant install hacs
         pause
         break
         ;;
@@ -311,7 +204,7 @@ read_options(){
 }
 
 set_false() {
-  log_watch="N"
+  tail_log="N"
 }
 
 show_colors() {
