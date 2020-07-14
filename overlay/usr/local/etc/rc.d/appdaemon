@@ -56,7 +56,6 @@ load_rc_config ${name}
 
 : ${appdaemon_enable:="NO"}
 : ${appdaemon_python:="/usr/local/bin/python3.7"}
-: ${appdaemon_group:="`id -gn ${appdaemon_user}`"}
 : ${appdaemon_rc_debug:="OFF"}
 : ${appdaemon_rc_info:="OFF"}
 : ${appdaemon_rc_umask:="022"}
