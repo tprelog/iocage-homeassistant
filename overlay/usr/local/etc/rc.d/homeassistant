@@ -11,34 +11,34 @@
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
 #       Default:  "homeassistant"
-#       Set to legacy:    `sysrc homeassistant_user="hass"`
+#       Set to retro:    `sysrc homeassistant_user="hass"`
 #       Reset to default: `sysrc -x homeassistant_user`
 #
 # homeassistant_group: The group account used to run the homeassistant daemon.
 #       Default:  $PRIMARY_USER_GROUP
-#       Set to legacy:    `sysrc homeassistant_group="hass"`
+#       Set to retro:    `sysrc homeassistant_group="hass"`
 #       Reset to default: `sysrc -x homeassistant_group`
 #
 # homeassistant_user_dir: Directory where the homeassistant user's files can be located.
 #       Default1:   $HOME
 #       Default2:   ${homeassistant_config_dir}     (If $HOME is not set)
-#       Set to legacy:    `sysrc homeassistant_user_dir="/home/hass"`
+#       Set to retro:    `sysrc homeassistant_user_dir="/home/hass"`
 #       Reset to default: `sysrc -x homeassistant_user_dir`
 #
 # homeassistant_config_dir: Directory where the homeassistant `configuration.yaml` is located.
 #       Default1:   "$HOME/.homeassistant"
 #       Default2:   "/usr/local/etc/homeassistant"  (If $HOME is not set)
-#       Set to legacy:    `sysrc homeassistant_config_dir="/home/hass/homeassistant"`
+#       Set to retro:    `sysrc homeassistant_config_dir="/home/hass/homeassistant"`
 #       Reset to default: `sysrc -x homeassistant_config_dir`
 #
 # homeassistant_python: Set the version of Python for Home Assistant Core.
 #       Default:  "/usr/local/bin/python3.8"
-#       Set to legacy:    `sysrc homeassistant_python="/usr/local/bin/python3.7"`
+#       Set to retro:    `sysrc homeassistant_python="/usr/local/bin/python3.7"`
 #       Reset to default: `sysrc -x homeassistant_python`
 #
 # homeassistant_venv: Directory where the homeassistant virtualenv is located.
 #       Default:  "/usr/local/share/homeassistant"
-#       Set to legacy:    `sysrc homeassistant_venv="/srv/homeassistant"`
+#       Set to retro:    `sysrc homeassistant_venv="/srv/homeassistant"`
 #       Reset to default: `sysrc -x homeassistant_venv`
 
 # -------------------------------------------------------

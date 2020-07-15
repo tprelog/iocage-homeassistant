@@ -11,39 +11,39 @@
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
 #       Default:  homeassistant
-#       Set to legacy:    `sysrc configurator_user="hass"`
+#       Set to retro:    `sysrc configurator_user="hass"`
 #       Reset to default: `sysrc -x configurator_user`
 #
 # configurator_group: The group account used to run the configurator daemon.
 #       Default:  $PRIMARY_USER_GROUP
-#       Set to legacy:    `sysrc configurator_group="hass"`
+#       Set to retro:    `sysrc configurator_group="hass"`
 #       Reset to default: `sysrc -x configurator_group`
 #
 # configurator_user_dir: Directory where the configurator user's files can be located.
 #       Default1: $HOME
 #       Default2: ${configurator_config_dir}     (If $HOME is not set)
-#       Set to legacy:    `sysrc configurator_user_dir="/home/hass"`
+#       Set to retro:    `sysrc configurator_user_dir="/home/hass"`
 #       Reset to default: `sysrc -x configurator_user_dir`
 #
 # configurator_config_dir: Directory where the configurator file is located.
 #       Default1: "$HOME/.configurator"
 #       Default2: "/usr/local/etc/configurator"  (If $HOME is not set)
-#       Set to legacy:    `sysrc configurator_config_dir="/home/hass/configurator"`
+#       Set to retro:    `sysrc configurator_config_dir="/home/hass/configurator"`
 #       Reset to default: `sysrc -x configurator_config_dir`
 #
 # configurator_config:	Full path to hass-configurator settings file.
 #       Default:  "$HOME/configurator/.configurator.conf"
-#       Set to legacy:    'sysrc configurator_config="/home/hass/configurator/configurator.conf"`
+#       Set to retro:    'sysrc configurator_config="/home/hass/configurator/configurator.conf"`
 #       Reset to default: `sysrc -x configurator_config_dir`
 #
 # configurator_python: Set the version of Python for the virtualenv.
 #       Default:  "/usr/local/bin/python3.7"
-#       Set to legacy:    `sysrc configurator_python="/usr/local/bin/python3.7"`
+#       Set to retro:    `sysrc configurator_python="/usr/local/bin/python3.7"`
 #       Reset to default: `sysrc -x configurator_python`
 #
 # configurator_venv: Directory where the configurator virtualenv is located.
 #       Default:  "/usr/local/share/configurator"
-#       Set to legacy:    `sysrc configurator_venv="/srv/configurator"`
+#       Set to retro:    `sysrc configurator_venv="/srv/configurator"`
 #       Reset to default: `sysrc -x configurator_venv`
 
 # -------------------------------------------------------

@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 srv_name="homeassistant"
-sysrc plugin_legacy_defaults="YES"
+sysrc plugin_retro_defaults="YES"
 sysrc plugin_ver="${plugin_ver:="v_0.0.4-beta1"}"
 sysrc plugin_ini="${plugin_ver}_$(date +%y.%m.%d)"
 
 . /etc/rc.subr
-#load_rc_config
+load_rc_config
 
 #
 # plugin_srv_prefix: Directory where virtualenv directories are located.
 #       Default:  "/usr/local/share"
-#       Set to legacy:    `sysrc plugin_srv_prefix=/srv`
+#       Set to retro:    `sysrc plugin_srv_prefix=/srv`
 #       Reset to default: `sysrc -x plugin_srv_prefix`
 
 # ( Hopefully ) sane default for *BSD / FreeNAS / TrueNAS Core
 #srv_prefix="${plugin_srv_prefix:-"/usr/local/share"}"
 
-## TODO ---- HASS LEGACY SETTINGS ---- TODO ##
+## TODO ---- HASS retro SETTINGS ---- TODO ##
 ## Don't forget to change them for TrueNAS Core!
 ## HINT also check /root/menu
 
@@ -236,7 +236,7 @@ elif [ "${__name__}" == "homeassistant" ] || [ "${1}" == "homeassistant" ]; then
 #  "homeassistant")
     srv_name="homeassistant"
     info "service \"${__name__}\" has called post_install.sh ${srv_name}"
-    # NOTE  warning If name == post_install then DEFAULTS == HASS LEGACY
+    # NOTE  warning If name == post_install then DEFAULTS == HASS retro
 #     srv_prefix="${plugin_srv_prefix:-"/srv"}"
     srv_enable="${homeassistant_enable:-"yes"}"
     srv_umask="${homeassistant_umask:-"002"}"
@@ -266,7 +266,7 @@ elif [ "${__name__}" == "appdaemon" ] || [ "${1}" == "appdaemon" ]; then
 #  "appdaemon")
     srv_name="appdaemon"
     info "service \"${__name__}\" has called post_install.sh ${srv_name}"
-    # NOTE warning If name == post_install then DEFAULTS == HASS LEGACY
+    # NOTE warning If name == post_install then DEFAULTS == HASS retro
 #     srv_prefix="${plugin_srv_prefix:-"/srv"}"
     srv_enable="${appdaemon_enable:-"yes"}"
     srv_umask="${appdaemon_umask:-"002"}"
@@ -292,7 +292,7 @@ elif [ "${__name__}" == "appdaemon" ] || [ "${1}" == "appdaemon" ]; then
 #  ;;
 elif [ "${__name__}" == "configurator" ] || [ "${1}" == "configurator" ]; then
 #  "configurator")
-    # NOTE  warning If name == post_install then DEFAULT == HASS LEGACY
+    # NOTE  warning If name == post_install then DEFAULT == HASS retro
     srv_name="configurator"
     info "service \"${__name__}\" has called post_install.sh ${srv_name}"
 #     srv_prefix="${plugin_srv_prefix:-"/srv"}"

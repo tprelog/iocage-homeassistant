@@ -11,8 +11,8 @@
 plugin_srv_prefix="/srv"
 # plugin_srv_prefix: Directory where virtualenv directories are located.
 #       Default:  "/usr/local/share"
-#       FreeNAS 11.x is using hass legacy
-#       Set to legacy:    `sysrc plugin_srv_prefix=/srv`
+#       FreeNAS 11.x is using hass retro
+#       Set to retro:    `sysrc plugin_srv_prefix=/srv`
 #       Reset to default: `sysrc -x plugin_srv_prefix`
 #
 # ( Hopefully ) sane default for *BSD / FreeNAS / TrueNAS Core
@@ -118,10 +118,10 @@ service_menu() {
         m_true="N"
         break
         ;;
-      "install") ## FreeNAS 11.x is using hass legacy
+      "install") ## FreeNAS 11.x is using hass retro
         ## installing using the service, should default to sane *BSD settings
         #service ${1} oneinstall ${1} || err 1 "return $?"
-        ## installing via post_install will default to hass legacy settings
+        ## installing via post_install will default to hass retro settings
         /root/post_install.sh ${1}
         pause
         break

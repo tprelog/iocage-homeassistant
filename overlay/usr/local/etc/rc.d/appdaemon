@@ -11,34 +11,34 @@
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
 #       Default:  "appdaemon"
-#       Set to legacy:    `sysrc appdaemon_user="hass"`
+#       Set to retro:    `sysrc appdaemon_user="hass"`
 #       Reset to default: `sysrc -x appdaemon_user`
 #
 # appdaemon_group: The group account used to run the appdaemon daemon.
 #       Default:  $PRIMARY_USER_GROUP
-#       Set to legacy:    `sysrc appdaemon_group="hass"`
+#       Set to retro:    `sysrc appdaemon_group="hass"`
 #       Reset to default: `sysrc -x appdaemon_group`
 #
 # appdaemon_user_dir: Directory where the appdaemon user's files can be located.
 #       Default1: $HOME
 #       Default2: ${appdaemon_config_dir}     (If $HOME is not set)
-#       Set to legacy:    `sysrc appdaemon_user_dir="/home/hass"`
+#       Set to retro:    `sysrc appdaemon_user_dir="/home/hass"`
 #       Reset to default: `sysrc -x appdaemon_user_dir`
 #
 # appdaemon_config_dir: Directory where the appdaemon configuration is located.
 #       Default1: "$HOME/.appdaemon"
 #       Default2: "/usr/local/etc/appdaemon"  (If $HOME is not set)
-#       Set to legacy:    `sysrc appdaemon_config_dir="/home/hass/appdaemon"`
+#       Set to retro:    `sysrc appdaemon_config_dir="/home/hass/appdaemon"`
 #       Reset to default: `sysrc -x appdaemon_config_dir`
 #
 # appdaemon_python: Set the version of Python for Home Assistant Core.
 #       Default:  "/usr/local/bin/python3.8"
-#       Set to legacy:    `sysrc appdaemon_python="/usr/local/bin/python3.7"`
+#       Set to retro:    `sysrc appdaemon_python="/usr/local/bin/python3.7"`
 #       Reset to default: `sysrc -x appdaemon_python`
 #
 # appdaemon_venv: Directory where the appdaemon virtualenv is located.
 #       Default:  "/usr/local/share/appdaemon"
-#       Set to legacy:    `sysrc appdaemon_venv="/srv/appdaemon"`
+#       Set to retro:    `sysrc appdaemon_venv="/srv/appdaemon"`
 #       Reset to default: `sysrc -x appdaemon_venv`
 
 # -------------------------------------------------------
