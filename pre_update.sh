@@ -23,8 +23,9 @@ sysrc plugin_ini 2>/dev/null \
 
 : "${_ver:="$(echo "${_plugin_ver}" | cut -d. -f2)"}"
 
-if [ "${_ver}" -lt 4 ]; then
-  
+if [ "${_ver}" == "4" ]; then ## likely to be at ver_0.4.X for awhile
+  echo "INFO: pre_update: found current version "${_plugin_ver}""
+elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
   srv_prefix="${plugin_srv_prefix:-"/usr/local/share"}"
   srv_uuid="${plugin_srv_uuid:-"8123"}"
   srv_umask="${plugin_srv_umask:-"002"}"
@@ -147,15 +148,12 @@ if [ "${_ver}" -lt 4 ]; then
       fi
     fi
   }
-
   echo -e "\nINFO: Running pre-update functions for versions 0.0 -> 0.4"
   getset_rcvars; echo -e "\n getset_rcvars: $?"
   check_openssl; echo " check_openssl: $?"
   disable_esphome_menu; echo " disable_esphome_menu: $?"
   disable_profile; echo " disable_profile: $?"
   rename_console_menu; echo -e " rename_console_menu: $?\n"
-elif [ "${_ver}" == "4" ]; then ## likely to be at ver_0.4.X for awhile
-  echo "INFO: pre_update: found current version "${_plugin_ver}""
 else
   echo "WARNING: unknown version "${_plugin_ver}""
 fi
