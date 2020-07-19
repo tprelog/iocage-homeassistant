@@ -219,7 +219,6 @@ homeassistant_poststop() {
 
 restart_precmd="${name}_prerestart"
 homeassistant_prerestart() {
-  homeassistant_prestop
   homeassistant_config config --check
 }
 
