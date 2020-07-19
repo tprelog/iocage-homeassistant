@@ -47,7 +47,7 @@ set_rc_vars() {
   #sysrc ${srv_name}_enable="${srv_enable}"
   if [ -z "${_dir_:-"$(sysrc -n ${srv_venv} 2>/dev/null)"}" ]; then
     if [ -d "/srv/${srv_name}" ]; then
-      echo "RETRO VENV: found directory. setting maunal override to use existing directory"
+      echo "RETRO VENV: found directory. setting manual override to use existing directory"
       srv_venv="/srv/${srv_name}"
     fi
   fi
