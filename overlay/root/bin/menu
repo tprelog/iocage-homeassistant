@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-## Console menu for the Home Assistant Core FreeNAS / TrueNAS Core Community plugins
+## Console menu for the Home Assistant Core -- FreeNAS / TrueNAS Core Community plugins
 ## A menu driven shell script hacked together from internet samples and other shit.
+## Just a simple menu, nothing more than a shortcut to use basic service commands.
 
 ## ----------------------------------
 # Step #1: Define variables
 # ----------------------------------
-
-RED='\033[0;41;30m'
-STD='\033[0;0;39m'
 
 main_menu="0"
 
@@ -27,7 +25,6 @@ load_colors() {
   orn=$'\e[38;5;208m'
   end=$'\e[0m'
 }
-
 
 pause(){
   echo
@@ -52,7 +49,7 @@ show_banner_1() {
   echo '  | __ | (_) | |\/| | _| / _ \\__ \__ \| |\__ \ | |/ _ \| .` | | |   '
   echo '  |_||_|\___/|_|  |_|___/_/ \_\___/___/___|___/ |_/_/ \_\_|\_| |_|   '
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-  echo "                  MANAGE THE HOME ASSISTANT SERVICE                     "
+  echo "               MANAGE THE HOME ASSISTANT CORE SERVICE                   "
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
   echo -e "${end}"
 }
@@ -65,7 +62,7 @@ show_banner_2() {
   echo '      | (_| (_) | .` | _| | | (_ | |_| |   / / _ \| || (_) |   / '
   echo '       \___\___/|_|\_|_| |___\___|\___/|_|_\/_/ \_\_| \___/|_|_\ '
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-  echo "                 MANAGE THE HASS CONFIGURATOR SERVICE                  "
+  echo "                    MANAGE THE FILE EDITOR SERVICE                     "
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
   echo -e "${end}"
 }
@@ -85,33 +82,28 @@ show_banner_3() {
 
 service_menu() {
 
-  local _default_actions
-  local _extra_actions
-  local _action
-  local _confirm
-  
-  # Default actions that all services (in this jail) should have
-  _default_actions="status restart upgrade start stop test"
-  
-  # Home Assistant has an extra check config option
-  [[ "${1}" == "homeassistant" ]] && _extra_actions="check_config"
-  
-  # Other services can be installed or removed depending on existing state
-  if [ "${1}" != "homeassistant" ]; then
-    if [ ! -d "${SRV_DIR}/${1}" ]; then
-      _extra_actions="install"
-    else # (toggle install/remove)
-      _extra_actions="remove"
-    fi
+  local _cmd_ _commands_ _ans_ _venv_
+  # Basic commands that all services (in this plugin) should have
+  _commands_="status restart upgrade start stop test"
+  # Home Assistant Core has an extra check_config option in this menu
+  [[ "${1}" == "homeassistant" ]] && _commands_="${_commands_} check_config"
+  # Other services can be installed or removed depending on existing state of the venv
+  if [ "${1}" == "appdaemon" ] || [ "${1}" == "configurator" ]; then
+    [ -d "${_venv_:="$(sysrc -n "${1}_venv" 2>/dev/null)"}" ] \
+    && _commands_="${_commands_} remove" || _commands_="${_commands_} install"
   fi
-  
+ 
   PS3=""$'\n'"${blu}Select: ${end}"
   echo
-  select _action in "Main Menu" ${_default_actions} ${_extra_actions}; do
-    case "${_action}" in
-      "Main Menu")
+  select _cmd_ in "main menu" ${_commands_} "exit menu"; do
+    case "${_cmd_}" in
+      "main menu")
         m_true="N"
         break
+        ;;
+      "exit menu")
+        m_true="N"
+        exit 0
         ;;
       "install")
         /root/post_install.sh ${1}
@@ -119,22 +111,26 @@ service_menu() {
         break
         ;;
       "remove")
-        echo -e "\n${red} DELETING ${SRV_DIR}/${1}${end}"
-        read -p " Type 'YES' to continue: " _confirm
-        [[ ${_confirm} == [Yy][Ee][Ss] ]] || break
+        echo -e "\n${orn} This will remove the rcvars and venv for \"${1}\": ${red}${_venv_}${end}"
+        read -p " Type 'YES' to continue: " _ans_
+        [[ ${_ans_} == [Yy][Ee][Ss] ]] || break
         echo
         service "${1}" stop 2>/dev/null
-        sysrc -x "${1}_enable" 2>/dev/null
-        rm -rf "${SRV_DIR}/${1}"
+        rm -rf "${_venv_}"
+        for _var_ in $(eval sysrc -ae | grep ^"${1}")
+          do
+            echo "removing rcvars for \"${_var_}\""
+            sysrc -x "${_var_}" | cut -d= -f1
+          done
         pause
         break
         ;;
       "status"|"restart"|"upgrade"|"start"|"stop"|"test"|"check_config")
-        service "${1}" "${_action}"
+        service "${1}" "${_cmd_}"
         pause
         break
         ;;
-      *) echo -e "${red}Sorry, [ ${_action} ] is not an option${end}" && sleep 1
+      *) echo -e "Sorry, \"${red}${_cmd_}${end}\" is not an option" && sleep 1
         ;;
     esac
   done
@@ -143,10 +139,10 @@ service_menu() {
 show_menu_0() {
 # clear --> moved to show_banner
   echo " 1) Home Assistant"
-  echo " 2) Hass Configurator"
+  echo " 2) Configurator"
   echo " 3) AppDaemon"
   echo
-  echo " 0) EXIT"
+  echo " 0) Exit Menu"
   echo
 }
 
@@ -159,14 +155,14 @@ read_options(){
     [eE]|[eE][xX][iI][tT]|[qQ]|[cC]|[cC]|[oN][sS][oO][lL][eE]|"0")
       clear; exit 0
       ;;
-    "1") # Home Assistant
+    "1") # Home Assistant Core
       m_true="Y"
       while [ ${m_true} == "Y" ]; do
         show_banner_1
         service_menu homeassistant
       done
       ;;
-    "2") # Hass Configurator
+    "2") # Hass-configurator ( File Editor )
       m_true="Y"
       while [ ${m_true} == "Y" ]; do
         show_banner_2
@@ -180,8 +176,8 @@ read_options(){
         service_menu appdaemon
       done
       ;;
-    "watch ha") # Shit for me
-      log_watch="Y"
+    [hH][aA]" logs")
+      tail_log="Y"
       while [ ${log_watch} == "Y" ]; do
         service homeassistant logs -f
       done
@@ -196,7 +192,7 @@ read_options(){
 }
 
 set_false() {
-  log_watch="N"
+  tail_log="N"
 }
 
 show_colors() {

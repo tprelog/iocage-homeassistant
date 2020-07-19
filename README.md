@@ -1,20 +1,8 @@
 # iocage-homeassistant
 Artifact file(s) for [Home Assistant Core][1] (Python Virtualenv)
 
-### This is a FreeNAS / TrueNAS Core Community Plugin
-
-
-**This release is intended for TrueNAS Core 12**
-
-- This plugin will create a 12.1-RELEASE iocage jail and install [Home Assistant Core][1] using a Pyton Virtualenv
-- Includes option to install the [Hass Configurator](https://github.com/danielperna84/hass-configurator#hass-configurator) ( :wrench: File Editor) in a separate Python Virtualenv
-
-**The FreeNAS Community Plugin [provides this basic configuration][config] to help get started**
-
-**Home Assistant Community Guide**
-- [Home Assistant Core -- FreeNAS Community Plugin][ha_forum_qs]
-
-**You may find some additional information in the [project wiki](https://github.com/tprelog/iocage-homeassistant/wiki)**
+**This is a FreeNAS / TrueNAS Core Community Plugin**
+- This branch is intended for TrueNAS Core / FreeBSD 12.1-RELEASE
 
 
 ## Installation
@@ -25,9 +13,15 @@ Artifact file(s) for [Home Assistant Core][1] (Python Virtualenv)
 
 
 
+**Home Assistant Community Guide**
+- [Home Assistant Core -- FreeNAS Community Plugin][ha_forum_qs]
+
+
+**You may find some additional information in the [project wiki](https://github.com/tprelog/iocage-homeassistant/wiki)**
+
 ---
 
-###### Current artifact files can be found in the [12.1-RELEASE branch][4]
+###### artifact files can be found in thier corresponding RELEASE branch
 
 [ha_forum_qs]: https://community.home-assistant.io/t/home-assistant-core-freenas-community-plugin/170542?u=troy
 [FreeNAS_plugins]: _img/TrueNAS_homeassistant.png

@@ -1,152 +1,100 @@
 #!/usr/bin/env bash
+plugin_ver="v_0.4.0"
+srv_name="homeassistant"
 
-  # pkg install autoconf bash ca_root_nss git-lite gmake pkgconf python38 py38-sqlite3 wget zip
-  # git clone -b 12.1-RELEASE https://github.com/tprelog/iocage-homeassistant.git /root/.iocage-homeassistant
-  # bash /root/.iocage-homeassistant/post_install.sh standard
+. /etc/rc.subr
+load_rc_config
 
-_plugin_ver=v.3b.pr4
+#
+# plugin_srv_prefix: Directory where virtualenv directories are located.
+#       Default:  "/usr/local/share"
+#       Set to retro:    `sysrc plugin_srv_prefix=/srv`
+#       Reset to default: `sysrc -x plugin_srv_prefix`
 
-sysrc plugin="${_plugin_ver}"
-sysrc plugin_ini="${_plugin_ver}_$(date +%y%m%d)"
+# ( Hopefully ) sane defaults for *BSD jails / FreeNAS / TrueNAS Core
+srv_prefix="${plugin_srv_prefix:-"/usr/local/share"}"
+srv_uuid="${plugin_srv_uuid:-"8123"}"
+srv_umask="${plugin_srv_umask:-"002"}"
+srv_uname="${plugin_srv_uname:-"${srv_name}"}"
+srv_gname="${plugin_srv_gname:-"${srv_name}"}"
+srv_uhome="${plugin_srv_uhome:-"/home/${srv_name}"}"
+srv_config_dir="${plugin_srv_config_dir:-"${srv_uhome}/${srv_name}"}"
+srv_venv="${plugin_srv_venv:-"${srv_prefix}/${srv_name}"}"
+## Set python version -- try python 3.8 first
+[ ! -z "${_python:="$(which "${plugin_srv_python}")"}" ] \
+|| [ ! -z "${_python:="$(which python3.8)"}" ] \
+|| [ ! -z "${_python:="$(which python3.7)"}" ] \
+|| err 1 "please set python using 'sysrc plugin_srv_python=/path/to/python'"
+debug "using python: ${_python}"
+srv_python="${_python}"
 
-v2srv_user=hass     # Changing this is not tested
-v2srv_uid=8123
-v2env=/usr/local/srv
 
-python=python3.8
-
-v2srv_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
-plugin_overlay="/root/.iocage-homeassistant/overlay"   # Used for `post_install.sh standard`
-
-script="${0}"
-ctrl="$(basename "${0}" .sh)"
-
-first_run () {
-  
-  ## It can be helpful to allow group write permission when the config is shared over a network
-  ## Set `umask 2` so the Home Assistant service will create files with group write permission
-  sed "s/^umask.*/umask 2/g" .cshrc > .cshrcTemp && mv .cshrcTemp .cshrc
-  
-  ## Start the console menu upon login
-  echo -e "\n# Start console menu after login." >> /root/.login
-  echo "if ( -x /root/bin/menu ) menu" >> /root/.login
-  
-  add_user
-  v2srv=homeassistant
-  cp_config "${v2srv}"
-  install_service
+add_user() {
+  local _U_="${srv_uuid}" 
+  local _D_="${srv_uhome}"
+  local _N_="${srv_uname}"
+  local _G_="${srv_gname}"
+  info "adding user ${_N_}"
+  pw adduser -u "${_U_}" -n "${_N_}" -d "${_D_}" -w no -s /usr/local/bin/bash -G dialer 2>/tmp/err \
+  || return 1
+  install -d -m 775 -o "${_N_}" -g "${_G_}" -- "${_D_}"
+  chown -R "${_N_}":"${_G_}" "${_D_}"
 }
 
-add_user () {
 
-  ## Create a home directory
-  install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 775 -- /home/${v2srv_user}
-  
-  ## Add user
-  pw adduser -u ${v2srv_uid} -n ${v2srv_user} -d /home/${v2srv_user} -w no -s /usr/local/bin/bash -G dialer
-  
-  ## This is a workaround to hopefully avoid pip related "/.cache" permission errors
-  install -d -g ${v2srv_uid} -o ${v2srv_uid} -m 700 -- /home/${v2srv_user}/.cache
-  install -l s -g ${v2srv_uid} -o ${v2srv_uid} -m 700 /home/${v2srv_user}/.cache /.cache
-}
-
-install_service() {
-  local _venv_="${v2env}/${v2srv}"
-  local _python_=$(which ${python})
-  
-  if [ ! -d ${_venv_} ]; then
-    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- ${_venv_} || exit
-  elif [ ! -z "$(ls -A ${_venv_})" ]; then  
-    echo -e "${red}\nvirtualenv directory found and it's not empty!\n${orn} Is ${v2srv} already installed?"
-    echo -e " You can remove ${_venv_} and try again${end}\n"
-    exit
-  fi
-  
-  if [ "${v2srv}" == "homeassistant" ]; then
-    ## Temporary patch to use V3 rc service
-    sysrc homeassistant_python="${_python_}"
-    sysrc homeassistant_venv="${_venv_}"
-    sysrc homeassistant_user="${v2srv_user}"
-    sysrc homeassistant_config_dir="/home/${v2srv_user}/homeassistant"
-    sysrc homeassistant_backup_dir="/home/${v2srv_user}/backups"
-  fi
-  
-  su ${v2srv_user} -c '
-
-    [ -f ${HOME}/.profile ] && source ${HOME}/.profile
-  
-    ${1} -m venv ${2}
-    source ${2}/bin/activate || exit 1
-    pip install --upgrade pip wheel
-    
-    if [ ${3} = "homeassistant" ]; then
-      ## Install Home Assistant Core
-      pip install  homeassistant
-      hass --config /home/hass/homeassistant --script check_config
-
-    elif [ ${3} = "appdaemon" ]; then
-      ## Install appdaemon
-      pip install appdaemon
-      
-    elif [ ${3} = "configurator" ]; then
-      ## Install Hass Configurator
-      pip install hass-configurator
-
+set_rc_vars() {
+  echo -e "\nINFO: setting rc vars for ${srv_name}"
+  #sysrc ${srv_name}_enable="${srv_enable}"
+  if [ -z "${_dir_:-"$(sysrc -n ${srv_venv} 2>/dev/null)"}" ]; then
+    if [ -d "/srv/${srv_name}" ]; then
+      echo "RETRO VENV: found directory. setting manual override to use existing directory"
+      srv_venv="/srv/${srv_name}"
     fi
-    deactivate
-  ' _ ${_python_} ${_venv_} ${v2srv} && enableStart_v2srv
+  fi
+  sysrc ${srv_name}_venv="${srv_venv}"
+  sysrc ${srv_name}_python="${srv_python}"
+  sysrc ${srv_name}_umask="${srv_umask}"
+  sysrc ${srv_name}_user="${srv_uname}"
+  sysrc ${srv_name}_group="${srv_gname}"
+  sysrc ${srv_name}_config_dir="${srv_config_dir}"
 }
 
-enableStart_v2srv () {
-  chmod +x /usr/local/etc/rc.d/${v2srv}
-  sysrc -f /etc/rc.conf ${v2srv}_enable=yes
-  service ${v2srv} start; sleep 1
+
+_config_warning() {
+  echo -e " \n${orn} ${2} is not empty!\n"
+  echo    " example configuration will not copied."
+  echo -e " \"${1}\" may fail to start with invalid or missing configuration${end}\n"
+  sleep 1
 }
 
-cp_overlay() {
-  ## This function is used for `post_install standard`
-  mkdir -p /root/bin
-  ln -s ${0} /root/bin/update
-  ln -s ${0} /root/post_install.sh
-  ln -s ${plugin_overlay}/usr/local/etc/plugin/sample_config/ /usr/local/etc/plugin/sample_config/
-  ln -s ${plugin_overlay}/root/bin/menu /root/bin/menu
-  
-  mkdir -p /usr/local/etc/rc.d
-  mkdir -p /usr/local/etc/sudoers.d
-  cp -R ${plugin_overlay}/usr/local/etc/ /usr/local/etc/
-  #cp ${plugin_overlay}/etc/motd /etc/motd
-  #chmod -R +x /usr/local/etc/rc.d/
-}
 
 cp_config() {
-  
-  ## ONLY IF ${config_dir} IS EMPTY else nothing is copied.
+  ## ONLY IF ${config_dir} == EMPTY, else nothing is copied.
   ## copy the example configuration files during an install.
   ## These files should be modified or replaced by end users
-  
-  v2srv=$1
-  hass_overlay="/usr/local/etc/plugin/sample_config/"
-  ha_confd="/home/${v2srv_user}/homeassistant"
+  srv_name="${1:-"${srv_name}"}"
+  config_dir="${srv_config_dir}"
+  example_cfg="/usr/local/examples/${srv_name}/"
+  debug "copy example config for ${srv_name}: ${config_dir}"
   
   # yaml = file containing plugin provided panel_iframes
-  yaml="${ha_confd}/packages/freenas_plugin.yaml"
+  yaml="${homeassistant_config_dir}/packages/freenas_plugin.yaml"
   
-  config_dir="/home/${v2srv_user}/${v2srv}"
   if [ ! -d "${config_dir}" ]; then
-    install -d -g ${v2srv_user} -o ${v2srv_user} -m 775 -- "${config_dir}" || return
+    install -d -g ${srv_uname} -o ${srv_uname} -m 775 -- "${config_dir}" || return
   fi
   
-  case $1 in
+  case "${srv_name}" in
     
-    ## Home Assistant
+    ## Home Assistant Core
     "homeassistant")
-      ## Copy the example Home Assistant configuration files
+      ## Copy the example Home Assistant Core configuration files
       if [ ! "$(ls -A ${config_dir})" ]; then
-        cp -R "${hass_overlay}/${1}/" "${config_dir}"
+        cp -R "${example_cfg}" "${config_dir}"
         find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
-        chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
+        chown -R ${srv_uname}:${srv_uname} ${config_dir} && chmod -R g=u ${config_dir}
       else
-       _config_warning "${1}"
+       _config_warning "${srv_name}" "${config_dir}"
       fi
     ;;
     
@@ -154,11 +102,12 @@ cp_config() {
     "configurator")
       ## Copy the example Hass-Configurator configuration file
       if [ ! "$(ls -A ${config_dir})" ]; then
-        cp -R "${hass_overlay}/${1}/" "${config_dir}"
+        debug "copy ${srv_name} examples: cp -R "${example_cfg}" "${config_dir}""
+        cp -R "${example_cfg}" "${config_dir}"
         find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
-        chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
+        chown -R ${srv_uname}:${srv_uname} ${config_dir} && chmod -R g=u ${config_dir}
       else
-        _config_warning "${1}"
+        _config_warning "${srv_name}" "${config_dir}"
       fi
       # Enable the Hass-Configurator iframe
       if [ -f "${yaml}" ]; then
@@ -168,7 +117,7 @@ cp_config() {
           s/#icon: mdi:wrench/icon: mdi:wrench/
           s/#require_admin: true/require_admin: true/
           s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-        chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
+        chown -R ${srv_uname}:${srv_uname} "${yaml}"; chmod -R g=u "${yaml}"
       fi
     ;;
     
@@ -176,11 +125,12 @@ cp_config() {
     "appdaemon")
       ## Copy the example AppDaemon configuration files
       if [ ! "$(ls -A ${config_dir})" ]; then
-        cp -R "${hass_overlay}/${1}/" "${config_dir}"
+        debug "copy ${srv_name} examples: cp -R "${example_cfg}" "${config_dir}""
+        cp -R "${example_cfg}" "${config_dir}"
         find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
-        chown -R ${v2srv_user}:${v2srv_user} ${config_dir} && chmod -R g=u ${config_dir}
+        chown -R ${srv_uname}:${srv_uname} ${config_dir} && chmod -R g=u ${config_dir}
       else
-        _config_warning "${1}"
+        _config_warning "${srv_name}" "${config_dir}"
       fi
       # Enable the AppDaemon iframe
       if [ -f "${yaml}" ]; then
@@ -190,22 +140,54 @@ cp_config() {
           s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
           s/#require_admin: false/require_admin: true/
           s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-        chown -R ${v2srv_user}:${v2srv_user} "${yaml}"; chmod -R g=u "${yaml}"
+        chown -R ${srv_uname}:${srv_uname} "${yaml}"; chmod -R g=u "${yaml}"
       fi
     ;;
-    
-  esac
+
+esac
 }
 
-_config_warning() {
-  ## called by cp_config function
-  echo -e " \n${red}${config_dir} is not empty!\n"
-  echo    " ${yel}Example configuration files not copied."
-  echo -e " ${1} service may fail to start with invalid or missing configuration${end}\n"
-  sleep 1
+
+install_service() {
+  if [ ! -d ${srv_venv} ]; then
+    info "creating virtualenv for \"${srv_name}\": ${srv_venv}"
+    install -d -g ${srv_gname} -m 775 -o ${srv_uname} -- ${srv_venv} 2>/tmp/err \
+    || err ${?} "$(</tmp/err)"
+  elif [ ! -z "$(ls -A ${srv_venv})" ] && [ "${__name__}" = "post_install.sh" ]; then
+    warn "${orn}virtualenv directory found and it's not empty!${end}"
+    warn "${orn}please remove \"${srv_venv}\" and try again${end}"
+    err 1 "${red}expecting empty directory${end} ${srv_venv}"
+    exit
+  else
+    info "using existing directory for virtualenv: ${srv_venv}"
+  fi
+  su ${srv_uname} -c '
+    ${1} -m venv ${2}
+    source ${2}/bin/activate 2>/tmp/err || exit 1
+    shift 2
+    pip install --upgrade --no-cache pip wheel
+    if [ ${1} = "homeassistant" ]; then
+      pip install --no-cache homeassistant \
+      && service homeassistant config --ensure \
+      && service homeassistant config --check
+    elif [ ${1} = "appdaemon" ]; then
+      pip install --no-cache appdaemon
+    elif [ ${1} = "configurator" ]; then
+      pip install --no-cache hass-configurator
+    else
+      pip install --no-cache "${@}"
+    fi
+    deactivate
+  ' _ ${srv_python} ${srv_venv} ${@} || err ${?} "$(</tmp/err)"
 }
 
-colors () {         # Define Some Colors for Messages
+enableStart_v2srv () {
+  chmod +x /usr/local/etc/rc.d/${srv_name}
+  sysrc -f /etc/rc.conf ${srv_name}_enable=yes
+  service ${srv_name} start
+}
+
+colors () {
   red=$'\e[1;31m'
   grn=$'\e[1;32m'
   yel=$'\e[1;33m'
@@ -216,107 +198,126 @@ colors () {         # Define Some Colors for Messages
   orn=$'\e[38;5;208m'
   end=$'\e[0m'
 }
+
+__script__="${0}"
+__name__="$(basename ${__script__})"
+
+install -m 666 -- /dev/null "/tmp/err"
 colors
 
-if [ "${ctrl}" = "post_install" ]; then
-  
-  if [ -z "${1}" ]; then
-    # Install Home Assistant in a plugin-jail
-    first_run
-    echo "Have Fun!" > /root/PLUGIN_INFO
-    
-  elif [ "${1}" = "standard" ]; then
-    # Install Home Assistant in a standard-jail
-    cp_overlay || exit 1
-    first_run || exit 1
-    service ${v2srv} status && \
+v2srv_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+
+#case "${__name__}" in
+if [ "${__name__}" == "post_install.sh" ] && [ -z "${1}" ]; then
+#  "post_install.sh")
+    ## WARNING Running this script, 'post_install.sh' with NO_ARGS, is intended for the initial installation only
+    ## Install the Home Assistant Core (iocage) Community Plugin - Tested on FreeNAS 11.3 / TrueNAS Core 12.x
+#    rc_debug="ON"
+    add_user || err 1 "$(</tmp/err)"
+    sysrc plugin_ver="${plugin_ver}"
+    sysrc plugin_ini="${plugin_ver}_$(date +%Y%m%d)"
+    set_rc_vars
+    cp_config ${srv_name}
+    service ${srv_name} oneinstall ${srv_name} || err 1 "return $?"
+#    service ${srv_name} config --check
+    enableStart_v2srv
+    ## Start the console menu upon login
+    ## WARNING Running the initial installation multiple times, will result in multiple entries to launch the menu
+    echo -e "\n# Start console menu after login." >> /root/.login
+    echo "if ( -x /root/bin/menu ) menu" >> /root/.login
+    ## TODO Add someting useful to this
+    echo "version: ${plugin_ver}" > /root/PLUGIN_INFO
+    echo -e "\nInitial startup can take 5-10 minutes before Home Assistant is reachable." >> /root/PLUGIN_INFO
+    echo -e " useful information coming soon!\n" >> /root/PLUGIN_INFO
+    exit "${?}"
+#  ;;
+elif [ "${__name__}" == "homeassistant" ] || [ "${1}" == "homeassistant" ]; then
+#  "homeassistant")
+    srv_name="homeassistant"
+    info "service \"${__name__}\" has called post_install.sh ${srv_name}"
+    srv_umask="${homeassistant_umask:-"${srv_umask}"}"
+    srv_uname="${homeassistant_user:-"$(id -unr "${srv_uuid}")"}"
+    srv_gname="${homeassistant_group:-"$(id -nrg "${srv_uname}")"}"
+    srv_uhome="${homeassistant_user_dir:-"$(eval echo "~${srv_uname}" 2>/dev/null)"}"
+    srv_config_dir="${homeassistant_config_dir:-"${srv_uhome}/${srv_name}"}"
+    srv_python="${homeassistant_python:-"${srv_python}"}"
+    srv_venv="${homeassistant_venv:-"${srv_prefix}/${srv_name}"}"
+    install_service ${srv_name} || err 1 "return $?"
+    set_rc_vars
+    cp_config ${srv_name}
+    enableStart_v2srv || err 1 "return $?"
     echo -e "\n ${grn}http://${v2srv_ip}:8123${end}\n"
-    
-  elif [ "${1}" = "hass-configurator" ] || [ "${1}" = "configurator" ]; then
-  # This should have some basic testing. Start by determining if the directory
-  # already exist then figure how to proceed. For now this will show a message and exit.
-    v2srv=configurator
-    cp_config ${v2srv}
-    install_service && echo; service ${v2srv} status && \
-    echo -e "\n ${grn}http://${v2srv_ip}:3218${end}\n"
-    echo -e "You may need to restart Home Assistant for all changes to take effect\n"
-    
-  elif [ "${1}" = "appdaemon" ]; then
-  # This should have some basic testing. Start by determining if the directory
-  # already exist then figure how to proceed. For now this will show a message and exit.
-    v2srv=appdaemon
-    cp_config ${v2srv}
-    install_service && echo; service ${v2srv} status && \
+    echo -e "${orn}Initial startup can take several minutes before Home Assistant is fully loaded${end}\n"
+    exit "${?}"
+#  ;;
+elif [ "${__name__}" == "appdaemon" ] || [ "${1}" == "appdaemon" ]; then
+#  "appdaemon")
+    srv_name="appdaemon"
+    info "service \"${__name__}\" has called post_install.sh ${srv_name}"
+    srv_umask="${appdaemon_umask:-"${srv_umask}"}"
+    srv_uname="${appdaemon_user:-"$(id -unr "${srv_uuid}")"}"
+    srv_gname="${appdaemon_group:-"$(id -nrg "${srv_uname}")"}"
+    srv_uhome="${appdaemon_user_dir:-"$(eval echo "~${srv_uname}" 2>/dev/null)"}"
+    srv_config_dir="${appdaemon_config_dir:-"${srv_uhome}/${srv_name}"}"
+    srv_python="${appdaemon_python:-"${srv_python}"}"
+    srv_venv="${appdaemon_venv:-"${srv_prefix}/${srv_name}"}"
+    install_service ${srv_name} || exit "${?}"
+    set_rc_vars
+    cp_config ${srv_name}
+    debug "checking for nested config directory - ${srv_config_dir}/conf"
+    if [ -d "${_config:="${srv_config_dir}/conf"}" ]; then
+      ## If the directory is not already there - it should no longer be provided by this plugin
+      echo "RETRO CONFIG: directory found - setting manual override to use existing configuration"
+      sysrc appdaemon_config_dir="${_config}"
+    fi
+    enableStart_v2srv || exit "${?}"
     echo -e "\n ${grn}http://${v2srv_ip}:5050${end}\n"
     echo -e "You may need to restart Home Assistant for all changes to take effect\n"
-    
-  elif [ "${1}" = "hacs" ]; then
-  # This should just download the latest version of HACS and extract it to 'homeassistant/custom_components/'
-    [ -d "/home/${v2srv_user}/homeassistant/custom_components/hacs" ] && echo "${red}Is HACS already installed?${end}" && exit
-    pkg install -y wget zip || exit
-    su - ${v2srv_user} -c '
-      wget -O /var/tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip \
-      && unzip -d homeassistant/custom_components/hacs /var/tmp/hacs.zip
-    ' _ || exit 1
-    echo -e "\n${red} !! RESTART HOME ASSISTANT BEFORE THE NEXT STEP !!"
-    echo -e "${grn}     https://hacs.xyz/docs/configuration/start${end}\n"
-    
-  else
-    echo "${red}post_install.sh - Nothing to do.${end}"
-    echo " script: ${script}"
-    echo " crtl name: ${ctrl}"
-    echo " arguments: ${@}"
-  fi
-  
-  exit
-fi
-
-# -------- BELOW THIS LINE IS CODE FOR A "SATNDARD JAIL INSTALL" ----------------- ,
-
-upgrade_menu () {
-  while true; do
-    echo
-    PS3="${cyn} Enter Number to Upgrade${end}: "
-    select OPT in "Home Assistant" "App Daemon" "Configurator" "FreeBSD" "Exit"
-    do
-      case ${OPT} in
-        "Home Assistant")
-          service homeassistant upgrade; break
-          ;;
-        "App Daemon")
-          service appdaemon upgrade; break
-          ;;
-        "Configurator")
-          service configurator upgrade; break
-          ;;
-        "FreeBSD")
-          pkg update && pkg upgrade; break
-          ;;
-        "Exit")
-          exit
-          ;;
-      esac
-    done
-  done
-}
-
-case $@ in
-  "update")
-    upgrade_menu
-    ;;
-  "refresh")
-    git -C /root/.iocage-homeassistant/ pull
-    echo "Please restart this script"
-    exit
-    ;;
-esac
-
-if [ "${ctrl}" = "update" ]; then
-    script="$(realpath "$BASH_SOURCE")"
-    upgrade_menu
+    exit "${?}"
+#  ;;
+elif [ "${__name__}" == "configurator" ] || [ "${1}" == "configurator" ]; then
+#  "configurator")
+    srv_name="configurator"
+    info "service \"${__name__}\" has called post_install.sh ${srv_name}"
+    srv_umask="${configurator_umask:-"${srv_umask}"}"
+    srv_uname="${configurator_user:-"$(id -unr "${srv_uuid}")"}"
+    srv_gname="${configurator_group:-"$(id -nrg "${srv_uname}")"}"
+    srv_uhome="${configurator_user_dir:-"$(eval echo "~${srv_uname}" 2>/dev/null)"}"
+    srv_config_dir="${configurator_config_dir:-"${srv_uhome}/${srv_name}"}"
+    srv_python="${configurator_python:-"${srv_python}"}"
+    srv_venv="${configurator_venv:-"${srv_prefix}/${srv_name}"}"
+    install_service ${srv_name} || err 1 "return $?"
+    set_rc_vars
+    cp_config ${srv_name}
+    debug "checking for retro config file - ${srv_config_dir}/configurator.conf"
+    if [ -f "${_config:="${srv_config_dir}/configurator.conf"}" ]; then
+      ## If the file is not already there - it should no longer be provided by this plugin
+      echo "RETRO CONFIG: file found - setting manual override to use existing configuration"
+      sysrc configurator_config="${_config}"
+    fi
+    enableStart_v2srv || exit "${?}"
+    echo -e "\n ${grn}http://${v2srv_ip}:3218${end}\n"
+    echo -e "You may need to restart Home Assistant for all changes to take effect\n"
+    exit "${?}"
+#  ;;
+elif [ "${__name__}" == "plugin" ]; then
+#  "plugin")
+    ## "plugin" is generic name to test"
+    info " -- MOCK SERVICE ONLY -- "
+    rc_debug="ON"
+    echo "debug should on"
+    debug "TEST: ${__name__}"
+    exit "${?}"
+#  ;;
 else
-    echo "${red}! Finished with Nothing To Do !${end}"
-    echo "script: ${script} "
-    echo "crtl name: ${ctrl} "
-    echo "arguments: ${@} "
+#  *)
+    warn "service \"${__name__}\" has called post_install.sh"
+    debug " script: ${__script__}"
+    debug " name: ${__name__}"
+    debug " args: ${@}"
+    err 1 "Finished with nothing to do!"
+#  ;;
 fi
+#esac
+echo -e "\nYOU SHOULDN'T BE HERE\n"
+exit 1
