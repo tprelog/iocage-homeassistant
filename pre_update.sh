@@ -75,16 +75,15 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
     local _profile_="/home/${_user_}/.profile"
     if [ -f "${_profile_}" ]; then
       mv  "${_profile_}" "${_profile_}.disabled"
-      echo "WARNING: using \"${_profile_}\" is no longer supported by this plugin"
-      echo "INFO: \"${_profile_}\" has been disabled!"
-      echo "INFO: It can be re-enabled using: mv ${_profile_}.disabled ${_profile_}"
+      echo "INFO: \"${_profile_}\" is no longer used by this plugin and has been disabled"
+      echo "INFO: \".profile\" can be re-enabled using: mv ${_profile_}.disabled ${_profile_}"
     fi
   }
   _set_rc_vars() {
     echo -e "\nINFO: setting rc vars for ${srv_name}"
     if [ -z "${_dir_:-"$(sysrc -n ${srv_venv} 2>/dev/null)"}" ]; then
       if [ -d "/srv/${srv_name}" ]; then
-        echo "RETRO VENV: found directory. setting manual override to use existing directory"
+        echo "INFO: retro venv directory found - setting manual override to use existing directory"
         srv_venv="/srv/${srv_name}"
       fi
     fi
@@ -122,10 +121,10 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
       srv_venv="${configurator_venv:-"${srv_prefix}/${srv_name}"}"
       _set_rc_vars
       debug "checking for retro config file - ${srv_config_dir}/configurator.conf"
-      if [ -f "${_config:="${srv_config_dir}/configurator.conf"}" ]; then
+      if [ -f "${srv_config_dir}/configurator.conf" ]; then
         ## If the file is not already there - it should no longer be provided by this plugin
-        echo "RETRO CONFIG: file found - setting manual override to use existing configuration"
-        sysrc configurator_config="${_config}"
+        echo "INFO: retro config file found - setting manual override to use existing configuration"
+        sysrc configurator_config="${srv_config_dir}/configurator.conf"
       fi
     fi
     ## AppDaemon
@@ -141,10 +140,10 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
       srv_venv="${appdaemon_venv:-"${srv_prefix}/${srv_name}"}"
       _set_rc_vars
       debug "checking for nested config directory - ${srv_config_dir}/conf"
-      if [ -d "${_config:="${srv_config_dir}/conf"}" ]; then
+      if [ -d "${srv_config_dir}/conf" ]; then
         ## If the directory is not already there - it should no longer be provided by this plugin
-        echo "RETRO CONFIG: directory found - setting manual override to use existing configuration"
-        sysrc appdaemon_config_dir="${_config}"
+        echo "INFO: retro config directory found - setting manual override to use existing configuration"
+        sysrc appdaemon_config_dir="${srv_config_dir}/conf"
       fi
     fi
   }
