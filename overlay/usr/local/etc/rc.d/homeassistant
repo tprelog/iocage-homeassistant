@@ -431,8 +431,8 @@ homeassistant_reinstall() {
   shift; local _ck_ _rcstop_ _srv_ _v_ _opt_="${@}"
   homeassistant_precmd
   if [ -z "${_srv_:="${_opt_}"}" ]; then
-    if [ -z ${_v_:-`cat ${homeassistant_config_dir}/.HA_VERSION 2>/dev/null`} ] \
-    || [ -z ${_v_:-`${homeassistant_venv}/bin/hass --version 2>/dev/null`} ]; then
+    if [ ! -z ${_v_:=`cat ${homeassistant_config_dir}/.HA_VERSION 2>/dev/null`} ] \
+    || [ ! -z ${_v_:=`${homeassistant_venv}/bin/hass --version 2>/dev/null`} ]; then
       _srv_="${name}==${_v_}"
     else
       _srv_="${name}"
@@ -446,7 +446,7 @@ homeassistant_reinstall() {
   debug "reinstall: ${_srv_}"
   run_rc_command stop 2>/dev/null; _rcstop_=$?
   [ -d ${HOME}/.cache/pip ] && rm -rf -- ${HOME}/.cache/pip
-  [ -d "${homeassistant_venv}" ] && rm -rf -- "${homeassistant_venv}"
+  [ -d "${homeassistant_venv}" ] && cd / && rm -rf -- "${homeassistant_venv}"
   run_rc_command install ${_srv_} && [ ${_rcstop_} == 0 ] && run_rc_command start
   return
 }
