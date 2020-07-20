@@ -1,6 +1,6 @@
 {
     "HASS_API_PASSWORD": "PASTE_LONG_LIVED_ACCESS_TOKEN_HERE",
-    "BASEPATH": "/home/hass/homeassistant",
+    "BASEPATH": "/home/homeassistant/homeassistant",
     "LISTENIP": "0.0.0.0",
     "PORT": 3218,
     "GIT": false,
