@@ -145,12 +145,12 @@ homeassistant_prestart() {
   
   HA_ARGS="--config ${homeassistant_config_dir}"
   
-  if [ ! -z "${homeassistant_log_file}" ]; then
+  if [ -n "${homeassistant_log_file}" ]; then
     install -g ${homeassistant_group} -m 664 -o ${homeassistant_user} -- /dev/null "${homeassistant_log_file}" \
     && HA_ARGS="${HA_ARGS} --log-file ${homeassistant_log_file}"
   fi
   
-  if [ ! -z "${homeassistant_log_rotate_days}" ]; then
+  if [ -n "${homeassistant_log_rotate_days}" ]; then
     HA_ARGS="${HA_ARGS} --log-rotate-days ${homeassistant_log_rotate_days}"
   fi
   
