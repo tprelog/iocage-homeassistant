@@ -65,6 +65,9 @@ load_rc_config ${name}
 : ${homeassistant_rc_umask:="022"}
 : ${homeassistant_user:="homeassistant"}
 : ${homeassistant_venv:="/usr/local/share/homeassistant"}
+: ${homeassistant_cpath:="/usr/local/include"}
+: ${homeassistant_library_path:="/usr/lib:/usr/local/lib"}
+: ${homeassistant_path:="/usr/local/sbin:/usr/local/bin:${PATH}"}
 
 if [ ! "$(id ${homeassistant_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${homeassistant_user}"
@@ -84,10 +87,10 @@ else
 fi
 
 if [ "${homeassistant_openssl}" == "package" ]; then
-  export CPATH=/usr/local/include
-  export LIBRARY_PATH=/usr/lib:/usr/local/lib
+  export CPATH="${homeassistant_cpath}"
+  export LIBRARY_PATH="${homeassistant_library_path}"
 fi
-export PATH=/usr/local/sbin:/usr/local/bin:${PATH}
+export PATH="${homeassistant_path}"
 export TERM=xterm
 
 checkyesno homeassistant_rc_debug && rc_debug="ON"
