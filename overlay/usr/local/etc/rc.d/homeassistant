@@ -209,7 +209,7 @@ homeassistant_status() {
 stop_precmd=${name}_prestop
 homeassistant_prestop() {
   local _owner_
-  if [ "${_owner_:-"`stat -f '%Su' ${pidfile_child}`"}" != ${homeassistant_user} ]; then
+  if [ -n "$rc_pid" ] && [ "${_owner_:-"`stat -f '%Su' ${pidfile_child}`"}" != ${homeassistant_user} ]; then
     err 1 "${homeassistant_user} can not stop a process owned by ${_owner_}"
   fi
 }
