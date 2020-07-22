@@ -65,6 +65,9 @@ load_rc_config ${name}
 : ${homeassistant_rc_umask:="022"}
 : ${homeassistant_user:="homeassistant"}
 : ${homeassistant_venv:="/usr/local/share/homeassistant"}
+: ${homeassistant_cpath:="/usr/local/include"}
+: ${homeassistant_library_path:="/usr/lib:/usr/local/lib"}
+: ${homeassistant_path:="/usr/local/sbin:/usr/local/bin:${PATH}"}
 
 if [ ! "$(id ${homeassistant_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${homeassistant_user}"
@@ -84,10 +87,10 @@ else
 fi
 
 if [ "${homeassistant_openssl}" == "package" ]; then
-  export CPATH=/usr/local/include
-  export LIBRARY_PATH=/usr/lib:/usr/local/lib
+  export CPATH="${homeassistant_cpath}"
+  export LIBRARY_PATH="${homeassistant_library_path}"
 fi
-export PATH=/usr/local/sbin:/usr/local/bin:${PATH}
+export PATH="${homeassistant_path}"
 export TERM=xterm
 
 checkyesno homeassistant_rc_debug && rc_debug="ON"
@@ -142,12 +145,12 @@ homeassistant_prestart() {
   
   HA_ARGS="--config ${homeassistant_config_dir}"
   
-  if [ ! -z "${homeassistant_log_file}" ]; then
+  if [ -n "${homeassistant_log_file}" ]; then
     install -g ${homeassistant_group} -m 664 -o ${homeassistant_user} -- /dev/null "${homeassistant_log_file}" \
     && HA_ARGS="${HA_ARGS} --log-file ${homeassistant_log_file}"
   fi
   
-  if [ ! -z "${homeassistant_log_rotate_days}" ]; then
+  if [ -n "${homeassistant_log_rotate_days}" ]; then
     HA_ARGS="${HA_ARGS} --log-rotate-days ${homeassistant_log_rotate_days}"
   fi
   
@@ -206,7 +209,7 @@ homeassistant_status() {
 stop_precmd=${name}_prestop
 homeassistant_prestop() {
   local _owner_
-  if [ "${_owner_:-"`stat -f '%Su' ${pidfile_child}`"}" != ${homeassistant_user} ]; then
+  if [ -n "$rc_pid" ] && [ "${_owner_:-"`stat -f '%Su' ${pidfile_child}`"}" != ${homeassistant_user} ]; then
     err 1 "${homeassistant_user} can not stop a process owned by ${_owner_}"
   fi
 }
@@ -398,7 +401,20 @@ install_cmd="${name}_install ${@}"
 homeassistant_install() {
   shift; local _new_ _arg_="${@:-"${name}"}"
   debug "install: ${_arg_}"
-  if [ -d "${homeassistant_venv}" ] && [ ! -z "$(ls -A ${homeassistant_venv})" ]; then
+  if [ `echo "${_arg_}" | cut -d" " -f1 | tr '[a-z]' '[A-Z]'` == "HACS" ]; then
+    if [ -d "${HACS:="${homeassistant_config_dir}/custom_components/hacs"}" ] && [ -n "$(ls -A ${HACS})" ]; then
+      echo "${red}Is HACS already installed?${end}"; exit 1
+    fi
+    su - ${homeassistant_user} -c '
+      wget -O /var/tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip \
+      && unzip -d homeassistant/custom_components/hacs /var/tmp/hacs.zip
+      rm /var/tmp/hacs.zip
+    ' _ || exit 1
+    echo -e "\n${red} !! RESTART HOME ASSISTANT BEFORE THE NEXT STEP !!"
+    echo -e "${grn}     https://hacs.xyz/docs/configuration/start${end}\n"
+    exit 0
+  fi
+  if [ -d "${homeassistant_venv}" ] && [ -n "$(ls -A ${homeassistant_venv})" ]; then
     info "found existing directory: ${homeassistant_venv}"
     homeassistant_precmd
   elif [ ! -d "${homeassistant_venv}" ] && [ "${_ck="$(echo ${1} | cut -d= -f1)"}" != "${name}" ]; then
@@ -427,26 +443,39 @@ homeassistant_install() {
 
 reinstall_cmd="${name}_reinstall ${@}"
 homeassistant_reinstall() {
-  shift; local _ck_ _rcstop_ _srv_ _v_ _opt_="${@}"
+  shift; local _ck_ _rcstop_ _v_ _arg_="${@}"
   homeassistant_precmd
-  if [ -z "${_srv_:="${_opt_}"}" ]; then
-    if [ ! -z ${_v_:=`cat ${homeassistant_config_dir}/.HA_VERSION 2>/dev/null`} ] \
-    || [ ! -z ${_v_:=`${homeassistant_venv}/bin/hass --version 2>/dev/null`} ]; then
-      _srv_="${name}==${_v_}"
+  if [ -z "${_arg_}" ]; then
+    if [ -n ${_v_:=`cat ${homeassistant_config_dir}/.HA_VERSION 2>/dev/null`} ] \
+    || [ -n ${_v_:=`${homeassistant_venv}/bin/hass --version 2>/dev/null`} ]; then
+      _arg_="${name}==${_v_}"
     else
-      _srv_="${name}"
+      _arg_="${name}"
     fi
   fi
-  if [ "${_ck_="$(echo ${_srv_} | cut -d= -f1)"}" != "${name}" ]; then
+  if [ "${_ck_="$(echo ${_arg_} | cut -d" " -f1 | cut -d= -f1)"}" != "${name}" ]; then
     warn "this will delete the venv for \"${name}\" but you are trying to reinstall ${_ck_}"
-    warn "expecting \"${name}\" as ARG_1 -- you can try 'forcereinstall' if this is intentional"
+    warn "expecting \"${name}\" as ARG_1 -- you'll need to manually reinstall if this is intentional"
     return 1
+  else
+    echo -e "\n${orn}You are about to recreate the virtualenv:${end} ${homeassistant_venv}"
+    echo -e "${orn}The following packages will be reinstalled:${end} ${_arg_}"
+    read -p " Type 'YES' to continue: " _ans1_
+    [ `echo "${_ans1_:-"NO"}" | tr '[a-z]' '[A-Z]'` == "YES" ] || exit
+    echo -e "\n${orn}Do you want to clear the pip cache?${end}"
+    read -p " Type 'YES' to clear cache: " _ans2_
+    if [ `echo "${_ans2_:-"NO"}" | tr '[a-z]' '[A-Z]'` == "YES" ]; then
+    ## NOTE the iocage plugin does not have pip outside the venv ( this is intentional )
+      su ${homeassistant_user} -c '
+        source ${1}/bin/activate 2>/tmp/err || exit
+        pip cache purge
+        deactivate
+      ' _ ${homeassistant_venv}
+    fi
   fi
-  debug "reinstall: ${_srv_}"
-  run_rc_command stop 2>/dev/null; _rcstop_=$?
-  [ -d ${HOME}/.cache/pip ] && rm -rf -- ${HOME}/.cache/pip
+  echo; run_rc_command stop 2>/dev/null; _rcstop_=$?
   [ -d "${homeassistant_venv}" ] && cd / && rm -rf -- "${homeassistant_venv}"
-  run_rc_command install ${_srv_} && [ ${_rcstop_} == 0 ] && run_rc_command start
+  run_rc_command install ${_arg_} && [ ${_rcstop_} == 0 ] && run_rc_command start
   return
 }
 
