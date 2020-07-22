@@ -157,7 +157,7 @@ configurator_status() {
   if [ -n "$rc_pid" ]; then
     : ${configurator_secure:="NO"}
     _ip_="$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')"
-    _port_="${configurator_port:-"8123"}"
+    _port_="${configurator_port:-"3218"}"
     checkyesno configurator_secure && _http_="https" || _http_="http"
     echo "${name} is running as pid $rc_pid."
     echo "${_http_}://${_ip_}:${_port_}"
