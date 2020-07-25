@@ -234,7 +234,7 @@ upgrade_cmd="${name}_upgrade"
 homeassistant_upgrade() {
   homeassistant_precmd
   run_rc_command stop 2>/dev/null; local _rcstop_=$?
-  homeassistant_install --upgrade "${name}"
+  run_rc_command install --upgrade "${name}"
   homeassistant_config config --check && [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
