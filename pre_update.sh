@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-. /etc/rc.subr
-load_rc_config
+. /etc/rc.subr && load_rc_config
 
 ## NOTE '_plugin_ver_next' should equal to 'plugin_ver' set in "post_install"
 _plugin_ver_next="ver_0.4.0"
@@ -24,16 +23,16 @@ sysrc plugin_ini 2>/dev/null \
 : "${_ver:="$(echo "${_plugin_ver}" | cut -d. -f2)"}"
 
 if [ "${_ver}" == "4" ]; then ## likely to be at ver_0.4.X for awhile
-  echo "INFO: pre_update: found current version "${_plugin_ver}""
+  echo "INFO: pre_update: found current version ${_plugin_ver}"
 elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
   srv_prefix="${plugin_srv_prefix:-"/usr/local/share"}"
   srv_uuid="${plugin_srv_uuid:-"8123"}"
   srv_umask="${plugin_srv_umask:-"002"}"
   srv_venv="${plugin_srv_venv:-"${srv_prefix}/${srv_name}"}"
   ## Set python version -- Try using python 3.8 first
-  [ ! -z "${_python:="$(which "${plugin_srv_python}")"}" ] \
-  || [ ! -z "${_python:="$(which python3.8)"}" ] \
-  || [ ! -z "${_python:="$(which python3.7)"}" ] \
+  [ -n "${_python:="$(which "${plugin_srv_python}")"}" ] \
+  || [ -n "${_python:="$(which python3.8)"}" ] \
+  || [ -n "${_python:="$(which python3.7)"}" ] \
   || warn "unable to find python version - set using 'sysrc plugin_srv_python=/path/to/python'"
   srv_python="${_python:-"SET_ME"}"
   debug "using python: ${_python}"
@@ -41,7 +40,7 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
   rename_console_menu() {
     ## This should handle renaming to the console menu.
     local _name_="menu"
-    if [ ! -f ${_console_menu_:="/root/bin/${_name_}"} ]; then
+    if [ ! -f "${_console_menu_:="/root/bin/${_name_}"}" ]; then
       return 1
     fi  ## and make sure it's executable
     [ -x "${_console_menu_}" ] || chmod +x "${_console_menu_}"
@@ -71,8 +70,9 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
   disable_profile() {
     ## https://homepages.inf.ed.ac.uk/imurray2/compnotes/library_linking.txt
     ## Use openssl 1.1.1 in Home Assistant Core on BSD 11.3-RELEASE
-    local _user_="$(id -unr "${srv_uuid}")"
-    local _profile_="/home/${_user_}/.profile"
+    local _user_ _profile_
+    _user_="$(id -unr "${srv_uuid}")"
+    _profile_="/home/${_user_}/.profile"
     if [ -f "${_profile_}" ]; then
       mv  "${_profile_}" "${_profile_}.disabled"
       echo "INFO: \"${_profile_}\" is no longer used by this plugin and has been disabled"
@@ -81,22 +81,23 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
   }
   _set_rc_vars() {
     echo -e "\nINFO: setting rc vars for ${srv_name}"
-    if [ -z "${_dir_:-"$(sysrc -n ${srv_venv} 2>/dev/null)"}" ]; then
+    if [ -z "${_dir_:-"$(sysrc -n "${srv_venv}" 2>/dev/null)"}" ]; then
       if [ -d "/srv/${srv_name}" ]; then
         echo "INFO: retro venv directory found - setting manual override to use existing directory"
         srv_venv="/srv/${srv_name}"
       fi
     fi
-    sysrc ${srv_name}_venv="${srv_venv}"
-    sysrc ${srv_name}_python="${srv_python}"
-    sysrc ${srv_name}_umask="${srv_umask}"
-    sysrc ${srv_name}_user="${srv_uname}"
-    sysrc ${srv_name}_group="${srv_gname}"
-    sysrc ${srv_name}_config_dir="${srv_config_dir}"
+    
+    sysrc "${srv_name}"_venv="${srv_venv}"
+    sysrc "${srv_name}"_python="${srv_python}"
+    sysrc "${srv_name}"_umask="${srv_umask}"
+    sysrc "${srv_name}"_user="${srv_uname}"
+    sysrc "${srv_name}"_group="${srv_gname}"
+    sysrc "${srv_name}"_config_dir="${srv_config_dir}"
   }
   getset_rcvars() {
     ## Home Assistant Core
-    if [ ! -z $(sysrc -n homeassistant_enable 2>/dev/null) ];then
+    if [ -n "$(sysrc -n homeassistant_enable 2>/dev/null)" ];then
       srv_name="homeassistant"
       info "getting rcvars for service ${srv_name}"
       srv_umask="${homeassistant_umask:-"${srv_umask}"}"
@@ -109,7 +110,7 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
       _set_rc_vars
     fi
     ## Configurator -- File Editor
-    if [ ! -z $(sysrc -n configurator_enable 2>/dev/null) ];then
+    if [ -n "$(sysrc -n configurator_enable 2>/dev/null)" ];then
       srv_name="configurator"
       info "getting rcvars for service ${srv_name}"
       srv_umask="${configurator_umask:-"${srv_umask}"}"
@@ -128,7 +129,7 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
       fi
     fi
     ## AppDaemon
-    if [ ! -z $(sysrc -n appdaemon_enable 2>/dev/null) ];then
+    if [ -n "$(sysrc -n appdaemon_enable 2>/dev/null)" ];then
       srv_name="appdaemon"
       info "getting rcvars for service ${srv_name}"
       srv_umask="${appdaemon_umask:-"${srv_umask}"}"
@@ -154,7 +155,7 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
   disable_profile; echo " disable_profile: $?"
   rename_console_menu; echo -e " rename_console_menu: $?\n"
 else
-  echo "WARNING: unknown version "${_plugin_ver}""
+  echo "WARNING: unknown version ${_plugin_ver}"
 fi
 
 update_post_install() {

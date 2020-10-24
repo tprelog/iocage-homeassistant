@@ -2,8 +2,7 @@
 plugin_ver="v_0.4.0"
 srv_name="homeassistant"
 
-. /etc/rc.subr
-load_rc_config
+. /etc/rc.subr && load_rc_config
 
 #
 # plugin_srv_prefix: Directory where virtualenv directories are located.
@@ -21,9 +20,9 @@ srv_uhome="${plugin_srv_uhome:-"/home/${srv_name}"}"
 srv_config_dir="${plugin_srv_config_dir:-"${srv_uhome}/${srv_name}"}"
 srv_venv="${plugin_srv_venv:-"${srv_prefix}/${srv_name}"}"
 ## Set python version -- try python 3.8 first
-[ ! -z "${_python:="$(which "${plugin_srv_python}")"}" ] \
-|| [ ! -z "${_python:="$(which python3.8)"}" ] \
-|| [ ! -z "${_python:="$(which python3.7)"}" ] \
+[ -n "${_python:="$(which "${plugin_srv_python}")"}" ] \
+|| [ -n "${_python:="$(which python3.8)"}" ] \
+|| [ -n "${_python:="$(which python3.7)"}" ] \
 || err 1 "please set python using 'sysrc plugin_srv_python=/path/to/python'"
 debug "using python: ${_python}"
 srv_python="${_python}"
@@ -45,7 +44,7 @@ add_user() {
 set_rc_vars() {
   echo -e "\nINFO: setting rc vars for ${srv_name}"
   #sysrc ${srv_name}_enable="${srv_enable}"
-  if [ -z "${_dir_:-"$(sysrc -n ${srv_venv} 2>/dev/null)"}" ]; then
+  if [ -z "${_dir_:-"$(sysrc -n "${srv_venv}" 2>/dev/null)"}" ]; then
     if [ -d "/srv/${srv_name}" ]; then
       echo "RETRO VENV: found directory. setting manual override to use existing directory"
       srv_venv="/srv/${srv_name}"
@@ -78,10 +77,11 @@ cp_config() {
   debug "copy example config for ${srv_name}: ${config_dir}"
   
   # yaml = file containing plugin provided panel_iframes
+  # shellcheck disable=SC2154
   yaml="${homeassistant_config_dir}/packages/freenas_plugin.yaml"
   
   if [ ! -d "${config_dir}" ]; then
-    install -d -g ${srv_uname} -o ${srv_uname} -m 775 -- "${config_dir}" || return
+    install -d -g "${srv_uname}" -o "${srv_uname}" -m 775 -- "${config_dir}" || return
   fi
   
   case "${srv_name}" in
@@ -89,10 +89,10 @@ cp_config() {
     ## Home Assistant Core
     "homeassistant")
       ## Copy the example Home Assistant Core configuration files
-      if [ ! "$(ls -A ${config_dir})" ]; then
+      if [ ! "$(ls -A "${config_dir}")" ]; then
         cp -R "${example_cfg}" "${config_dir}"
-        find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
-        chown -R ${srv_uname}:${srv_uname} ${config_dir} && chmod -R g=u ${config_dir}
+        find "${config_dir}" -type f -name ".empty" -depth -exec rm -f {} \;
+        chown -R "${srv_uname}":"${srv_uname}" "${config_dir}" && chmod -R g=u "${config_dir}"
       else
        _config_warning "${srv_name}" "${config_dir}"
       fi
@@ -101,11 +101,11 @@ cp_config() {
     ## Hass-Configurator
     "configurator")
       ## Copy the example Hass-Configurator configuration file
-      if [ ! "$(ls -A ${config_dir})" ]; then
-        debug "copy ${srv_name} examples: cp -R "${example_cfg}" "${config_dir}""
+      if [ ! "$(ls -A "${config_dir}")" ]; then
+        debug "copy ${srv_name} examples: cp -R ${example_cfg} ${config_dir}"
         cp -R "${example_cfg}" "${config_dir}"
-        find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
-        chown -R ${srv_uname}:${srv_uname} ${config_dir} && chmod -R g=u ${config_dir}
+        find "${config_dir}" -type f -name ".empty" -depth -exec rm -f {} \;
+        chown -R "${srv_uname}":"${srv_uname}" "${config_dir}" && chmod -R g=u "${config_dir}"
       else
         _config_warning "${srv_name}" "${config_dir}"
       fi
@@ -116,19 +116,19 @@ cp_config() {
           s/#title: File Editor/title: File Editor/
           s/#icon: mdi:wrench/icon: mdi:wrench/
           s/#require_admin: true/require_admin: true/
-          s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-        chown -R ${srv_uname}:${srv_uname} "${yaml}"; chmod -R g=u "${yaml}"
+          s%#url: http://0.0.0.0:3218%url: http://${v2srv_ip}:3218%" "${yaml}" > "${yaml}".temp && mv "${yaml}".temp "${yaml}"
+        chown -R "${srv_uname}":"${srv_uname}" "${yaml}"; chmod -R g=u "${yaml}"
       fi
     ;;
     
     ## AppDaemon (includes HADashboard)
     "appdaemon")
       ## Copy the example AppDaemon configuration files
-      if [ ! "$(ls -A ${config_dir})" ]; then
-        debug "copy ${srv_name} examples: cp -R "${example_cfg}" "${config_dir}""
+      if [ ! "$(ls -A "${config_dir}")" ]; then
+        debug "copy ${srv_name} examples: cp -R ${example_cfg} ${config_dir}"
         cp -R "${example_cfg}" "${config_dir}"
-        find ${config_dir} -type f -name ".empty" -depth -exec rm -f {} \;
-        chown -R ${srv_uname}:${srv_uname} ${config_dir} && chmod -R g=u ${config_dir}
+        find "${config_dir}" -type f -name ".empty" -depth -exec rm -f {} \;
+        chown -R "${srv_uname}":"${srv_uname}" "${config_dir}" && chmod -R g=u "${config_dir}"
       else
         _config_warning "${srv_name}" "${config_dir}"
       fi
@@ -139,8 +139,8 @@ cp_config() {
           s/#title: AppDaemon/title: AppDaemon/
           s/#icon: mdi:view-dashboard-variant/icon: mdi:view-dashboard-variant/
           s/#require_admin: false/require_admin: true/
-          s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > ${yaml}.temp && mv ${yaml}.temp ${yaml}
-        chown -R ${srv_uname}:${srv_uname} "${yaml}"; chmod -R g=u "${yaml}"
+          s%#url: http://0.0.0.0:5050%url: http://${v2srv_ip}:5050%" "${yaml}" > "${yaml}.temp" && mv "${yaml}.temp" "${yaml}"
+        chown -R "${srv_uname}":"${srv_uname}" "${yaml}"; chmod -R g=u "${yaml}"
       fi
     ;;
 
@@ -151,9 +151,9 @@ esac
 install_service() {
   if [ ! -d ${srv_venv} ]; then
     info "creating virtualenv for \"${srv_name}\": ${srv_venv}"
-    install -d -g ${srv_gname} -m 775 -o ${srv_uname} -- ${srv_venv} 2>/tmp/err \
+    install -d -g "${srv_gname}" -m 775 -o "${srv_uname}" -- ${srv_venv} 2>/tmp/err \
     || err ${?} "$(</tmp/err)"
-  elif [ ! -z "$(ls -A ${srv_venv})" ] && [ "${__name__}" = "post_install.sh" ]; then
+  elif [ -n "$(ls -A ${srv_venv})" ] && [ "${__name__}" = "post_install.sh" ]; then
     warn "${orn}virtualenv directory found and it's not empty!${end}"
     warn "${orn}please remove \"${srv_venv}\" and try again${end}"
     err 1 "${red}expecting empty directory${end} ${srv_venv}"
@@ -161,7 +161,8 @@ install_service() {
   else
     info "using existing directory for virtualenv: ${srv_venv}"
   fi
-  su ${srv_uname} -c '
+  # shellcheck disable=SC2016
+  su "${srv_uname}" -c '
     ${1} -m venv ${2}
     source ${2}/bin/activate 2>/tmp/err || exit 1
     shift 2
@@ -178,13 +179,13 @@ install_service() {
       pip install --no-cache "${@}"
     fi
     deactivate
-  ' _ ${srv_python} ${srv_venv} ${@} || err ${?} "$(</tmp/err)"
+  ' _ "${srv_python}" ${srv_venv} "${@}" || err ${?} "$(</tmp/err)"
 }
 
 enableStart_v2srv () {
-  chmod +x /usr/local/etc/rc.d/${srv_name}
-  sysrc -f /etc/rc.conf ${srv_name}_enable=yes
-  service ${srv_name} start
+  chmod +x "/usr/local/etc/rc.d/${srv_name}"
+  sysrc -f /etc/rc.conf "${srv_name}_enable"=yes
+  service "${srv_name}" start
 }
 
 colors () {
@@ -200,7 +201,7 @@ colors () {
 }
 
 __script__="${0}"
-__name__="$(basename ${__script__})"
+__name__="$(basename "${__script__}")"
 
 install -m 666 -- /dev/null "/tmp/err"
 colors
@@ -217,8 +218,8 @@ if [ "${__name__}" == "post_install.sh" ] && [ -z "${1}" ]; then
     sysrc plugin_ver="${plugin_ver}"
     sysrc plugin_ini="${plugin_ver}_$(date +%Y%m%d)"
     set_rc_vars
-    cp_config ${srv_name}
-    service ${srv_name} oneinstall ${srv_name} || err 1 "return $?"
+    cp_config "${srv_name}"
+    service "${srv_name}" oneinstall "${srv_name}" || err 1 "return $?"
 #    service ${srv_name} config --check
     enableStart_v2srv
     ## Start the console menu upon login
@@ -314,7 +315,7 @@ else
     warn "service \"${__name__}\" has called post_install.sh"
     debug " script: ${__script__}"
     debug " name: ${__name__}"
-    debug " args: ${@}"
+    debug " args: ${*}"
     err 1 "Finished with nothing to do!"
 #  ;;
 fi
