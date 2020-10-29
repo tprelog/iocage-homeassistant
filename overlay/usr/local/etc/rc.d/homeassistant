@@ -77,11 +77,11 @@ fi
 
 if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ] || [ "${HOME}" == "none" ]; then
   : "${homeassistant_config_dir:="/usr/local/etc/${name}"}"
-  : "${homeassistant_user_dir:="${homeassistant_config_dir}"}"
-  export HOME="${homeassistant_venv}"
+  : "${homeassistant_user_dir:="${homeassistant_venv}"}"
+  export HOME="${homeassistant_user_dir}"
 else
-  : ${homeassistant_user_dir:="${HOME}"}
-  : ${homeassistant_config_dir:="${homeassistant_user_dir}/.${name}"}
+  : "${homeassistant_user_dir:="${HOME}"}"
+  : "${homeassistant_config_dir:="${homeassistant_user_dir}/.${name}"}"
   : "${homeassistant_backup_dir:="${homeassistant_user_dir}/.${name}_zip.d"}"
 fi
 
@@ -116,7 +116,7 @@ homeassistant_precmd() {
   elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
     warn "${_srv_} is currently owned by ${_own_}"
     warn "option 1: set the service back to the correct homeassistant_user: sysrc homeassistant_user=${_own_}"
-    warn "option 2: change the permissions on the virtaulenv for a different homeassistant_user: chown -R ${homeassistant_user} ${homeassistant_venv}"
+    warn "option 2: change the permissions on the virtualenv for a different homeassistant_user: chown -R ${homeassistant_user} ${homeassistant_venv}"
     _msg_="${_srv_} is not owned by ${_user_}"
   else
     HA_CMD="${_srv_}"
@@ -160,11 +160,11 @@ homeassistant_prestart() {
 cli_cmd="${name}_cli ${*}"
 homeassistant_cli() {
   shift; local _arg_="${*:-"--help"}" _cli_venv_
-  # TODO use seperate venv for homeassistant-cli if there is interest in having this
-  warn "this SHOULD - BUT currently DOES NOT create a seperate virtualenv"
+  # TODO use separate venv for homeassistant-cli if there is interest in having this
+  warn "this SHOULD - BUT currently DOES NOT create a separate virtualenv"
   warn "experimental: use \`service homeassistant install homeassistant-cli\` to install"
   debug "args: ${_arg_}"
-  _cli_venv_="${homeassistant_cli_vnev:="${homeassistant_venv}"}"
+  _cli_venv_="${homeassistant_cli_venv:="${homeassistant_venv}"}"
   # shellcheck disable=SC2016
   su ${homeassistant_user} -c '
     source ${1}/bin/activate || exit 1
@@ -335,7 +335,7 @@ homeassistant_config() {
             _from_="${dir}"
             install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- "${_to_}" || return 1
           else
-            err 1 "${orn}Destination must be an empty directory${end}"
+            err 1 "expecting empty directory: ${_to_}"
           fi
           # shellcheck disable=SC2016
           su ${homeassistant_user} -c '

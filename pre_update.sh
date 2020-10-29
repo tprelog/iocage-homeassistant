@@ -56,7 +56,7 @@ elif [ "${_ver}" == "0" ] || [ "${_ver}" == "3b" ]; then
     fi
   }
   disable_esphome_menu () {
-    ## ESPHome has been moved to a seperate FreeNAS plugin. 
+    ## ESPHome has been moved to a separate FreeNAS plugin. 
     ## The console menu is no longer available for this service
     sysrc -x esphome_menu 2>/dev/null
     return 0

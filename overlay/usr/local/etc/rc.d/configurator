@@ -98,7 +98,6 @@ command="/usr/sbin/daemon"
 extra_commands="install upgrade test"
 
 configurator_precmd() {
-  ## TODO create $rcvar to use checkyesno / allow users to skip this test
   local _srv_ _own_ _msg_ _cmd_="hass-configurator"
   local _venv_="${configurator_venv}"
   local _user_="${configurator_user}"
@@ -111,10 +110,10 @@ configurator_precmd() {
   elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
     warn "${_srv_} is currently owned by ${_own_}"
     warn "option 1: set the service back to the correct configurator_user: sysrc configurator_user=${_own_}"
-    warn "option 2: change the permissions on the virtaulenv for a different configurator_user: chown -R ${configurator_user} ${configurator_venv}"
+    warn "option 2: change the permissions on the virtualenv for a different configurator_user: chown -R ${configurator_user} ${configurator_venv}"
     _msg_="${_srv_} is not owned by ${_user_}"
   else
-    HC="${_srv_}"
+    HC_CMD="${_srv_}"
     cd ${configurator_venv} || err 1 "cd ${configurator_venv}"
     umask ${configurator_rc_umask}
     return 0
@@ -141,7 +140,7 @@ configurator_prestart() {
     HC_CONFIG="${configurator_config}"
   fi
   
-  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HC} ${HC_ARGS} ${HC_CONFIG}"
+  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HC_CMD} ${HC_ARGS} ${HC_CONFIG}"
 }
 
 start_postcmd=${name}_poststart

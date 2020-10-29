@@ -73,8 +73,8 @@ if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/e
   : "${appdaemon_user_dir:="${appdaemon_venv}"}"
   export HOME="${appdaemon_user_dir}"
 else
-  : ${appdaemon_user_dir:="${HOME}"}
-  : ${appdaemon_config_dir:="${appdaemon_user_dir}/${name}"}
+  : "${appdaemon_user_dir:="${HOME}"}"
+  : "${appdaemon_config_dir:="${appdaemon_user_dir}/${name}"}"
 fi
 
 export PATH=${PATH}:/usr/local/sbin:/usr/local/bin:${appdaemon_venv}/bin
@@ -91,7 +91,6 @@ command="/usr/sbin/daemon"
 extra_commands="install upgrade test"
 
 appdaemon_precmd() {
-  ## TODO create $rcvar to use checkyesno / allow users to skip this test
   local _srv_ _own_ _msg_ _cmd_="appdaemon"
   local _venv_="${appdaemon_venv}"
   local _user_="${appdaemon_user}"
@@ -104,10 +103,10 @@ appdaemon_precmd() {
   elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
     warn "${_srv_} is currently owned by ${_own_}"
     warn "option 1: set the service back to the correct appdaemon_user: sysrc appdaemon_user=${_own_}"
-    warn "option 2: change the permissions on the virtaulenv for a different appdaemon_user: chown -R ${appdaemon_user} ${appdaemon_venv}"
+    warn "option 2: change the permissions on the virtualenv for a different appdaemon_user: chown -R ${appdaemon_user} ${appdaemon_venv}"
     _msg_="${_srv_} is not owned by ${_user_}"
   else
-    AD="${_srv_}"
+    AD_CMD="${_srv_}"
     cd ${appdaemon_venv} || err 1 "cd ${appdaemon_venv}"
     umask ${appdaemon_rc_umask}
     return 0
@@ -131,7 +130,7 @@ appdaemon_prestart() {
     AD_ARGS="${AD_ARGS} --debug ${appdaemon_debug_level}"
   fi
 
-  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${AD} ${AD_ARGS}"
+  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${AD_CMD} ${AD_ARGS}"
 }
 
 
