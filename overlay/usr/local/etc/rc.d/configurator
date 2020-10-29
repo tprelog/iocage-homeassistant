@@ -70,7 +70,7 @@ rcvar=${name}_enable
 if [ ! "$(id ${configurator_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${configurator_user}"
 else
-  HOME=$(eval echo "~${configurator_user}" 2>/dev/null)
+  HOME="$(getent passwd "${configurator_user}" | cut -d: -f6)"
   : "${configurator_group:="$(id -gn ${configurator_user})"}"
 fi
 
@@ -79,8 +79,8 @@ if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/e
   : "${configurator_user_dir:="${configurator_venv}"}"
   export HOME="${configurator_user_dir}"
 else
-  : ${configurator_user_dir:="${HOME}"}
-  : ${configurator_config_dir:="${configurator_user_dir}/.${name}"}
+  : "${configurator_user_dir:="${HOME}"}"
+  : "${configurator_config_dir:="${configurator_user_dir}/.${name}"}"
 fi
 : "${configurator_config:="${configurator_config_dir}/config.json"}"
 
@@ -98,24 +98,21 @@ command="/usr/sbin/daemon"
 extra_commands="install upgrade test"
 
 configurator_precmd() {
-  local _srv_ _own_ _msg_ _cmd_="hass-configurator"
+  local _srv_ _own_ _msg_
   local _venv_="${configurator_venv}"
   local _user_="${configurator_user}"
   if [ ! -d "${_venv_}" ]; then
     _msg_="${_venv_} not found"
   elif [ ! -f "${_venv_}/bin/activate" ]; then
     _msg_="${_venv_}/bin/activate is not found"
-  elif [ ! -x "${_srv_:="${_venv_}/bin/${_cmd_}"}" ]; then
+  elif [ ! -x "${_srv_:="${_venv_}/bin/hass-configurator"}" ]; then
     _msg_="${_srv_} is not found or is not executable"
   elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
     warn "${_srv_} is currently owned by ${_own_}"
-    warn "option 1: set the service back to the correct configurator_user: sysrc configurator_user=${_own_}"
-    warn "option 2: change the permissions on the virtualenv for a different configurator_user: chown -R ${configurator_user} ${configurator_venv}"
     _msg_="${_srv_} is not owned by ${_user_}"
   else
     HC_CMD="${_srv_}"
-    cd ${configurator_venv} || err 1 "cd ${configurator_venv}"
-    umask ${configurator_rc_umask}
+    cd "${_venv_}" || err 1 "cd ${_venv_}"
     return 0
   fi
   err 1 "${_msg_}"
@@ -221,4 +218,5 @@ configurator_test() {
   ' _ ${configurator_venv} || exit ${?}
 }
 
+umask ${configurator_rc_umask}
 run_rc_command "$1"

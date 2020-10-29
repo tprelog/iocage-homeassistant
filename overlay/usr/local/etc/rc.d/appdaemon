@@ -64,7 +64,7 @@ rcvar=${name}_enable
 if [ ! "$(id ${appdaemon_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${appdaemon_user}"
 else
-  HOME=$(eval echo "~${appdaemon_user}" 2>/dev/null)
+  HOME="$(getent passwd "${appdaemon_user}" | cut -d: -f6)"
   : "${appdaemon_group:="$(id -gn ${appdaemon_user})"}"
 fi
 
@@ -91,24 +91,21 @@ command="/usr/sbin/daemon"
 extra_commands="install upgrade test"
 
 appdaemon_precmd() {
-  local _srv_ _own_ _msg_ _cmd_="appdaemon"
+  local _srv_ _own_ _msg_
   local _venv_="${appdaemon_venv}"
   local _user_="${appdaemon_user}"
   if [ ! -d "${_venv_}" ]; then
     _msg_="${_venv_} not found"
   elif [ ! -f "${_venv_}/bin/activate" ]; then
     _msg_="${_venv_}/bin/activate is not found"
-  elif [ ! -x "${_srv_:="${_venv_}/bin/${_cmd_}"}" ]; then
+  elif [ ! -x "${_srv_:="${_venv_}/bin/appdaemon"}" ]; then
     _msg_="${_srv_} is not found or is not executable"
   elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
     warn "${_srv_} is currently owned by ${_own_}"
-    warn "option 1: set the service back to the correct appdaemon_user: sysrc appdaemon_user=${_own_}"
-    warn "option 2: change the permissions on the virtualenv for a different appdaemon_user: chown -R ${appdaemon_user} ${appdaemon_venv}"
     _msg_="${_srv_} is not owned by ${_user_}"
   else
     AD_CMD="${_srv_}"
-    cd ${appdaemon_venv} || err 1 "cd ${appdaemon_venv}"
-    umask ${appdaemon_rc_umask}
+    cd "${_venv_}" || err 1 "cd ${_venv_}"
     return 0
   fi
   err 1 "${_msg_}"
@@ -219,4 +216,5 @@ appdaemon_test() {
   ' _ ${appdaemon_venv} || exit ${?}
 }
 
+umask ${appdaemon_rc_umask}
 run_rc_command "$1"

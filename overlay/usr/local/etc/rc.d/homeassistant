@@ -71,8 +71,8 @@ rcvar=${name}_enable
 if [ ! "$(id ${homeassistant_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${homeassistant_user}"
 else
-  HOME=$(eval echo "~${homeassistant_user}" 2>/dev/null)
   : "${homeassistant_group:="$(id -gn ${homeassistant_user})"}"
+  HOME="$(getent passwd "${homeassistant_user}" | cut -d: -f6)"
 fi
 
 if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ] || [ "${HOME}" == "none" ]; then
@@ -103,25 +103,21 @@ command="/usr/sbin/daemon"
 extra_commands="check_config config install reinstall logs test upgrade cli"
 
 homeassistant_precmd() {
-  ## TODO create $rcvar to use checkyesno / allow users to skip this test
-  local _srv_ _own_ _msg_ _cmd_="hass"
+  local _srv_ _own_ _msg_
   local _venv_="${homeassistant_venv}"
   local _user_="${homeassistant_user}"
   if [ ! -d "${_venv_}" ]; then
     _msg_="${_venv_} not found"
   elif [ ! -f "${_venv_}/bin/activate" ]; then
     _msg_="${_venv_}/bin/activate is not found"
-  elif [ ! -x "${_srv_:="${_venv_}/bin/${_cmd_}"}" ]; then
+  elif [ ! -x "${_srv_:="${_venv_}/bin/hass"}" ]; then
     _msg_="${_srv_} is not found or is not executable"
   elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
-    warn "${_srv_} is currently owned by ${_own_}"
-    warn "option 1: set the service back to the correct homeassistant_user: sysrc homeassistant_user=${_own_}"
-    warn "option 2: change the permissions on the virtualenv for a different homeassistant_user: chown -R ${homeassistant_user} ${homeassistant_venv}"
-    _msg_="${_srv_} is not owned by ${_user_}"
+    warn "${_srv_} is not owned by ${_user_}"
+    _msg_="${_srv_} is currently owned by ${_own_}"
   else
     HA_CMD="${_srv_}"
-    cd ${homeassistant_venv} || err 1 "cd ${homeassistant_venv}"
-    umask ${homeassistant_rc_umask}
+    cd "${_venv_}" || err 1 "cd ${_venv_}"
     return 0
   fi
   err 1 "${_msg_}"
@@ -530,7 +526,7 @@ colors () {
   export blu=$'\e[38;5;39m'
   export orn=$'\e[38;5;208m'
   export end=$'\e[0m'
-}
+}; colors
 
-colors
+umask ${homeassistant_rc_umask}
 run_rc_command "$1"
