@@ -4,51 +4,56 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
+# revised: 20201030
+#
 # homeassistant_enable: Set to YES to enable the homeassistant service.
-#       Default: NO
+#       Default: "NO"
+#       Enable:  sysrc homeassistant_enable="YES"
+#       Disable: sysrc -x homeassistant_enable
 #
 # homeassistant_user: The user account used to run the homeassistant daemon.
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
 #       Default:  "homeassistant"
-#       Set to retro:    `sysrc homeassistant_user="hass"`
-#       Reset to default: `sysrc -x homeassistant_user`
+#       Change:   `sysrc homeassistant_user="hass"`
+#       Reset:    `sysrc -x homeassistant_user`
 #
 # homeassistant_group: The group account used to run the homeassistant daemon.
 #       Default:  $PRIMARY_USER_GROUP
-#       Set to retro:    `sysrc homeassistant_group="hass"`
-#       Reset to default: `sysrc -x homeassistant_group`
+#       Change:   `sysrc homeassistant_group="hass"`
+#       Reset:    `sysrc -x homeassistant_group`
 #
 # homeassistant_user_dir: Directory where the homeassistant user's files can be located.
-#       Default1:   $HOME
-#       Default2:   ${homeassistant_config_dir}     (If $HOME is not set)
-#       Set to retro:    `sysrc homeassistant_user_dir="/home/hass"`
-#       Reset to default: `sysrc -x homeassistant_user_dir`
+#       Default1: $HOME
+#       Default2: ${homeassistant_venv}     (If $HOME is not set)
+#       Change:   `sysrc homeassistant_user_dir="/home/hass"`
+#       Reset:    `sysrc -x homeassistant_user_dir`
 #
 # homeassistant_config_dir: Directory where the homeassistant `configuration.yaml` is located.
-#       Default1:   "$HOME/.homeassistant"
-#       Default2:   "/usr/local/etc/homeassistant"  (If $HOME is not set)
-#       Set to retro:    `sysrc homeassistant_config_dir="/home/hass/homeassistant"`
-#       Reset to default: `sysrc -x homeassistant_config_dir`
+#       Default1: $HOME/.homeassistant"
+#       Default2: "/usr/local/etc/homeassistant"  (If $HOME is not set)
+#       Change:   `sysrc homeassistant_config_dir="/home/hass/homeassistant"`
+#       Reset:    `sysrc -x homeassistant_config_dir`
 #
 # homeassistant_python: Set the version of Python for Home Assistant Core.
-#       Default:  "/usr/local/bin/python3.8"
-#       Set to retro:    `sysrc homeassistant_python="/usr/local/bin/python3.7"`
-#       Reset to default: `sysrc -x homeassistant_python`
+#       Default:  "$(which python)"
+#       Change:   `sysrc homeassistant_python="/usr/local/bin/python3.8"`
+#       Reset:    `sysrc -x homeassistant_python`
 #
 # homeassistant_venv: Directory where the homeassistant virtualenv is located.
 #       Default:  "/usr/local/share/homeassistant"
-#       Set to retro:    `sysrc homeassistant_venv="/srv/homeassistant"`
-#       Reset to default: `sysrc -x homeassistant_venv`
+#       Change:   `sysrc homeassistant_venv="/srv/homeassistant"`
+#       Reset:    `sysrc -x homeassistant_venv`
 
-# ----- ( Basic steps to install Home Assistant Core using this script ) -------------------------
+# ------- Basic steps to install Home Assistant Core using this script ---------------------------
+# - Install Home Assistant Core requirements and add a user
 # pkg install autoconf bash ca_root_nss ffmpeg gcc gmake pkgconf python38 py38-sqlite3 wget zip
 # pw adduser -u 8123 -n homeassistant -d /home/homeassistant -w no -s /usr/local/bin/bash
-# Copy this file to '/usr/local/etc/rc.d/homeassistant' 
-# `chmod +x /usr/local/etc/rc.d/homeassistant`
-# `sysrc -f /etc/rc.conf homeassistant_enable=yes`
-# `service homeassistant install`
-# `service homeassistant start`
+# - Copy this file to '/usr/local/etc/rc.d/homeassistant' 
+# chmod +x /usr/local/etc/rc.d/homeassistant
+# sysrc homeassistant_enable=YES
+# service homeassistant install
+# service homeassistant start
 # ------------------------------------------------------------------------------------------------
 
 name=homeassistant
@@ -60,7 +65,6 @@ rcvar=${name}_enable
 : "${homeassistant_openssl:="base"}"
 : "${homeassistant_python:="/usr/local/bin/python3.8"}"
 : "${homeassistant_rc_debug:="OFF"}"
-: "${homeassistant_rc_info:="OFF"}"
 : "${homeassistant_rc_umask:="022"}"
 : "${homeassistant_user:="homeassistant"}"
 : "${homeassistant_venv:="/usr/local/share/homeassistant"}"
@@ -75,7 +79,7 @@ else
   HOME="$(getent passwd "${homeassistant_user}" | cut -d: -f6)"
 fi
 
-if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ] || [ "${HOME}" == "none" ]; then
+if [ -z "${HOME}" ] || [ ! -d "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ]; then
   : "${homeassistant_config_dir:="/usr/local/etc/${name}"}"
   : "${homeassistant_user_dir:="${homeassistant_venv}"}"
   export HOME="${homeassistant_user_dir}"
@@ -91,9 +95,6 @@ if [ "${homeassistant_openssl}" == "package" ]; then
 fi
 export PATH="${homeassistant_path}"
 export TERM=xterm
-
-checkyesno homeassistant_rc_debug && rc_debug="ON"
-checkyesno homeassistant_rc_info && rc_info="ON"
 
 logfile="/var/log/${name}_daemon.log"
 pidfile="/var/run/${name}_daemon.pid"
@@ -235,25 +236,20 @@ homeassistant_upgrade() {
   homeassistant_config config --check && [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
-logs_cmd="${name}_logs ${*}"
+logs_cmd="${name}_logs ${1} ${2} ${3}"
 homeassistant_logs() {
-  local num=${3}
-  case ${2} in
+  [ "${1}" == "logs" ] && shift
+  case "${1}" in
     -f )
-      tail -F "${logfile}"
-    ;;
+      tail -F "${logfile}" ;;
     -h )
-      head -n "${num:-"50"}" "${logfile}"
-    ;;
+      head -n "${2:-"100"}" "${logfile}" ;;
     -n | -t )
-      tail -n "${num:-"25"}" "${logfile}"
-    ;;
+      tail -n "${2:-"100"}" "${logfile}" ;;
     -l )
-      less -R "${logfile}"
-    ;;
+      less -R "${logfile}" ;;
     * )
-      cat "${logfile}"
-    ;;
+      cat "${logfile}" ;;
   esac
 }
 
@@ -499,6 +495,7 @@ homeassistant_test() {
   # shellcheck disable=SC2016
   su "${homeassistant_user}" -c '
     echo " USER: $(whoami)"
+    source ${1}/bin/activate || exit 20
     echo " HOME: ${HOME}"
     echo " PATH: ${PATH}"
     echo
@@ -506,7 +503,6 @@ homeassistant_test() {
     echo " CPATH = ${CPATH}"
     echo " LIBRARY_PATH = ${LIBRARY_PATH}"
     echo
-    source ${1}/bin/activate || exit 20
     ## Check versions of python and homeassistant
     echo " $(python --version)" || exit 21
     echo " Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)" || exit 22
@@ -526,7 +522,9 @@ colors () {
   export blu=$'\e[38;5;39m'
   export orn=$'\e[38;5;208m'
   export end=$'\e[0m'
-}; colors
+} ; colors
 
 umask ${homeassistant_rc_umask}
-run_rc_command "$1"
+
+checkyesno homeassistant_rc_debug && rc_debug="ON"
+run_rc_command "${1}"

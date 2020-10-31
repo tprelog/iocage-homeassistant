@@ -4,48 +4,52 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
+# revised: 20201030
+#
 # appdaemon_enable: Set to YES to enable the appdaemon service.
 #       Default: NO
+#       Enable:  sysrc appdaemon_enable="YES"
+#       Disable: sysrc -x appdaemon_enable
 #
 # appdaemon_user: The user account used to run the appdaemon daemon.
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
 #       Default:  "appdaemon"
-#       Set to retro:    `sysrc appdaemon_user="hass"`
-#       Reset to default: `sysrc -x appdaemon_user`
+#       change:   sysrc appdaemon_user="homeassistant"
+#       Reset:    sysrc -x appdaemon_user
 #
 # appdaemon_group: The group account used to run the appdaemon daemon.
 #       Default:  $PRIMARY_USER_GROUP
-#       Set to retro:    `sysrc appdaemon_group="hass"`
-#       Reset to default: `sysrc -x appdaemon_group`
+#       change:   sysrc appdaemon_group="homeassistant"
+#       Reset:    sysrc -x appdaemon_group
 #
 # appdaemon_user_dir: Directory where the appdaemon user's files can be located.
 #       Default1: $HOME
-#       Default2: ${appdaemon_config_dir}     (If $HOME is not set)
-#       Set to retro:    `sysrc appdaemon_user_dir="/home/hass"`
-#       Reset to default: `sysrc -x appdaemon_user_dir`
+#       Default2: ${appdaemon_venv}     (If $HOME is not set)
+#       Change:   sysrc appdaemon_user_dir="/home/homeassistant"
+#       Reset:    sysrc -x appdaemon_user_dir
 #
 # appdaemon_config_dir: Directory where the appdaemon configuration is located.
 #       Default1: "$HOME/.appdaemon"
 #       Default2: "/usr/local/etc/appdaemon"  (If $HOME is not set)
-#       Set to retro:    `sysrc appdaemon_config_dir="/home/hass/appdaemon"`
-#       Reset to default: `sysrc -x appdaemon_config_dir`
+#       Change:   sysrc appdaemon_config_dir="/home/homeassistant/appdaemon"
+#       Reset:    sysrc -x appdaemon_config_dir
 #
 # appdaemon_python: Set the version of Python for Home Assistant Core.
 #       Default:  "/usr/local/bin/python3.8"
-#       Set to retro:    `sysrc appdaemon_python="/usr/local/bin/python3.7"`
-#       Reset to default: `sysrc -x appdaemon_python`
+#       Change:   sysrc appdaemon_python="/usr/local/bin/python3.7"
+#       Reset:    sysrc -x appdaemon_python
 #
 # appdaemon_venv: Directory where the appdaemon virtualenv is located.
 #       Default:  "/usr/local/share/appdaemon"
-#       Set to retro:    `sysrc appdaemon_venv="/srv/appdaemon"`
-#       Reset to default: `sysrc -x appdaemon_venv`
+#       Change:   sysrc appdaemon_venv="/srv/appdaemon"
+#       Reset:    sysrc -x appdaemon_venv
 
 # -------------------------------------------------------
-# Copy this file to '/usr/local/etc/rc.d/appdaemon' 
-# `chmod +x /usr/local/etc/rc.d/appdaemon`
-# `sysrc appdaemon_enable=yes`
-# `service appdaemon start`
+# - Copy this file to '/usr/local/etc/rc.d/appdaemon' 
+# chmod +x /usr/local/etc/rc.d/appdaemon
+# sysrc appdaemon_enable=yes
+# service appdaemon start
 # -------------------------------------------------------
 
 name=appdaemon
@@ -56,7 +60,6 @@ rcvar=${name}_enable
 : "${appdaemon_enable:="NO"}"
 : "${appdaemon_python:="/usr/local/bin/python3.8"}"
 : "${appdaemon_rc_debug:="OFF"}"
-: "${appdaemon_rc_info:="OFF"}"
 : "${appdaemon_rc_umask:="022"}"
 : "${appdaemon_user:="appdaemon"}"
 : "${appdaemon_venv:="/usr/local/share/appdaemon"}"
@@ -68,7 +71,7 @@ else
   : "${appdaemon_group:="$(id -gn ${appdaemon_user})"}"
 fi
 
-if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ] || [ "${HOME}" == "none" ]; then
+if [ -z "${HOME}" ] || [ ! -d "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ]; then
   : "${appdaemon_config_dir:="/usr/local/etc/${name}"}"
   : "${appdaemon_user_dir:="${appdaemon_venv}"}"
   export HOME="${appdaemon_user_dir}"
@@ -77,11 +80,8 @@ else
   : "${appdaemon_config_dir:="${appdaemon_user_dir}/${name}"}"
 fi
 
-export PATH=${PATH}:/usr/local/sbin:/usr/local/bin:${appdaemon_venv}/bin
+export PATH=${PATH}:/usr/local/sbin:/usr/local/bin
 export TERM=xterm
-
-checkyesno appdaemon_rc_info && rc_info=${appdaemon_rc_info}
-checkyesno appdaemon_rc_debug && rc_debug=${appdaemon_rc_debug}
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
@@ -171,8 +171,7 @@ appdaemon_install() {
 restart_cmd="${name}_restart"
 appdaemon_restart() {
   run_rc_command stop 2>/dev/null
-  sleep 1
-  run_rc_command start
+  sleep 1 ; run_rc_command start
 }
 
 rcvar_cmd=${name}_rcvar
@@ -217,4 +216,5 @@ appdaemon_test() {
 }
 
 umask ${appdaemon_rc_umask}
-run_rc_command "$1"
+checkyesno appdaemon_rc_debug && rc_debug="${appdaemon_rc_debug}"
+run_rc_command "${1}"

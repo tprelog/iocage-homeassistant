@@ -4,53 +4,57 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
+# revised: 20201030
+#
 # configurator_enable: Set to YES to enable the configurator service.
-#       Default: NO
+#       Default: "NO"
+#       Enable:  sysrc configurator_enable="YES"
+#       Disable: sysrc -x configurator_enable
 #
 # configurator_user: The user account used to run the configurator daemon.
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
 #       Default:  configurator
-#       Set to retro:    `sysrc configurator_user="hass"`
-#       Reset to default: `sysrc -x configurator_user`
+#       Change:   sysrc configurator_user="homeassistant"
+#       Reset:    sysrc -x configurator_user
 #
 # configurator_group: The group account used to run the configurator daemon.
 #       Default:  $PRIMARY_USER_GROUP
-#       Set to retro:    `sysrc configurator_group="hass"`
-#       Reset to default: `sysrc -x configurator_group`
+#       Change:   sysrc configurator_group="homeassistant"
+#       Reset:    sysrc -x configurator_group
 #
 # configurator_user_dir: Directory where the configurator user's files can be located.
 #       Default1: $HOME
-#       Default2: ${configurator_config_dir}     (If $HOME is not set)
-#       Set to retro:    `sysrc configurator_user_dir="/home/hass"`
-#       Reset to default: `sysrc -x configurator_user_dir`
+#       Default2: ${configurator_venv}     (If $HOME is not set)
+#       Change:   sysrc configurator_user_dir="/home/homeassistant"
+#       Reset:    sysrc -x configurator_user_dir
 #
 # configurator_config_dir: Directory where the configurator file is located.
 #       Default1: "$HOME/.configurator"
 #       Default2: "/usr/local/etc/configurator"  (If $HOME is not set)
-#       Set to retro:    `sysrc configurator_config_dir="/home/hass/configurator"`
-#       Reset to default: `sysrc -x configurator_config_dir`
+#       Change:   sysrc configurator_config_dir="/home/homeassistant/configurator"
+#       Reset:    sysrc -x configurator_config_dir
 #
 # configurator_config:	Full path to hass-configurator settings file.
 #       Default:  "$HOME/configurator/.configurator.conf"
-#       Set to retro:    'sysrc configurator_config="/home/hass/configurator/configurator.conf"`
-#       Reset to default: `sysrc -x configurator_config_dir`
+#       Change:   sysrc configurator_config="/home/homeassistant/configurator/config.json"
+#       Reset:    sysrc -x configurator_config_dir
 #
 # configurator_python: Set the version of Python for the virtualenv.
-#       Default:  "/usr/local/bin/python3.7"
-#       Set to retro:    `sysrc configurator_python="/usr/local/bin/python3.7"`
-#       Reset to default: `sysrc -x configurator_python`
+#       Default:  "/usr/local/bin/python3.8"
+#       Change:   sysrc configurator_python="/usr/local/bin/python3.7"
+#       Reset:    sysrc -x configurator_python
 #
 # configurator_venv: Directory where the configurator virtualenv is located.
 #       Default:  "/usr/local/share/configurator"
-#       Set to retro:    `sysrc configurator_venv="/srv/configurator"`
-#       Reset to default: `sysrc -x configurator_venv`
+#       Change:   sysrc configurator_venv="/srv/configurator"
+#       Reset:    sysrc -x configurator_venv
 
 # -------------------------------------------------------
-# Copy this file to '/usr/local/etc/rc.d/configurator' 
-# `chmod +x /usr/local/etc/rc.d/configurator`
-# `sysrc configurator_enable=YES`
-# `service configurator start`
+# - Copy this file to '/usr/local/etc/rc.d/configurator' 
+# chmod +x /usr/local/etc/rc.d/configurator
+# sysrc configurator_enable=YES
+# service configurator start
 # ---------------------------------------------
 
 name=configurator
@@ -61,7 +65,6 @@ rcvar=${name}_enable
 : "${configurator_enable:="NO"}"
 : "${configurator_python:="/usr/local/bin/python3.8"}"
 : "${configurator_rc_debug:="OFF"}"
-: "${configurator_rc_info:="OFF"}"
 : "${configurator_rc_umask:="022"}"
 : "${configurator_standalone:="YES"}"
 : "${configurator_user:="configurator"}"
@@ -74,7 +77,7 @@ else
   : "${configurator_group:="$(id -gn ${configurator_user})"}"
 fi
 
-if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ] || [ "${HOME}" == "none" ]; then
+if [ -z "${HOME}" ] || [ ! -d "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ]; then
   : "${configurator_config_dir:="/usr/local/etc/${name}"}"
   : "${configurator_user_dir:="${configurator_venv}"}"
   export HOME="${configurator_user_dir}"
@@ -84,11 +87,8 @@ else
 fi
 : "${configurator_config:="${configurator_config_dir}/config.json"}"
 
-export PATH=${PATH}:/usr/local/sbin:/usr/local/bin:${configurator_venv}/bin
+export PATH=${PATH}:/usr/local/sbin:/usr/local/bin
 export TERM=xterm
-
-checkyesno configurator_rc_info && rc_info=${configurator_rc_info}
-checkyesno configurator_rc_debug && rc_debug=${configurator_rc_debug}
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
@@ -213,10 +213,11 @@ configurator_test() {
   su "${configurator_user}" -c '
     source ${1}/bin/activate || exit 2
     echo " $(python --version)" || exit 3
-    echo " Hass Configurator $(pip3 show hass-configurator | grep Version | cut -d" " -f2)" || exit 4
+    echo " Hass Configurator $(pip show hass-configurator | grep Version | cut -d" " -f2)" || exit 4
     deactivate
   ' _ ${configurator_venv} || exit ${?}
 }
 
 umask ${configurator_rc_umask}
-run_rc_command "$1"
+checkyesno configurator_rc_debug && rc_debug="${configurator_rc_debug}"
+run_rc_command "${1}"
