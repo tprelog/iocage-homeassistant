@@ -139,11 +139,7 @@ homeassistant_prestart() {
   && install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${pidfile_child}" \
   || return 1
 
-  if [ ! -d "${homeassistant_config_dir}" ]; then
-    install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- "${homeassistant_config_dir}" \
-    || return 1
-  fi
-  
+  homeassistant_ensure_config homeassistant_check_config
   HA_ARGS="--config ${homeassistant_config_dir}"
   
   if [ -n "${homeassistant_log_file:-}" ]; then
@@ -164,38 +160,28 @@ homeassistant_prestart() {
   rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HA_CMD} ${HA_ARGS}"
 }
 
-
-cli_cmd="${name}_cli ${*}"
-homeassistant_cli() {
-  shift; local _arg_="${*:-"--help"}" _cli_venv_
-  # TODO use separate venv for homeassistant-cli if there is interest in having this
-  warn "this SHOULD - BUT currently DOES NOT create a separate virtualenv"
-  warn "experimental: use \`service homeassistant install homeassistant-cli\` to install"
-  debug "args: ${_arg_}"
-  _cli_venv_="${homeassistant_cli_venv:="${homeassistant_venv}"}"
-  # shellcheck disable=SC2016
-  su ${homeassistant_user} -c '
-    source ${1}/bin/activate || exit 1
-    shift
-    hass-cli ${@}
-    deactivate
-  ' _ ${_cli_venv_} "${_arg_}"
-}
-
-check_config_cmd="${name}_check_config"
-homeassistant_check_config() {
-  homeassistant_config config --check
-}
-
-ensure_config_cmd="${name}_ensure_config"
-homeassistant_ensure_config() {
-  homeassistant_config config --ensure
-}
-
 start_postcmd=${name}_poststart
 homeassistant_poststart() {
-  sleep 1
-  run_rc_command status
+  sleep 1 ; run_rc_command status
+}
+
+restart_precmd="${name}_prerestart"
+homeassistant_prerestart() {
+  homeassistant_check_config "${homeassistant_config_dir}"
+}
+
+stop_precmd=${name}_prestop
+homeassistant_prestop() {
+  local _owner_
+  if [ -n "${rc_pid}" ] && [ "${_owner_:-"$(stat -f '%Su' ${pidfile_child})"}" != ${homeassistant_user} ]; then
+    err 1 "${homeassistant_user} can not stop a process owned by ${_owner_}"
+  fi
+}
+
+stop_postcmd=${name}_poststop
+homeassistant_poststop() {
+  rm -f -- "${pidfile_child}"
+  rm -f -- "${pidfile}"
 }
 
 status_cmd=${name}_status
@@ -213,31 +199,44 @@ homeassistant_status() {
   fi
 }
 
-stop_precmd=${name}_prestop
-homeassistant_prestop() {
-  local _owner_
-  if [ -n "$rc_pid" ] && [ "${_owner_:-"$(stat -f '%Su' ${pidfile_child})"}" != ${homeassistant_user} ]; then
-    err 1 "${homeassistant_user} can not stop a process owned by ${_owner_}"
+check_config_cmd="${name}_check_config ${1} ${2}"
+homeassistant_check_config() {
+  [ "${1}" == "check_config" ] && shift
+  homeassistant_script check_config --config "${1:-"${homeassistant_config_dir}"}"
+}
+
+ensure_config_cmd="${name}_ensure_config ${1} ${2}"
+homeassistant_ensure_config() {
+  [ "${1}" == "ensure_config" ] && shift
+  local _config_dir_="${1:-"${homeassistant_config_dir}"}"
+  debug "config_dir: ${_config_dir_}"
+  if [ ! -d "${_config_dir_}" ]; then
+    install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- "${_config_dir_}" \
+    || err 1 "unable to create directory: ${_config_dir_}"
   fi
+  homeassistant_script ensure_config --config "${_config_dir_}"
 }
 
-stop_postcmd=${name}_poststop
-homeassistant_poststop() {
-  rm -f -- "${pidfile_child}"
-  rm -f -- "${pidfile}"
-}
-
-restart_precmd="${name}_prerestart"
-homeassistant_prerestart() {
-  homeassistant_config config --check
+script_cmd="${name}_script ${*}"
+homeassistant_script() {
+  [ "${1}" == "script" ] && shift
+  local _action_="${1}" ; shift
+  local _args_="${*}"
+  homeassistant_precmd
+  # shellcheck disable=SC2016
+  su ${homeassistant_user} -c '
+    source ${1}/bin/activate || exit 1
+    hass --script ${2} ${3}
+    deactivate
+  ' _ ${homeassistant_venv} "${_action_}" "${_args_}"
 }
 
 upgrade_cmd="${name}_upgrade"
 homeassistant_upgrade() {
   homeassistant_precmd
-  run_rc_command stop 2>/dev/null; local _rcstop_=$?
+  run_rc_command stop 2>/dev/null ; local _rcstop_=${?}
   run_rc_command install --upgrade "${name}"
-  homeassistant_config config --check && [ ${_rcstop_} == 0 ] && run_rc_command start
+  homeassistant_check_config && [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
 logs_cmd="${name}_logs ${1} ${2} ${3}"
@@ -257,10 +256,7 @@ homeassistant_logs() {
   esac
 }
 
-
-config_cmd="${name}_config ${*}"
-homeassistant_config() {
-  usage() {
+homeassistant_config_usage() {
     echo -e "\n Config Directory: ${homeassistant_config_dir}"
     echo -e " Backup Directory: ${homeassistant_backup_dir}\n"
     cat <<-_HELP_ # NOTE this Here Doc uses TABS to function correctly
@@ -270,17 +266,38 @@ homeassistant_config() {
 	  export TODO = Add more useful information to help
 	    
 	    -b  | --backup   Create zip backup of a configuration directory.
-	    -c  | --check    Run a config check.
 	    -cp | --copy     Copy configuration to another directory.
-	    -e  | --ensure   Create a default configuration.
 	    -r  | --restore  Restore zip backup to a configuration directory.
 	    
 	_HELP_
     return 0
   }
   
-  local dir="${3}"
-    case $2 in
+config_cmd="${name}_config ${*}"
+homeassistant_config() {
+  [ "${1}" == "config" ] && shift
+  local _opt_ _dir_  _from_ _to_
+  _opt_="${1}"
+  _dir_="${2}"
+  case ${_opt_} in
+    -h | --help )
+        homeassistant_config_usage
+        ;;
+    -cp | --copy )
+        [ -n "${_dir_}" ] || err 1 "Please provide a /path/to/directory"
+        ## One folder must be empty! Copy config to the empty folder.
+        if [ ! -d "${_dir_}" ] || [ ! "$(ls -A "${_dir_}")" ]; then
+          _from_="${homeassistant_config_dir}"
+          _to_="${_dir_}"
+        elif [ ! -d "${homeassistant_config_dir}" ] || [ ! "$(ls -A "${homeassistant_config_dir}")" ]; then
+          _to_="${homeassistant_config_dir}"
+          _from_="${_dir_}"
+        else
+          err 1 "expecting empty directory: ${_to_}"
+        fi
+        install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- "${_to_}" \
+        && cp -a "${_from_}"/ "${_to_}"/
+        ;;
       -b | --backup )
           local conf_dir="${dir:=$homeassistant_config_dir}"
           if [ ! -d ${conf_dir} ]; then
@@ -305,55 +322,6 @@ homeassistant_config() {
             echo -e "${grn}Backup Created${end} ${2}/${backup}"
           ' _ ${conf_dir} ${homeassistant_backup_dir} || return $?
           ;;
-          
-      -c | --check )
-          homeassistant_precmd
-          local conf_dir="${dir:=$homeassistant_config_dir}"
-          info "checking configuration: ${conf_dir}"
-          # shellcheck disable=SC2016
-          su ${homeassistant_user} -c '
-            source ${1}/bin/activate || exit 1
-            hass --config ${2} --script check_config
-            deactivate
-          ' _ ${homeassistant_venv} ${conf_dir}
-          ;;
-          
-      -cp | --copy )
-          [ -n "${dir}" ] || err 1 "Please provide a /path/to/directory"
-          local _from_ _to_
-          ## One folder must be empty! Copy config to the empty folder.
-          if [ ! -d "${dir}" ] || [ ! "$(ls -A ${dir})" ]; then
-            _from_="${homeassistant_config_dir}"
-            _to_="${dir}"
-            install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- "${_to_}" || return 1
-          elif [ ! -d "${homeassistant_config_dir}" ] || [ ! "$(ls -A ${homeassistant_config_dir})" ]; then
-            _to_="${homeassistant_config_dir}"
-            _from_="${dir}"
-            install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- "${_to_}" || return 1
-          else
-            err 1 "expecting empty directory: ${_to_}"
-          fi
-          # shellcheck disable=SC2016
-          su ${homeassistant_user} -c '
-            cp -R ${1}/ ${2}/
-          ' _ ${_from_} ${_to_}
-          ;;
-          
-      -e | --ensure )
-          homeassistant_precmd
-          local conf_dir="${dir:=$homeassistant_config_dir}"
-          # shellcheck disable=SC2016
-          su ${homeassistant_user} -c '
-            source ${1}/bin/activate || exit 1
-            hass --config ${2} --script ensure_config
-            deactivate
-          ' _ ${homeassistant_venv} ${conf_dir}
-          ;;
-          
-      -h | --help )
-          usage
-          ;;
-        
       -r | --restore )
           local _create_="false" conf_dir="${dir:=$homeassistant_config_dir}"
           if [ ! -d ${homeassistant_backup_dir} ] || [ ! "$(ls -A ${homeassistant_backup_dir}/*.zip)" ]; then
@@ -393,8 +361,7 @@ homeassistant_config() {
           fi
           ;;
       * )
-        usage
-        ;;
+      homeassistant_config_usage ;;
     esac
 }
 
