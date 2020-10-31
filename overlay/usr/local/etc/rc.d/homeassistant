@@ -223,11 +223,6 @@ homeassistant_prerestart() {
   homeassistant_config config --check
 }
 
-rcvar_cmd=${name}_rcvar
-homeassistant_rcvar() {
-  sysrc -a | grep ^${name}
-}
-
 upgrade_cmd="${name}_upgrade"
 homeassistant_upgrade() {
   homeassistant_precmd
@@ -472,12 +467,11 @@ homeassistant_reinstall() {
         pip cache purge
         deactivate
       ' _ ${homeassistant_venv}
-    fi
-  fi
-  echo; run_rc_command stop 2>/dev/null; _rcstop_=$?
-  [ -d "${homeassistant_venv}" ] && cd / && rm -rf -- "${homeassistant_venv}"
-  run_rc_command install ${_arg_} && [ ${_rcstop_} == 0 ] && run_rc_command start
-  return
+}
+
+info_cmd=${name}_info
+homeassistant_info() {
+  sysrc -a | grep ^${name}
 }
 
 test_cmd="${name}_test $*"
