@@ -139,7 +139,7 @@ homeassistant_prestart() {
   && install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${pidfile_child}" \
   || return 1
 
-  homeassistant_ensure_config homeassistant_check_config
+  homeassistant_ensure_config "${homeassistant_config_dir}"
   HA_ARGS="--config ${homeassistant_config_dir}"
   
   if [ -n "${homeassistant_log_file:-}" ]; then
