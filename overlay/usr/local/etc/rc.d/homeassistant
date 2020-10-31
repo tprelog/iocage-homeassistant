@@ -389,14 +389,14 @@ homeassistant_install_hacs() {
 
 install_cmd="${name}_install ${*}"
 homeassistant_install() {
-  [ "${1}" == "install" ] && shift
+  [ "${1}" == "install" ] || [ "${1}" == "oneinstall" ] && shift
   local _create_ _arg_
   _arg_="${*:-"${name}"}"
   debug "install: ${_arg_}"
-  if [ "${1%==*}" == "${name}" ] && { [ ! -d "${homeassistant_venv}" ] || [ -n "$(ls -A ${homeassistant_venv})" ]; }; then
+  if [ "${_arg_%==*}" == "${name}" ] && { [ ! -d "${homeassistant_venv}" ] || [ ! "$(ls -A ${homeassistant_venv})" ]; }; then
     debug "creating virtualenv: ${homeassistant_venv}"
-    install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- ${homeassistant_venv} 2>/tmp/err \
-    || err ${?} "$(</tmp/err)"
+    install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- ${homeassistant_venv} \
+    || err 1 "failed to create directory: ${homeassistant_venv}"
     _create_="YES"
   elif [ -d "${homeassistant_venv}" ]; then
     debug "found existing directory: ${homeassistant_venv}"
