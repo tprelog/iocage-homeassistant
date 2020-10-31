@@ -189,15 +189,13 @@ homeassistant_poststart() {
 
 status_cmd=${name}_status
 homeassistant_status() {
-  local _http_ _ip_ _port_
-  # shellcheck disable=SC2154
+  local _http_ _ip_
   if [ -n "${rc_pid}" ]; then
-    : "${homeassistant_secure:="NO"}"
+    : "${homeassistant_secure:="NO"}" # This is only a cosmetic variable - used by the status_cmd
     _ip_="$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')"
-    _port_="${homeassistant_port:-"8123"}"
     checkyesno homeassistant_secure && _http_="https" || _http_="http"
     echo "${name} is running as pid ${rc_pid}."
-    echo "${_http_}://${_ip_}:${_port_}"
+    echo "${_http_}://${_ip_}:${homeassistant_port:-"8123"}"  # This is only a cosmetic variable
   else
     echo "${name} is not running."
     return 1
