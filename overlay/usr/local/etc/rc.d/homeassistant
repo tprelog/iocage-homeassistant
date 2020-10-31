@@ -71,6 +71,11 @@ rcvar=${name}_enable
 : "${homeassistant_cpath:="/usr/local/include"}"
 : "${homeassistant_library_path:="/usr/lib:/usr/local/lib"}"
 : "${homeassistant_path:="/usr/local/sbin:/usr/local/bin:${PATH}"}"
+: "${homeassistant_safe_mode:="NO"}"
+: "${homeassistant_debug:="NO"}"
+: "${homeassistant_skip_pip:="NO"}"
+: "${homeassistant_verbrose:="NO"}"
+: "${homeassistant_color_log:="YES"}"
 
 if [ ! "$(id ${homeassistant_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${homeassistant_user}"
@@ -149,6 +154,12 @@ homeassistant_prestart() {
   if [ -n "${homeassistant_log_rotate_days:-}" ]; then
     HA_ARGS="${HA_ARGS} --log-rotate-days ${homeassistant_log_rotate_days}"
   fi
+  
+  checkyesno homeassistant_color_log || HA_ARGS="${HA_ARGS} --log-no-color"
+  checkyesno homeassistant_debug && HA_ARGS="${HA_ARGS} --debug"
+  checkyesno homeassistant_safe_mode && HA_ARGS="${HA_ARGS} --safe_mode"
+  checkyesno homeassistant_skip_pip && HA_ARGS="${HA_ARGS} --skip_pip"
+  checkyesno homeassistant_verbose && HA_ARGS="${HA_ARGS} --verbose"
   
   rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HA_CMD} ${HA_ARGS}"
 }
