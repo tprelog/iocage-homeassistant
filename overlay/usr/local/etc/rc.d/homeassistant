@@ -257,27 +257,6 @@ homeassistant_upgrade() {
   homeassistant_check_config && [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
-install_hacs_cmd="${name}_install_hacs ${1} ${2}"
-homeassistant_install_hacs() {
-  [ "${1}" == "install_hacs" ] && shift
-  local _custom_components_ _hacs_ _hacs_zip_
-  _custom_components_="${1:-"${homeassistant_config_dir}"}/custom_components"
-  _hacs_="${_custom_components_}/hacs"
-  debug "HACS install directory: ${_hacs_}"
-  if [ -d "${_hacs_}" ] && [ -n "$(ls -A "${_hacs_}")" ]; then
-    echo -e "\nHACS is already installed: ${_hacs_}" ; err 1 "expecting empty directory"
-  elif [ ! -d "${_custom_components_}" ]; then
-    install -d -g "${homeassistant_group}" -m 775 -o ${homeassistant_user} -- "${_custom_components_}"
-  fi
-  _hacs_zip_="$(mktemp -t hacs)"
-  wget -O "${_hacs_zip_}" https://github.com/hacs/integration/releases/latest/download/hacs.zip
-  unzip -qt "${_hacs_zip_}" || { rm "${_hacs_zip_}" ; err 1 "failed or invalid download" ; }
-  unzip -d "${_hacs_}" "${_hacs_zip_}" \
-  && chown -R "${homeassistant_user}":"${homeassistant_group}" "${_hacs_}" \
-  && echo -e "\nRemember to restart Home Assistant before you configure HACS\n https://hacs.xyz/docs/configuration/start \n"
-  rm "${_hacs_zip_}"
-}
-
 install_cmd="${name}_install ${*}"
 homeassistant_install() {
   [ "${1}" == "install" ] || [ "${1}" == "oneinstall" ] && shift
