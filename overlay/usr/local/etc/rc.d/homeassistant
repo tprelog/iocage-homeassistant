@@ -106,7 +106,7 @@ pidfile="/var/run/${name}_daemon.pid"
 pidfile_child="/var/run/${name}.pid"
 
 command="/usr/sbin/daemon"
-extra_commands="check_config ensure_config install_hacs upgrade install reinstall logs test info script"
+extra_commands="check_config ensure_config upgrade install reinstall logs script test"
 
 
 homeassistant_precmd() {
