@@ -367,12 +367,6 @@ homeassistant_test() {
 
 colors () {
   export red=$'\e[1;31m'
-  export grn=$'\e[1;32m'
-  export yel=$'\e[1;33m'
-  export bl1=$'\e[1;34m'
-  export mag=$'\e[1;35m'
-  export cyn=$'\e[1;36m'
-  export blu=$'\e[38;5;39m'
   export orn=$'\e[38;5;208m'
   export end=$'\e[0m'
 } ; colors
