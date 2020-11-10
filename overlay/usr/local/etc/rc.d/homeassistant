@@ -328,10 +328,6 @@ homeassistant_reinstall() {
   homeassistant_install ${_arg_} && [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
-info_cmd=${name}_info
-homeassistant_info() {
-  sysrc -a | grep ^${name}
-}
 
 test_cmd="${name}_test $*"
 homeassistant_test() {
