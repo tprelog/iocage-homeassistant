@@ -195,13 +195,13 @@ homeassistant_status() {
 
 check_config_cmd="${name}_check_config ${1} ${2}"
 homeassistant_check_config() {
-  [ "${1}" == "check_config" ] && shift
+  [ "${1}" == "check_config" ] || [ "${1}" == "onecheck_config" ] && shift
   homeassistant_script check_config --config "${1:-"${homeassistant_config_dir}"}"
 }
 
 ensure_config_cmd="${name}_ensure_config ${1} ${2}"
 homeassistant_ensure_config() {
-  [ "${1}" == "ensure_config" ] && shift
+  [ "${1}" == "ensure_config" ] || [ "${1}" == "oneensure_config" ] && shift
   local _config_dir_="${1:-"${homeassistant_config_dir}"}"
   debug "config_dir: ${_config_dir_}"
   if [ ! -d "${_config_dir_}" ]; then
@@ -213,7 +213,7 @@ homeassistant_ensure_config() {
 
 script_cmd="${name}_script ${*}"
 homeassistant_script() {
-  [ "${1}" == "script" ] && shift
+  [ "${1}" == "script" ] || [ "${1}" == "onescript" ] && shift
   local _action_="${1}" ; shift
   local _args_="${*}"
   homeassistant_precmd
@@ -286,7 +286,7 @@ homeassistant_install() {
 
 reinstall_cmd="${name}_reinstall ${*}"
 homeassistant_reinstall() {
-  [ "${1}" == "reinstall" ] && shift
+  [ "${1}" == "reinstall" ] || [ "${1}" == "onereinstall" ] && shift
   local _ans1_ _ans2_ _rcstop_ _version_ _arg_
   homeassistant_precmd
   if [ "${1%==*}" == "${name}" ]; then
