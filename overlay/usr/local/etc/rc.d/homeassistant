@@ -327,7 +327,8 @@ homeassistant_reinstall() {
   fi; echo
   run_rc_command stop 2>/dev/null; _rcstop_=${?}
   cd / ; rm -r -- "${homeassistant_venv}" || err 1 "failed to remove ${homeassistant_venv}"
-  homeassistant_install ${_arg_} && [ ${_rcstop_} == 0 ] && run_rc_command start
+  { homeassistant_install ${_arg_} ; homeassistant_check_config ; } \
+  && [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
 
