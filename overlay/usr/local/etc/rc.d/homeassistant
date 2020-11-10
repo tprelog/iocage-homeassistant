@@ -108,6 +108,8 @@ pidfile_child="/var/run/${name}.pid"
 command="/usr/sbin/daemon"
 extra_commands="check_config ensure_config upgrade install reinstall logs script test"
 
+umask ${homeassistant_rc_umask}
+checkyesno homeassistant_rc_debug && rc_debug="ON"
 
 homeassistant_precmd() {
   local _srv_ _own_ _msg_
@@ -367,7 +369,4 @@ colors () {
   export end=$'\e[0m'
 } ; colors
 
-umask ${homeassistant_rc_umask}
-
-checkyesno homeassistant_rc_debug && rc_debug="ON"
 run_rc_command "${1}"
