@@ -225,16 +225,15 @@ homeassistant_script() {
   ' _ ${homeassistant_venv} "${_action_}" "${_args_}"
 }
 
-logs_cmd="${name}_logs ${1} ${2} ${3}"
+logs_cmd="${name}_logs ${*}"
 homeassistant_logs() {
-  [ "${1}" == "logs" ] && shift
-  case "${1}" in
+  case "${2}" in
     -f )
       tail -F "${logfile}" ;;
     -h )
-      head -n "${2:-"100"}" "${logfile}" ;;
+      head -n "${3:-"100"}" "${logfile}" ;;
     -n | -t )
-      tail -n "${2:-"100"}" "${logfile}" ;;
+      tail -n "${3:-"100"}" "${logfile}" ;;
     -l )
       less -R "${logfile}" ;;
     * )
