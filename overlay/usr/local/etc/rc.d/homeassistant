@@ -62,16 +62,14 @@ rcvar=${name}_enable
 . /etc/rc.subr && load_rc_config ${name}
 
 : "${homeassistant_enable:="NO"}"
-: "${homeassistant_openssl:="base"}"
-: "${homeassistant_python:="/usr/local/bin/python3.8"}"
-: "${homeassistant_rc_debug:="OFF"}"
-: "${homeassistant_rc_umask:="022"}"
+: "${homeassistant_rc_debug:="NO"}"
 : "${homeassistant_user:="homeassistant"}"
+: "${homeassistant_python:="/usr/local/bin/python3.8"}"
 : "${homeassistant_venv:="/usr/local/share/homeassistant"}"
 : "${homeassistant_safe_mode:="NO"}"
 : "${homeassistant_debug:="NO"}"
 : "${homeassistant_skip_pip:="NO"}"
-: "${homeassistant_verbrose:="NO"}"
+: "${homeassistant_verbose:="NO"}"
 : "${homeassistant_color_log:="YES"}"
 
 if [ ! "$(id ${homeassistant_user} 2>/dev/null)" ]; then
@@ -88,14 +86,13 @@ if [ -z "${HOME}" ] || [ ! -d "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || 
 else
   : "${homeassistant_user_dir:="${HOME}"}"
   : "${homeassistant_config_dir:="${homeassistant_user_dir}/.${name}"}"
-  : "${homeassistant_backup_dir:="${homeassistant_user_dir}/.${name}_zip.d"}"
 fi
 
 [ -n "${homeassistant_cpath:-}" ] && export CPATH="${homeassistant_cpath}"
 [ -n "${homeassistant_library_path:-}" ] && export LIBRARY_PATH="${homeassistant_library_path}"
 [ -n "${homeassistant_path:-}" ] && export PATH="${homeassistant_path}"
 
-export TERM=xterm
+umask "${homeassistant_umask:-022}"
 
 logfile="/var/log/${name}_daemon.log"
 pidfile="/var/run/${name}_daemon.pid"
@@ -103,9 +100,6 @@ pidfile_child="/var/run/${name}.pid"
 
 command="/usr/sbin/daemon"
 extra_commands="check_config ensure_config upgrade install reinstall logs script test"
-
-umask ${homeassistant_rc_umask}
-checkyesno homeassistant_rc_debug && rc_debug="ON"
 
 homeassistant_precmd() {
   local _srv_ _own_ _msg_
@@ -172,7 +166,8 @@ homeassistant_prerestart() {
 stop_precmd=${name}_prestop
 homeassistant_prestop() {
   local _owner_
-  if [ -n "${rc_pid}" ] && [ "${_owner_:-"$(stat -f '%Su' ${pidfile_child})"}" != ${homeassistant_user} ]; then
+  # shellcheck disable=SC2154
+  if [ -n "${rc_pid}" ] && [ "${_owner_:="$(stat -f '%Su' ${pidfile_child})"}" != ${homeassistant_user} ]; then
     err 1 "${homeassistant_user} can not stop a process owned by ${_owner_}"
   fi
 }
@@ -320,8 +315,8 @@ homeassistant_reinstall() {
         pip cache purge
         deactivate
       ' _ ${homeassistant_venv}
-  fi; echo
-  run_rc_command stop 2>/dev/null; _rcstop_=${?}
+  fi ; echo
+  run_rc_command stop 2>/dev/null ; _rcstop_=${?}
   cd / ; rm -r -- "${homeassistant_venv}" || err 1 "failed to remove ${homeassistant_venv}"
   { homeassistant_install ${_arg_} ; homeassistant_check_config ; } \
   && [ ${_rcstop_} == 0 ] && run_rc_command start
@@ -364,4 +359,5 @@ colors () {
   export end=$'\e[0m'
 } ; colors
 
+checkyesno homeassistant_rc_debug && rc_debug="ON"
 run_rc_command "${1}"
