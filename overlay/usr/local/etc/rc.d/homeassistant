@@ -68,9 +68,6 @@ rcvar=${name}_enable
 : "${homeassistant_rc_umask:="022"}"
 : "${homeassistant_user:="homeassistant"}"
 : "${homeassistant_venv:="/usr/local/share/homeassistant"}"
-: "${homeassistant_cpath:="/usr/local/include"}"
-: "${homeassistant_library_path:="/usr/lib:/usr/local/lib"}"
-: "${homeassistant_path:="/usr/local/sbin:/usr/local/bin:${PATH}"}"
 : "${homeassistant_safe_mode:="NO"}"
 : "${homeassistant_debug:="NO"}"
 : "${homeassistant_skip_pip:="NO"}"
@@ -94,11 +91,10 @@ else
   : "${homeassistant_backup_dir:="${homeassistant_user_dir}/.${name}_zip.d"}"
 fi
 
-if [ "${homeassistant_openssl}" == "package" ]; then
-  export CPATH="${homeassistant_cpath}"
-  export LIBRARY_PATH="${homeassistant_library_path}"
-fi
-export PATH="${homeassistant_path}"
+[ -n "${homeassistant_cpath:-}" ] && export CPATH="${homeassistant_cpath}"
+[ -n "${homeassistant_library_path:-}" ] && export LIBRARY_PATH="${homeassistant_library_path}"
+[ -n "${homeassistant_path:-}" ] && export PATH="${homeassistant_path}"
+
 export TERM=xterm
 
 logfile="/var/log/${name}_daemon.log"
@@ -350,10 +346,8 @@ homeassistant_test() {
     source ${1}/bin/activate || exit 20
     echo " HOME: ${HOME}"
     echo " PATH: ${PATH}"
-    echo
-    echo " Using $(openssl version)"
-    echo " CPATH = ${CPATH}"
-    echo " LIBRARY_PATH = ${LIBRARY_PATH}"
+    [ -n "${CPATH}" ] && echo " CPATH: ${CPATH}"
+    [ -n "${LIBRARY_PATH}" ] && echo " LIBRARY_PATH: ${LIBRARY_PATH}"
     echo
     ## Check versions of python and homeassistant
     echo " $(python --version)" || exit 21
