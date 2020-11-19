@@ -16,40 +16,32 @@
 #       empty string as this will cause the daemon to run as root.
 #       Default:  "appdaemon"
 #       change:   sysrc appdaemon_user="homeassistant"
-#       Reset:    sysrc -x appdaemon_user
 #
 # appdaemon_group: The group account used to run the appdaemon daemon.
-#       Default:  $PRIMARY_USER_GROUP
+#       Default:   The primary group of the ${appdaemon_user}
 #       change:   sysrc appdaemon_group="homeassistant"
-#       Reset:    sysrc -x appdaemon_group
 #
-# appdaemon_user_dir: Directory where the appdaemon user's files can be located.
-#       Default1: $HOME
-#       Default2: ${appdaemon_venv}     (If $HOME is not set)
-#       Change:   sysrc appdaemon_user_dir="/home/homeassistant"
-#       Reset:    sysrc -x appdaemon_user_dir
+# appdaemon_user_dir: Path to directory, where ".cache/pip" will be located. This may also be the
+#       location for the user's files and ${appdaemon_config_dir}.
+#       Alternate: If HOME is not set or does not exist -- ${appdaemon_venv}
+#       Default:  The HOME directory for the ${appdaemon_user}
 #
-# appdaemon_config_dir: Directory where the appdaemon configuration is located.
-#       Default1: "$HOME/.appdaemon"
-#       Default2: "/usr/local/etc/appdaemon"  (If $HOME is not set)
-#       Change:   sysrc appdaemon_config_dir="/home/homeassistant/appdaemon"
-#       Reset:    sysrc -x appdaemon_config_dir
+# appdaemon_config_dir: Path to directory, where the appdaemon configuration is located.
+#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/appdaemon"
+#       Default:  ${appdaemon_user_dir}/.appdaemon"
 #
-# appdaemon_python: Set the version of Python for Home Assistant Core.
-#       Default:  "/usr/local/bin/python3.8"
-#       Change:   sysrc appdaemon_python="/usr/local/bin/python3.7"
-#       Reset:    sysrc -x appdaemon_python
-#
-# appdaemon_venv: Directory where the appdaemon virtualenv is located.
+# appdaemon_venv: Path to directory, where the Appdaemon virtualenv is located or will be created.
 #       Default:  "/usr/local/share/appdaemon"
-#       Change:   sysrc appdaemon_venv="/srv/appdaemon"
-#       Reset:    sysrc -x appdaemon_venv
-
+#
+# appdaemon_python: Set the version of Python, used when creating the virtualenv for Appdaemon.
+#       After changing the Python version, you must recreate the virtualenv for this change to take effect.
+#       Default:  "/usr/local/bin/python3.8"
+#
 # -------------------------------------------------------
-# - Copy this file to '/usr/local/etc/rc.d/appdaemon' 
-# chmod +x /usr/local/etc/rc.d/appdaemon
-# sysrc appdaemon_enable=yes
-# service appdaemon start
+# Copy this file to '/usr/local/etc/rc.d/appdaemon' 
+#   chmod +x /usr/local/etc/rc.d/appdaemon
+#   sysrc appdaemon_enable=yes
+#   service appdaemon start
 # -------------------------------------------------------
 
 name=appdaemon

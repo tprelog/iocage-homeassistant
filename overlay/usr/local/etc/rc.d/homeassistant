@@ -6,54 +6,45 @@
 #
 # revised: 20201030
 #
-# homeassistant_enable: Set to YES to enable the homeassistant service.
+# homeassistant_enable: Enable the homeassistant service.
 #       Default: "NO"
 #       Enable:  sysrc homeassistant_enable="YES"
-#       Disable: sysrc -x homeassistant_enable
+#       Reset:   sysrc -x homeassistant_enable
 #
 # homeassistant_user: The user account used to run the homeassistant daemon.
-#       This is optional, however do not specifically set this to an
-#       empty string as this will cause the daemon to run as root.
 #       Default:  "homeassistant"
-#       Change:   `sysrc homeassistant_user="hass"`
-#       Reset:    `sysrc -x homeassistant_user`
 #
 # homeassistant_group: The group account used to run the homeassistant daemon.
-#       Default:  $PRIMARY_USER_GROUP
-#       Change:   `sysrc homeassistant_group="hass"`
-#       Reset:    `sysrc -x homeassistant_group`
+#       Default:  The primary group of the ${homeassistant_user}
 #
-# homeassistant_user_dir: Directory where the homeassistant user's files can be located.
-#       Default1: $HOME
-#       Default2: ${homeassistant_venv}     (If $HOME is not set)
-#       Change:   `sysrc homeassistant_user_dir="/home/hass"`
-#       Reset:    `sysrc -x homeassistant_user_dir`
+# homeassistant_user_dir: Path to directory, where ".cache/pip" will be located. This may also be the
+#       location for the user's files and ${homeassistant_config_dir}.
+#       Alternate:  If HOME is not set or does not exist -- ${homeassistant_venv}
+#       Default:  The HOME directory for the ${homeassistant_user}
 #
-# homeassistant_config_dir: Directory where the homeassistant `configuration.yaml` is located.
-#       Default1: $HOME/.homeassistant"
-#       Default2: "/usr/local/etc/homeassistant"  (If $HOME is not set)
-#       Change:   `sysrc homeassistant_config_dir="/home/hass/homeassistant"`
-#       Reset:    `sysrc -x homeassistant_config_dir`
+# homeassistant_config_dir: Path to directory, where the Home Assistant "configuration.yaml" is located.
+#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/homeassistant"
+#       Default:  ${homeassistant_user_dir}/.homeassistant"
 #
-# homeassistant_python: Set the version of Python for Home Assistant Core.
-#       Default:  "$(which python)"
-#       Change:   `sysrc homeassistant_python="/usr/local/bin/python3.8"`
-#       Reset:    `sysrc -x homeassistant_python`
-#
-# homeassistant_venv: Directory where the homeassistant virtualenv is located.
+# homeassistant_venv: Path to directory, where the Home Assistant virtualenv is located or will be created.
 #       Default:  "/usr/local/share/homeassistant"
-#       Change:   `sysrc homeassistant_venv="/srv/homeassistant"`
-#       Reset:    `sysrc -x homeassistant_venv`
+#
+# homeassistant_python: Set the version of Python, used when creating the virtualenv for Home Assistant.
+#       After changing the Python version, you must recreate the virtualenv for this change to take effect.
+#       Default:  "/usr/local/bin/python3.8"
 
-# ------- Basic steps to install Home Assistant Core using this script ---------------------------
-# - Install Home Assistant Core requirements and add a user
-# pkg install autoconf bash ca_root_nss ffmpeg gcc gmake pkgconf python38 py38-sqlite3 wget zip
-# pw adduser -u 8123 -n homeassistant -d /home/homeassistant -w no -s /usr/local/bin/bash
-# - Copy this file to '/usr/local/etc/rc.d/homeassistant' 
-# chmod +x /usr/local/etc/rc.d/homeassistant
-# sysrc homeassistant_enable=YES
-# service homeassistant install
-# service homeassistant start
+# ------- Basic steps to install Home Assistant Core, using this script with default settings -----
+# Install the system requirements for Home Assistant Core.
+#   pkg install autoconf bash ca_root_nss ffmpeg gcc gmake pkgconf python38 py38-sqlite3
+# Add the homeassistant user, then create an empty HOME directory.
+#   pw adduser -u 8123 -n homeassistant -d /home/homeassistant -w no -s /usr/local/bin/bash
+#   install -d -g homeassistant -m 775 -o homeassistant -- /home/homeassistant
+# Copy this file to '/usr/local/etc/rc.d/homeassistant' and then enable the service.
+#   chmod +x /usr/local/etc/rc.d/homeassistant
+#   sysrc homeassistant_enable=YES
+# Install, then finally start Home Assistant.
+#   service homeassistant install
+#   service homeassistant start
 # ------------------------------------------------------------------------------------------------
 
 name=homeassistant
@@ -131,7 +122,7 @@ homeassistant_prestart() {
   && install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${pidfile}" \
   && install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${pidfile_child}" \
   || return 1
-
+  
   homeassistant_ensure_config "${homeassistant_config_dir}"
   HA_ARGS="--config ${homeassistant_config_dir}"
   
@@ -303,17 +294,17 @@ homeassistant_reinstall() {
   fi
   echo -e "\n${orn}You are about to recreate the virtualenv:${end}\n  ${homeassistant_venv}\n"
   echo -e "${orn}The following package(s) will be installed:${end}\n  ${_arg_}\n"
-    read -rp " Type 'YES' to continue: " _ans1_
-    [ "$(echo "${_ans1_:-"NO"}" | tr '[:lower:]' '[:upper:]')" == "YES" ] || exit
-    echo -e "\n${orn}Do you want to clear the pip cache?${end}"
-    read -rp " Type 'YES' to clear cache: " _ans2_
-    if [ "$(echo "${_ans2_:-"NO"}" | tr '[:lower:]' '[:upper:]')" == "YES" ]; then
-      # shellcheck disable=SC2016
-      su ${homeassistant_user} -c '
-        source ${1}/bin/activate 2>/tmp/err || exit
-        pip cache purge
-        deactivate
-      ' _ ${homeassistant_venv}
+  read -rp " Type 'YES' to continue: " _ans1_
+  [ "$(echo "${_ans1_:-"NO"}" | tr '[:lower:]' '[:upper:]')" == "YES" ] || exit
+  echo -e "\n${orn}Do you want to clear the pip cache?${end}"
+  read -rp " Type 'YES' to clear cache: " _ans2_
+  if [ "$(echo "${_ans2_:-"NO"}" | tr '[:lower:]' '[:upper:]')" == "YES" ]; then
+    # shellcheck disable=SC2016
+    su ${homeassistant_user} -c '
+      source ${1}/bin/activate 2>/tmp/err || exit
+      pip cache purge
+      deactivate
+    ' _ ${homeassistant_venv}
   fi ; echo
   run_rc_command stop 2>/dev/null ; _rcstop_=${?}
   cd / ; rm -r -- "${homeassistant_venv}" || err 1 "failed to remove ${homeassistant_venv}"

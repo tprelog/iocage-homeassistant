@@ -14,48 +14,39 @@
 # configurator_user: The user account used to run the configurator daemon.
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
-#       Default:  configurator
+#       Default:  "configurator"
 #       Change:   sysrc configurator_user="homeassistant"
-#       Reset:    sysrc -x configurator_user
 #
 # configurator_group: The group account used to run the configurator daemon.
-#       Default:  $PRIMARY_USER_GROUP
+#       Default:  The primary group of the ${configurator_user}
 #       Change:   sysrc configurator_group="homeassistant"
-#       Reset:    sysrc -x configurator_group
 #
-# configurator_user_dir: Directory where the configurator user's files can be located.
-#       Default1: $HOME
-#       Default2: ${configurator_venv}     (If $HOME is not set)
-#       Change:   sysrc configurator_user_dir="/home/homeassistant"
-#       Reset:    sysrc -x configurator_user_dir
+# configurator_user_dir: Path to directory, where ".cache/pip" will be located. This may also be the
+#       location for the user's files and ${configurator_config_dir}.
+#       Alternate: If HOME is not set or does not exist -- ${configurator_venv}
+#       Default:  The HOME directory for the ${configurator_user}
 #
-# configurator_config_dir: Directory where the configurator file is located.
-#       Default1: "$HOME/.configurator"
-#       Default2: "/usr/local/etc/configurator"  (If $HOME is not set)
-#       Change:   sysrc configurator_config_dir="/home/homeassistant/configurator"
-#       Reset:    sysrc -x configurator_config_dir
+# configurator_config_dir: Path to directory, where the configurator "config.json" is located.
+#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/configurator"
+#       Default:  ${configurator_user_dir}/.configurator"
 #
-# configurator_config:	Full path to hass-configurator settings file.
-#       Default:  "$HOME/configurator/.configurator.conf"
-#       Change:   sysrc configurator_config="/home/homeassistant/configurator/config.json"
-#       Reset:    sysrc -x configurator_config_dir
+# configurator_config: Set a full and direct path to hass-configurator settings file. You can use this if you want
+#       to change the name of the configuration file. This also overrides the ${configurator_config_dir} path.
+#       Default:  "${configurator_config_dir}/config.json"
 #
-# configurator_python: Set the version of Python for the virtualenv.
-#       Default:  "/usr/local/bin/python3.8"
-#       Change:   sysrc configurator_python="/usr/local/bin/python3.7"
-#       Reset:    sysrc -x configurator_python
-#
-# configurator_venv: Directory where the configurator virtualenv is located.
+# configurator_venv: Path to directory, where the Haa-Configurator virtualenv is located or will be created.
 #       Default:  "/usr/local/share/configurator"
-#       Change:   sysrc configurator_venv="/srv/configurator"
-#       Reset:    sysrc -x configurator_venv
-
+#
+# configurator_python: Set the version of Python, used when creating the virtualenv for the Hass-Configurator.
+#       After changing the Python version, you must recreate the virtualenv for this change to take effect.
+#       Default:  "/usr/local/bin/python3.8"
+#
 # -------------------------------------------------------
-# - Copy this file to '/usr/local/etc/rc.d/configurator' 
-# chmod +x /usr/local/etc/rc.d/configurator
-# sysrc configurator_enable=YES
-# service configurator start
-# ---------------------------------------------
+# Copy this file to '/usr/local/etc/rc.d/configurator' 
+#   chmod +x /usr/local/etc/rc.d/configurator
+#   sysrc configurator_enable=YES
+#   service configurator start
+# -------------------------------------------------------
 
 name=configurator
 rcvar=${name}_enable
