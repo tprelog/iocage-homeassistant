@@ -321,35 +321,32 @@ homeassistant_reinstall() {
   && [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
-
-test_cmd="${name}_test $*"
+test_cmd="${name}_test"
 homeassistant_test() {
-  echo ## TODO make this function useful
-  echo "USER: $(whoami)"
-  echo "HOME: ${HOME}"
-  echo "PATH: ${PATH}"
-  homeassistant_precmd
   echo -e "\nChecking Service\n"
   echo -e "  User: ${homeassistant_user}"
   echo -e " Group: ${homeassistant_group}\n"
+  homeassistant_precmd
   echo "Switching to user ${homeassistant_user}"
-  ## Switch users / activate virtualenv / run a command
   # shellcheck disable=SC2016
   su "${homeassistant_user}" -c '
-    echo " USER: $(whoami)"
+    echo "  CWD: $(pwd)"
+    echo -e "\nActivating virtualenv\n"
     source ${1}/bin/activate || exit 20
-    echo " HOME: ${HOME}"
-    echo " PATH: ${PATH}"
+    echo "  HOME: ${HOME}"
+    echo "  PATH: ${PATH}"
+    echo "  USER: $(whoami)"
+    echo " UMASK: $(umask)"
+    echo
     [ -n "${CPATH}" ] && echo " CPATH: ${CPATH}"
     [ -n "${LIBRARY_PATH}" ] && echo " LIBRARY_PATH: ${LIBRARY_PATH}"
-    echo
-    ## Check versions of python and homeassistant
+    echo ## Checking versions of python and homeassistant
     echo " $(python --version)" || exit 21
     echo " Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)" || exit 22
     echo
     deactivate
   ' _ ${homeassistant_venv}
-  debug "returned $?"
+  debug "returned ${?}"
 }
 
 colors () {

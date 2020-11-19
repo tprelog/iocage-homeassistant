@@ -63,12 +63,11 @@ rcvar=${name}_enable
 . /etc/rc.subr && load_rc_config ${name}
 
 : "${configurator_enable:="NO"}"
-: "${configurator_python:="/usr/local/bin/python3.8"}"
 : "${configurator_rc_debug:="OFF"}"
-: "${configurator_rc_umask:="022"}"
-: "${configurator_standalone:="YES"}"
 : "${configurator_user:="configurator"}"
+: "${configurator_python:="/usr/local/bin/python3.8"}"
 : "${configurator_venv:="/usr/local/share/configurator"}"
+: "${configurator_standalone:="YES"}"
 
 if [ ! "$(id ${configurator_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${configurator_user}"
@@ -89,6 +88,8 @@ fi
 
 export PATH=${PATH}:/usr/local/sbin:/usr/local/bin
 export TERM=xterm
+
+umask "${configurator_rc_umask:-22}"
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
@@ -206,8 +207,8 @@ configurator_upgrade() {
 test_cmd="${name}_test"
 configurator_test() {
   echo -e "\nTesting virtualenv...\n"
-  configurator_precmd || return 1
   echo " CWD: $PWD"
+  configurator_precmd || return 1
   ## Switch users / activate virtualenv / run a command
   # shellcheck disable=SC2016
   su "${configurator_user}" -c '
@@ -218,6 +219,5 @@ configurator_test() {
   ' _ ${configurator_venv} || exit ${?}
 }
 
-umask ${configurator_rc_umask}
-checkyesno configurator_rc_debug && rc_debug="${configurator_rc_debug}"
+checkyesno configurator_rc_debug && rc_debug="ON"
 run_rc_command "${1}"

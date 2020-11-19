@@ -58,10 +58,9 @@ rcvar=${name}_enable
 . /etc/rc.subr && load_rc_config ${name}
 
 : "${appdaemon_enable:="NO"}"
-: "${appdaemon_python:="/usr/local/bin/python3.8"}"
 : "${appdaemon_rc_debug:="OFF"}"
-: "${appdaemon_rc_umask:="022"}"
 : "${appdaemon_user:="appdaemon"}"
+: "${appdaemon_python:="/usr/local/bin/python3.8"}"
 : "${appdaemon_venv:="/usr/local/share/appdaemon"}"
 
 if [ ! "$(id ${appdaemon_user} 2>/dev/null)" ]; then
@@ -82,6 +81,7 @@ fi
 
 export PATH=${PATH}:/usr/local/sbin:/usr/local/bin
 export TERM=xterm
+umask "${appdaemon_rc_umask:-022}"
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
@@ -203,8 +203,8 @@ appdaemon_upgrade() {
 test_cmd="${name}_test"
 appdaemon_test() {
   echo -e "\nTesting virtualenv...\n"
-  appdaemon_precmd || return 1
   echo " CWD: $PWD"
+  appdaemon_precmd || return 1
   ## Switch users / activate virtualenv / run a command
   # shellcheck disable=SC2016
   su "${appdaemon_user}" -c '
@@ -215,6 +215,5 @@ appdaemon_test() {
   ' _ ${appdaemon_venv} || exit ${?}
 }
 
-umask ${appdaemon_rc_umask}
-checkyesno appdaemon_rc_debug && rc_debug="${appdaemon_rc_debug}"
+checkyesno appdaemon_rc_debug && rc_debug="ON"
 run_rc_command "${1}"
