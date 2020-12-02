@@ -4,7 +4,7 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# revised: 20201030
+# revised: 20201201
 #
 # appdaemon_enable: Set to YES to enable the appdaemon service.
 #       Default: NO
@@ -23,12 +23,12 @@
 #
 # appdaemon_user_dir: Path to directory, where ".cache/pip" will be located. This may also be the
 #       location for the user's files and ${appdaemon_config_dir}.
-#       Alternate: If HOME is not set or does not exist -- ${appdaemon_venv}
 #       Default:  The HOME directory for the ${appdaemon_user}
+#       Alternate: If HOME is not set or does not exist -- ${appdaemon_venv}
 #
 # appdaemon_config_dir: Path to directory, where the appdaemon configuration is located.
-#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/appdaemon"
 #       Default:  ${appdaemon_user_dir}/.appdaemon"
+#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/appdaemon"
 #
 # appdaemon_venv: Path to directory, where the Appdaemon virtualenv is located or will be created.
 #       Default:  "/usr/local/share/appdaemon"
@@ -37,12 +37,6 @@
 #       After changing the Python version, you must recreate the virtualenv for this change to take effect.
 #       Default:  "/usr/local/bin/python3.8"
 #
-# -------------------------------------------------------
-# Copy this file to '/usr/local/etc/rc.d/appdaemon' 
-#   chmod +x /usr/local/etc/rc.d/appdaemon
-#   sysrc appdaemon_enable=yes
-#   service appdaemon start
-# -------------------------------------------------------
 
 name=appdaemon
 rcvar=${name}_enable
@@ -156,7 +150,7 @@ install_cmd="${name}_install ${*}"
 appdaemon_install() {
   shift; local _arg_="${*:-"${name}"}"
   debug "install: ${_arg_}"
-  run_rc_script /root/post_install.sh "${_arg_}"
+  run_rc_script /root/bin/install_service.sh "${_arg_}"
   debug "install returned: ${?}"
 }
 

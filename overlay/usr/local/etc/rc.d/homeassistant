@@ -4,9 +4,9 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# revised: 20201030
+# revised: 20201201
 #
-# homeassistant_enable: Enable the homeassistant service.
+# homeassistant_enable: Enable the Home Assistant Core service.
 #       Default: "NO"
 #       Enable:  sysrc homeassistant_enable="YES"
 #       Reset:   sysrc -x homeassistant_enable
@@ -19,33 +19,22 @@
 #
 # homeassistant_user_dir: Path to directory, where ".cache/pip" will be located. This may also be the
 #       location for the user's files and ${homeassistant_config_dir}.
-#       Alternate:  If HOME is not set or does not exist -- ${homeassistant_venv}
 #       Default:  The HOME directory for the ${homeassistant_user}
+#       Alternate:  If HOME is not set or does not exist -- ${homeassistant_venv}
 #
 # homeassistant_config_dir: Path to directory, where the Home Assistant "configuration.yaml" is located.
-#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/homeassistant"
 #       Default:  ${homeassistant_user_dir}/.homeassistant"
+#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/homeassistant"
 #
-# homeassistant_venv: Path to directory, where the Home Assistant virtualenv is located or will be created.
+# homeassistant_venv: Path to directory, where the Home Assistant Core virtualenv is located or will be created.
+#       https://github.com/home-assistant/architecture/blob/master/adr/0016-home-assistant-core.md
 #       Default:  "/usr/local/share/homeassistant"
 #
-# homeassistant_python: Set the version of Python, used when creating the virtualenv for Home Assistant.
-#       After changing the Python version, you must recreate the virtualenv for this change to take effect.
+# homeassistant_python: Set a supported version of Python to be used when creating the virtualenv for Home Assistant Core.
+#       https://github.com/home-assistant/architecture/blob/master/adr/0016-home-assistant-core.md#supported-python-versions
+#       After changing the Python version, you must recreate the virtualenv for the updated version to take effect.
 #       Default:  "/usr/local/bin/python3.8"
-
-# ------- Basic steps to install Home Assistant Core, using this script with default settings -----
-# Install the system requirements for Home Assistant Core.
-#   pkg install autoconf bash ca_root_nss ffmpeg gcc gmake pkgconf python38 py38-sqlite3
-# Add the homeassistant user, then create an empty HOME directory.
-#   pw adduser -u 8123 -n homeassistant -d /home/homeassistant -w no -s /usr/local/bin/bash
-#   install -d -g homeassistant -m 775 -o homeassistant -- /home/homeassistant
-# Copy this file to '/usr/local/etc/rc.d/homeassistant' and then enable the service.
-#   chmod +x /usr/local/etc/rc.d/homeassistant
-#   sysrc homeassistant_enable=YES
-# Install, then finally start Home Assistant.
-#   service homeassistant install
-#   service homeassistant start
-# ------------------------------------------------------------------------------------------------
+#
 
 name=homeassistant
 rcvar=${name}_enable
@@ -314,30 +303,17 @@ homeassistant_reinstall() {
 
 test_cmd="${name}_test"
 homeassistant_test() {
-  echo -e "\nChecking Service\n"
-  echo -e "  User: ${homeassistant_user}"
-  echo -e " Group: ${homeassistant_group}\n"
-  homeassistant_precmd
-  echo "Switching to user ${homeassistant_user}"
+  echo -e "\nTesting virtualenv...\n"
+  echo "  CWD: $(pwd)"
+  homeassistant_precmd || return 1
+  ## Switch users / activate virtualenv / run a command
   # shellcheck disable=SC2016
   su "${homeassistant_user}" -c '
-    echo "  CWD: $(pwd)"
-    echo -e "\nActivating virtualenv\n"
-    source ${1}/bin/activate || exit 20
-    echo "  HOME: ${HOME}"
-    echo "  PATH: ${PATH}"
-    echo "  USER: $(whoami)"
-    echo " UMASK: $(umask)"
-    echo
-    [ -n "${CPATH}" ] && echo " CPATH: ${CPATH}"
-    [ -n "${LIBRARY_PATH}" ] && echo " LIBRARY_PATH: ${LIBRARY_PATH}"
-    echo ## Checking versions of python and homeassistant
-    echo " $(python --version)" || exit 21
-    echo " Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)" || exit 22
-    echo
+    source ${1}/bin/activate
+    echo " $(python --version)"
+    echo " Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)"
     deactivate
   ' _ ${homeassistant_venv}
-  debug "returned ${?}"
 }
 
 colors () {
