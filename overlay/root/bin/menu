@@ -102,7 +102,7 @@ service_menu() {
       "status"|"restart"|"upgrade"|"start"|"stop"|"test"|"check_config")
         service "${1}" "${_cmd_}"
         pause ; break ;;
-      *) echo -e "Sorry, \"${red}${_cmd_}${end}\" is not an option" && sleep 1
+      *) echo -e "Sorry, that is not an option" && sleep 1
         ;;
     esac
   done
@@ -153,7 +153,7 @@ read_options(){
         pause
         return
         ;;
-    *) echo -e "${red}Sorry, ${choice} is not an option${end}" && sleep 1
+    *) echo -e "Sorry, that is not an option" && sleep 1
   esac
 }
 
@@ -162,6 +162,7 @@ pause(){
 }
 
 goodbye() {
+  echo -e "${end}"
   exit
 }
 
