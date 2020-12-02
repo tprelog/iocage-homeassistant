@@ -83,7 +83,7 @@ service_menu() {
       "exit menu")
         show_menu="N" ; exit 0 ;;
       "install")
-        install_service.sh "${1}"
+        install_service "${1}"
         pause ; break ;;
       "remove")
         ## TODO move this to function to service_install.sh and call from here 
