@@ -185,7 +185,7 @@ load_colors() {
 #   3 = SIGQUIT (Quit signal from keyboard)
 #   6 = SIGABRT (Aborted by abort(3))
 #
-# Create Trap for ^\ & others - calls function goodbye
+# Create trap for ^C & others - calls function goodbye
   trap goodbye 1 2 3 6
 
 
