@@ -148,11 +148,10 @@ read_options(){
         service_menu appdaemon
       done
       ;;
-      [iI]"nstall "[hH][aA][cC][sS])
-        echo "Gone fishing... Be back soon!"
-        pause
-        return
-        ;;
+    [iI]"nstall "[hH][aA][cC][sS])
+      install_hacs
+      pause ; return
+      ;;
     *) echo -e "Sorry, that is not an option" && sleep 1
   esac
 }
