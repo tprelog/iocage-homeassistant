@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-## Console menu for the Home Assistant Core -- FreeNAS / TrueNAS Core Community plugins
-## A menu driven shell script hacked together from internet samples and other shit.
-## Just a simple menu, nothing more than a shortcut to use basic service commands.
+# A menu driven shell script hacked together from internet samples and other shit.
+# Console menu for the Home Assistant Core, TrueNAS Core community plugin, is just
+# a simple menu, nothing more than a shortcut to execute basic service commands.
 
-## ----------------------------------
+# ----------------------------------
 # Step #1: Define variables
 # ----------------------------------
 
@@ -14,29 +14,11 @@ main_menu="0"
 # Step #2: User defined function
 # ----------------------------------
 
-load_colors() {
-  red=$'\e[1;31m'
-  grn=$'\e[1;32m'
-  yel=$'\e[1;33m'
-  bl1=$'\e[1;34m'
-  mag=$'\e[1;35m'
-  cyn=$'\e[1;36m'
-  blu=$'\e[38;5;39m'
-  orn=$'\e[38;5;208m'
-  end=$'\e[0m'
-}
-
-pause(){
-  echo
-  read -p "Press ENTER to continue..." fackEnterKey
-}
-
-
 show_banner_0() {
   clear
   echo "${blu}"
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  echo "          Home Assistant Core - FreeNAS Plugin Service Menu           "
+  echo "          Home Assistant Core - TrueNAS Plugin Service Menu           "
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   echo -e "${end}\n"
 }
@@ -92,27 +74,21 @@ service_menu() {
     [ -d "${_venv_:="$(sysrc -n "${1}_venv" 2>/dev/null)"}" ] \
     && _commands_="${_commands_} remove" || _commands_="${_commands_} install"
   fi
- 
-  PS3=""$'\n'"${blu}Select: ${end}"
-  echo
+
+  PS3=""$'\n'"${blu}Select: ${end}" ; echo
   select _cmd_ in "main menu" ${_commands_} "exit menu"; do
     case "${_cmd_}" in
       "main menu")
-        m_true="N"
-        break
-        ;;
+        show_menu="N" ; break ;;
       "exit menu")
-        m_true="N"
-        exit 0
-        ;;
+        show_menu="N" ; exit 0 ;;
       "install")
-        /root/post_install.sh ${1}
-        pause
-        break
-        ;;
+        install_service.sh "${1}"
+        pause ; break ;;
       "remove")
+        ## TODO move this to function to service_install.sh and call from here 
         echo -e "\n${orn} This will remove the rcvars and venv for \"${1}\": ${red}${_venv_}${end}"
-        read -p " Type 'YES' to continue: " _ans_
+        read -rp " Type 'YES' to continue: " _ans_
         [[ ${_ans_} == [Yy][Ee][Ss] ]] || break
         echo
         service "${1}" stop 2>/dev/null
@@ -122,14 +98,10 @@ service_menu() {
             echo "removing rcvars for \"${_var_}\""
             sysrc -x "${_var_}" | cut -d= -f1
           done
-        pause
-        break
-        ;;
+        pause ; break ;;
       "status"|"restart"|"upgrade"|"start"|"stop"|"test"|"check_config")
         service "${1}" "${_cmd_}"
-        pause
-        break
-        ;;
+        pause ; break ;;
       *) echo -e "Sorry, \"${red}${_cmd_}${end}\" is not an option" && sleep 1
         ;;
     esac
@@ -149,82 +121,71 @@ show_menu_0() {
 read_options(){
   local choice
   echo "${blu}"
-  read -p "Select: " choice
+  read -rp "Select: " choice
   echo "${end}"
   case "${choice}" in
     [eE]|[eE][xX][iI][tT]|[qQ]|[cC]|[cC]|[oN][sS][oO][lL][eE]|"0")
       clear; exit 0
       ;;
     "1") # Home Assistant Core
-      m_true="Y"
-      while [ ${m_true} == "Y" ]; do
+      show_menu="Y"
+      while [ ${show_menu} == "Y" ]; do
         show_banner_1
         service_menu homeassistant
       done
       ;;
     "2") # Hass-configurator ( File Editor )
-      m_true="Y"
-      while [ ${m_true} == "Y" ]; do
+      show_menu="Y"
+      while [ ${show_menu} == "Y" ]; do
         show_banner_2
         service_menu configurator
       done
       ;;
     "3") # AppDaemon
-      m_true="Y"
-      while [ ${m_true} == "Y" ]; do
+      show_menu="Y"
+      while [ ${show_menu} == "Y" ]; do
         show_banner_3
         service_menu appdaemon
       done
       ;;
-    [hH][aA]" logs")
-      tail_log="Y"
-      while [ ${log_watch} == "Y" ]; do
-        service homeassistant logs -f
-      done
-      ;;
       [iI]"nstall "[hH][aA][cC][sS])
-        service homeassistant install hacs
+        echo "Gone fishing... Be back soon!"
         pause
-        break
+        return
         ;;
-    *) echo -e "${red}Sorry, wrong number..${end}" && sleep 1
+    *) echo -e "${red}Sorry, ${choice} is not an option${end}" && sleep 1
   esac
 }
 
-set_false() {
-  tail_log="N"
+pause(){
+  echo ; read -rp "Press ENTER to continue..." fackEnterKey
 }
 
-show_colors() {
-# Test function to see how colors look
-  echo
-  echo " ${red}ALERT"
-  echo " ${orn}Warning "
-  echo " ${yel}Caution "
-  echo "${end}"
+goodbye() {
+  exit
+}
+
+load_colors() {
+  blu=$'\e[38;5;39m'
+  orn=$'\e[38;5;208m'
+  red=$'\e[1;31m'
+  end=$'\e[0m'
 }
 
 
 # ----------------------------------------------
 # Step #3: Trap CTRL+C, CTRL+Z and quit singles
 # ----------------------------------------------
-# Included from original example
-#trap '' SIGINT SIGQUIT SIGTSTP
-
-## TODO Expand using this example instead
-##      to call a function when signal is caught.
-
+#
 # Define and use traps to clean up all temp files
-   # Trap on:  Use 'kill -l' to list all
-   # 1 = SIGHUP (Hangup of controlling terminal or death of parent)
-   # 2 = SIGINT (Interrupted by the keyboard)
-   # 3 = SIGQUIT (Quit signal from keyboard)
-   # 6 = SIGABRT (Aborted by abort(3))
-   # 9 = SIGKILL (Sent a kill command)
-
-   # Create Trap for ^\ & Others: Call Funtion CleanExit
-#   trap CleanExit 1 3 6 9
-   trap set_false 2
+# Trap on: --> Use 'kill -l' to list all
+#   1 = SIGHUP (Hangup of controlling terminal or death of parent)
+#   2 = SIGINT (Interrupted by the keyboard)
+#   3 = SIGQUIT (Quit signal from keyboard)
+#   6 = SIGABRT (Aborted by abort(3))
+#
+# Create Trap for ^\ & others - calls function goodbye
+  trap goodbye 1 2 3 6
 
 
 # -----------------------------------
@@ -232,7 +193,6 @@ show_colors() {
 # ------------------------------------
 
 load_colors # Only need to load colors once
-
 while true; do
   show_banner_0 && show_menu_${main_menu} && read_options
 done
