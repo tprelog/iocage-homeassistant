@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
-install_extra_pkgs() {
-  ## Install any remaining packages from '/tmp/pkglist'
-  ## This is used to reinstall any additional packages not included in the plugin manifest
-  pkgs=$(cat /tmp/pkglist)
-  echo -e "Installing any remaining packages"
+. /etc/rc.subr && load_rc_config
+: "${plugin_enable_primelist:="NO"}"
+: "${plugin_primelist_path:="/tmp/pkglist"}"
+
+install_primelist() {
+  ## If enabled, re-install packages from the prime-list
+  ## Use `sysrc plugin_enable_primelist=YES` to enable
+  local pkgs ; pkgs=$(cat "${plugin_primelist_path}")
+  echo -e "\nChecking prime-list for additional packages..."
   echo "${pkgs}" | xargs pkg install -y
 }
 
-install_extra_pkgs
+checkyesno plugin_enable_primelist && install_primelist
+
 echo -e "\npost_update.sh Finished\n"
