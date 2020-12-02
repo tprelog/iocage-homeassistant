@@ -28,7 +28,7 @@ sysrc ${service_name}_venv="/usr/local/share/${service_name}"
 ## Provide the example configuration files for the jail's primary service
 cp -R "/usr/local/examples/${service_name}/" "${service_config}"
 find "${service_config}" -type f -name ".empty" -depth -exec rm -f {} \;
-chown -R "${service_name}":"${service_name}" "${service_config}" && chmod -R g=u "${service_config}"
+chown -R "${service_name}":"${service_name}" "${service_home}" && chmod -R g=u "${service_home}"
 
 ## Install the jail's primary service, Home Assistant Core
 service "${service_name}" oneinstall "${service_name}" || exit 1
