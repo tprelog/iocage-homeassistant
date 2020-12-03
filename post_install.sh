@@ -5,6 +5,7 @@ sysrc plugin_initialized="${plugin_version}"
 sysrc plugin_version="${plugin_version}"
 
 ## Who will run the jail's primary service, Home Assistant Core
+## If installed, optional services will also be run as this user
 service_port="8123"           # service_port == UID
 service_name="homeassistant"  # service_name == username
 service_home="/home/${service_name}"
