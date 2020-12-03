@@ -2,27 +2,28 @@
 
 . /etc/rc.subr && load_rc_config
 
-# TODO work out logic that will only suggest a clean install when required
-# TODO if plugin_force_update then attempt to force upgrade (useful for debugging)
+update_post_install() {
+  ## post_install.sh is not automatically updated after the initial installation. (This should NOT be required)
+  ## FIXED - Version 5 does not require any updates to post_install.sh after initial installation. Still, we
+  ## should update the script in version 4, but disable exe to midigate potential use - It should NOT be used!
+  wget -q -O /root/post_install.sh https://raw.githubusercontent.com/tprelog/iocage-homeassistant/master/post_install.sh \
+  && chmod -x /root/post_install.sh
+}
 
 # shellcheck disable=SC2154
-if [ "${plugin_version}" == "5" ]; then
+if [ "${plugin_ver}" == "v_0.4.0" ]; then
+  warn "Version 5 is now available! Please see the wiki for breaking changes."
+  warn "You will need a fresh install of this plugin in order to upgrade!"
+  update_post_install
+elif [ "${plugin_version%%.*}" == "5" ]; then
   true
-elif [ "${plugin_ver}" == "v_0.4.0" ]; then
-  # TODO if plugin_ini != some_date_in_time then suggested clean install and fail
-  echo "INFO: pre_update: current version is ${plugin_ver}"
-else # if plugin_ver != 4 then suggested a fresh install and fail
-  warn "unsupported upgrade path, please reinstall this plugin"
-  err 1 "BREAKING CHANGES - manual intervention required!"
+else ## if plugin_ver != 4 then suggested a fresh install and fail.
+# TODO if plugin_force_update then attempt to force upgrade (useful for debugging)
+  warn "Version 5 now is available! Please see the wiki for breaking changes."
+  warn "unsupported update path, please reinstall this plugin"
+  err 1 "BREAKING CHANGES - Manual intervention is required!"
 fi
 
-update_post_install() {
-  # post_install.sh is not automatically updated after the initial installation
-  # FIXME plugins should not require any updates to post_install.sh after initial installation
-  wget -q -O /root/post_install.sh https://raw.githubusercontent.com/tprelog/iocage-homeassistant/master/post_install.sh \
-  && chmod +x /root/post_install.sh || return 1
-} ; update_post_install
-
 ## Generate a list of the primaray packages that have been installed.
-## If enabled, these packages will be re-installed after a Plugin -> UPDATE.
+## If enabled, these packages will be re-installed after Plugin -> UPDATE.
 pkg prime-list > /tmp/pkglist
