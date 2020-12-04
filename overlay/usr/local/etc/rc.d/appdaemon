@@ -74,7 +74,7 @@ pidfile="/var/run/${name}_daemon.pid"
 logfile="/var/log/${name}_daemon.log"
 
 command="/usr/sbin/daemon"
-extra_commands="install upgrade test"
+extra_commands="upgrade test"
 
 appdaemon_precmd() {
   local _srv_ _own_ _msg_
@@ -146,23 +146,10 @@ appdaemon_postcmd() {
   rm -f -- "${pidfile_child}"
 }
 
-install_cmd="${name}_install ${*}"
-appdaemon_install() {
-  shift; local _arg_="${*:-"${name}"}"
-  debug "install: ${_arg_}"
-  run_rc_script /root/bin/install_service.sh "${_arg_}"
-  debug "install returned: ${?}"
-}
-
 restart_cmd="${name}_restart"
 appdaemon_restart() {
   run_rc_command stop 2>/dev/null
   sleep 1 ; run_rc_command start
-}
-
-rcvar_cmd=${name}_rcvar
-appdaemon_rcvar() {
-  sysrc -a | grep ^${name}
 }
 
 stop_precmd=${name}_prestop
@@ -180,7 +167,7 @@ appdaemon_upgrade() {
   # shellcheck disable=SC2016
   su ${appdaemon_user} -c '
     source ${1}/bin/activate || exit 1
-    pip install --upgrade appdaemon
+    pip install --no-cache-dir --upgrade appdaemon
     deactivate
   ' _ ${appdaemon_venv} || exit 1
   [ ${_rcstop_} == 0 ] && run_rc_command start
