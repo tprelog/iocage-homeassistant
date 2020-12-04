@@ -1,0 +1,12 @@
+## This package.yaml file is provided by the Home Assistant Core iocage-jail for TrueNAS Core
+# Learn more at https://www.home-assistant.io/docs/configuration/packages/
+
+## Add AppDaemon to the side panel of Home Assistant.
+# Learn more at https://www.home-assistant.io/integrations/panel_iframe/
+
+panel_iframe:
+  appdaemon:
+    title: AppDaemon
+    icon: mdi:view-dashboard-variant
+    require_admin: true
+    url: http://0.0.0.0:5050
