@@ -304,16 +304,17 @@ homeassistant_reinstall() {
 test_cmd="${name}_test"
 homeassistant_test() {
   echo -e "\nTesting virtualenv...\n"
-  echo "  CWD: $(pwd)"
-  homeassistant_precmd || return 1
+  homeassistant_precmd
   ## Switch users / activate virtualenv / run a command
   # shellcheck disable=SC2016
   su "${homeassistant_user}" -c '
+    echo -e "  $(pwd)\n"
     source ${1}/bin/activate
-    echo " $(python --version)"
-    echo " Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)"
+    echo "  $(python --version)"
+    echo "  Home Assistant $(pip show homeassistant | grep Version | cut -d" " -f2)"
     deactivate
   ' _ ${homeassistant_venv}
+  echo
 }
 
 colors () {

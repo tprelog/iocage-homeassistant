@@ -167,7 +167,7 @@ configurator_postcmd() {
 
 upgrade_cmd="${name}_upgrade"
 configurator_upgrade() {
-  configurator_precmd || return 1
+  configurator_precmd
   run_rc_command stop 2>/dev/null; _rcstop_=$?
   # shellcheck disable=SC2016
   su ${configurator_user} -c '
@@ -181,16 +181,17 @@ configurator_upgrade() {
 test_cmd="${name}_test"
 configurator_test() {
   echo -e "\nTesting virtualenv...\n"
-  configurator_precmd || return 1
+  configurator_precmd
   ## Switch users / activate virtualenv / run a command
   # shellcheck disable=SC2016
   su "${configurator_user}" -c '
-    echo " CWD: $PWD"
-    source ${1}/bin/activate || exit 2
-    echo " $(python --version)" || exit 3
-    echo " Hass Configurator $(pip show hass-configurator | grep Version | cut -d" " -f2)" || exit 4
+    echo -e "  $(pwd)\n"
+    source ${1}/bin/activate
+    echo "  $(python --version)"
+    echo "  Hass Configurator $(pip show hass-configurator | grep Version | cut -d" " -f2)"
     deactivate
-  ' _ ${configurator_venv} || exit ${?}
+  ' _ ${configurator_venv}
+  echo
 }
 
 checkyesno configurator_rc_debug && rc_debug="ON"

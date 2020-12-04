@@ -162,7 +162,7 @@ appdaemon_prestop() {
 
 upgrade_cmd="${name}_upgrade"
 appdaemon_upgrade() {
-  appdaemon_precmd || return 1
+  appdaemon_precmd
   run_rc_command stop 2>/dev/null; _rcstop_=$?
   # shellcheck disable=SC2016
   su ${appdaemon_user} -c '
@@ -176,16 +176,17 @@ appdaemon_upgrade() {
 test_cmd="${name}_test"
 appdaemon_test() {
   echo -e "\nTesting virtualenv...\n"
-  echo " CWD: $PWD"
-  appdaemon_precmd || return 1
+  appdaemon_precmd
   ## Switch users / activate virtualenv / run a command
   # shellcheck disable=SC2016
   su "${appdaemon_user}" -c '
-    source ${1}/bin/activate || exit 2
-    echo " $(python --version)" || exit 3
-    echo " AppDaemon $(pip show appdaemon | grep Version | cut -d" " -f2)" || exit 4
+    echo -e "  $(pwd)\n"
+    source ${1}/bin/activate 
+    echo "  $(python --version)"
+    echo "  AppDaemon $(pip show appdaemon | grep Version | cut -d" " -f2)"
     deactivate
-  ' _ ${appdaemon_venv} || exit ${?}
+  ' _ ${appdaemon_venv}
+  echo
 }
 
 checkyesno appdaemon_rc_debug && rc_debug="ON"
