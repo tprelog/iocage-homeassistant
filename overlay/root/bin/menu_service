@@ -107,7 +107,7 @@ provide_examples() {
   if [ ! "$(ls -A "${service_config_dir}")" ]; then
     cp -R "${example_cfg}" "${service_config_dir}"
     find "${service_config_dir}" -type f -name ".empty" -depth -exec rm -f {} \;
-    chown -R "${srv_uname}":"${srv_uname}" "${service_config_dir}"
+    chown -R "${service_user}":"${service_group}" "${service_config_dir}"
     chmod -R g=u "${service_config_dir}"
   else
     echo -e "\n${orn}WARN:${end} ${service_config_dir} is not empty!"
