@@ -110,8 +110,9 @@ provide_examples() {
     chown -R "${service_user}":"${service_group}" "${service_config_dir}"
     chmod -R g=u "${service_config_dir}"
   else
-    echo -e "\n${orn}WARN:${end} ${service_config_dir} is not empty!"
-    echo -e "${orn}WARN:${end} ${service_name} may fail to start with invalid configuration.\n"
+    echo -e "\n${grn}INFO:${end} ${service_config_dir} is not empty!"
+    echo -e "\n${grn}INFO:${end} Example configuration will not be added."
+    echo -e "${orn}WARN:${end} ${service_name} may fail to start with missing or invalid configuration.\n"
     sleep 1
   fi
 }

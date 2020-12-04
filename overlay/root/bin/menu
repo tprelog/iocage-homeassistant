@@ -62,33 +62,37 @@ service_menu() {
   ## Show a menu and run basic commands for each of the plugin's services.
   local _cmd_ _commands_ _ans_
   ## These are commands that all service menus should have.
-  _commands_="status restart upgrade start stop test"
+  _commands_="status restart upgrade start stop test_service"
   ## Home Assistant Core has an extra check_config option in it's menu.
   [[ "${1}" == "homeassistant" ]] && _commands_="${_commands_} check_config"
   ## Optional services can be installed or removed, depending on their existing state.
   if [ "${1}" == "appdaemon" ] || [ "${1}" == "configurator" ]; then
     [ -d "$(sysrc -n "${1}"_venv 2>/dev/null)" ] \
-    && _commands_="${_commands_} remove" || _commands_="${_commands_} install"
+    && _commands_="${_commands_} remove_service" || _commands_="${_commands_} install_service"
   fi
   ## Prompt for user input and run command when provided.
   PS3=""$'\n'"${blu}Select: ${end}" ; echo
-  select _cmd_ in "main menu" ${_commands_} "exit"; do
+  select _cmd_ in "main_menu" ${_commands_} "exit_menu"; do
     case "${_cmd_}" in
-      "main menu")
+      "main_menu")
         show_menu="NO" ; break
         ;;
-      "exit")
+      "exit_menu")
         goodbye ; exit 0
         ;;
-      "install")
+      "install_service")
         menu_service install "${1}"
         pause ; break
         ;;
-      "remove")
+      "remove_service")
         menu_service remove "${1}"
         pause ; break
         ;;
-      "status"|"restart"|"upgrade"|"start"|"stop"|"test"|"check_config")
+      "test_service")
+        service "${1}" test
+        pause ; break
+        ;;
+      "status"|"restart"|"upgrade"|"start"|"stop"|"check_config")
         service "${1}" "${_cmd_}"
         pause ; break
         ;;
