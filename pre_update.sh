@@ -20,7 +20,7 @@ elif [ "${plugin_version%%.*}" == "5" ]; then
 else ## if plugin_ver != 4 then suggested a fresh install and fail.
 # TODO if plugin_force_update then attempt to force upgrade (useful for debugging)
   warn "Version 5 now is available! Please see the wiki for breaking changes."
-  warn "unsupported update path, please reinstall this plugin"
+  warn "Unsupported update path! I suggest to you, please reinstall this plugin."
   err 1 "BREAKING CHANGES - Manual intervention is required!"
 fi
 
