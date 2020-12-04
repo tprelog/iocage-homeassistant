@@ -59,18 +59,18 @@ show_banner_3() {
 }
 
 service_menu() {
-  ## Show a menu and run basic commands for each of the plugin's services
+  ## Show a menu and run basic commands for each of the plugin's services.
   local _cmd_ _commands_ _ans_
-  ## Commands that all service menus should have
+  ## These are commands that all service menus should have.
   _commands_="status restart upgrade start stop test"
-  ## Home Assistant Core has an extra check_config option in it's menu
+  ## Home Assistant Core has an extra check_config option in it's menu.
   [[ "${1}" == "homeassistant" ]] && _commands_="${_commands_} check_config"
-  ## Optional services can be installed or removed depending on their existing state
+  ## Optional services can be installed or removed, depending on their existing state.
   if [ "${1}" == "appdaemon" ] || [ "${1}" == "configurator" ]; then
     [ -d "$(sysrc -n "${1}"_venv 2>/dev/null)" ] \
     && _commands_="${_commands_} remove" || _commands_="${_commands_} install"
   fi
-  ## Prompt for user input and run command when provided
+  ## Prompt for user input and run command when provided.
   PS3=""$'\n'"${blu}Select: ${end}" ; echo
   select _cmd_ in "main menu" ${_commands_} "exit"; do
     case "${_cmd_}" in
@@ -92,7 +92,7 @@ service_menu() {
         service "${1}" "${_cmd_}"
         pause ; break
         ;;
-      ## Anything else is invalid option
+      ## Anything else is an invalid option.
       *) echo -e "Sorry, that is not an option" && sleep 1 
         ;;
     esac
@@ -105,14 +105,13 @@ show_menu_0() {
   echo " 2) Configurator (File Editor)"
   echo " 3) AppDaemon + HA-Dashboard"
   echo -e "\n 0) Exit Menu \n"
-
 }
 
 read_options() {
   local choice
   echo "${blu}" ; read -rp "Select: " choice ; echo "${end}"
   case "${choice}" in
-   ## Select which menu to load, or command to run
+  ## Select which menu to load, or command to run
     "1") # Home Assistant Core
       show_menu="YES"
       while [ ${show_menu} == "YES" ]; do
@@ -120,30 +119,30 @@ read_options() {
         service_menu homeassistant
       done
       ;;
-    "2") # Hass-configurator ( File Editor )
+    "2") # Hass-configurator (File Editor)
       show_menu="YES"
       while [ ${show_menu} == "YES" ]; do
         show_banner_2
         service_menu configurator
       done
       ;;
-    "3") # AppDaemon
+    "3") # AppDaemon / HA-Dashboard
       show_menu="YES"
       while [ ${show_menu} == "YES" ]; do
         show_banner_3
         service_menu appdaemon
       done
       ;;
-    ## Install HACS
+    ## Install HACS (Custom integration for Home Assistant)
     [iI]"nstall "[hH][aA][cC][sS])
       install_hacs
       pause ; return
       ;;
-    ## Exit menu, returns to the jail's console
+    ## Exit menu, returns to the jail's console.
     [eE]|[eE][xX][iI][tT]|[qQ]|[cC]|[cC]|[oN][sS][oO][lL][eE]|"0")
       goodbye
       ;;
-    ## Anything else is invalid option
+    ## Anything else is invalid option.
     *) echo -e "Sorry, that is not an option" && sleep 1
       ;;
   esac
@@ -169,7 +168,7 @@ load_colors() {
 # Step #3: Trap CTRL+C, CTRL+Z and quit singles
 # ----------------------------------------------
 
-## Define and use traps to clean up all temp files
+# Define and use traps to clean up all temp files
 #  Trap on --- use 'kill -l' to list all
 #   1 = SIGHUP (Hangup of controlling terminal or death of parent)
 #   2 = SIGINT (Interrupted by the keyboard)

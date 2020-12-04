@@ -6,7 +6,7 @@
 ## What action are we taking?
 service_action="${1}"
 
-## These are the services and default ports.
+## Set the service_name and default service_port.
 if [ "${2}" == "configurator" ]; then
   service_name="configurator"
   service_port="3218"
