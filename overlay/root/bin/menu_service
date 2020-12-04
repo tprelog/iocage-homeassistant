@@ -90,9 +90,9 @@ remove_service() {
 }
 
 start_service () {
-  chmod +x "/usr/local/etc/rc.d/${service_name}"
+  chmod +x "/usr/local/etc/rc.d/${service_name}" ; echo
   sysrc -f /etc/rc.conf "${service_name}_enable"=YES
-  service "${service_name}" start
+  service "${service_name}" start ; echo
 }
 
 provide_examples() {

@@ -14,7 +14,7 @@ show_banner_0() {
   clear
   echo "${blu}"
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  echo "          Home Assistant Core - TrueNAS Plugin Service Menu           "
+  echo "  Console Menu for TrueNAS Core Community Plugin, Home Assistant Core  "
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   echo -e "${end}\n"
 }
@@ -22,10 +22,10 @@ show_banner_0() {
 show_banner_1() {
   clear
   echo "${blu}"
-  echo '   _  _  ___  __  __ ___   _   ___ ___ ___ ___ _____ _   _  _ _____  '
-  echo '  | || |/ _ \|  \/  | __| /_\ / __/ __|_ _/ __|_   _/_\ | \| |_   _| '
-  echo '  | __ | (_) | |\/| | _| / _ \\__ \__ \| |\__ \ | |/ _ \| .` | | |   '
-  echo '  |_||_|\___/|_|  |_|___/_/ \_\___/___/___|___/ |_/_/ \_\_|\_| |_|   '
+  echo '   _  _  ___  __  __ ___      _   ___ ___ ___ ___ _____ _   _  _ _____  '
+  echo '  | || |/ _ \|  \/  | __|    /_\ / __/ __|_ _/ __|_   _/_\ | \| |_   _| '
+  echo '  | __ | (_) | |\/| | _|    / _ \\__ \__ \| |\__ \ | |/ _ \| .` | | |   '
+  echo '  |_||_|\___/|_|  |_|___|  /_/ \_\___/___/___|___/ |_/_/ \_\_|\_| |_|   '
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
   echo "               MANAGE THE HOME ASSISTANT CORE SERVICE                   "
   echo '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
@@ -103,7 +103,7 @@ show_menu_0() {
 # clear --> moved to show_banner
   echo " 1) Home Assistant Core"
   echo " 2) Configurator (File Editor)"
-  echo " 3) AppDaemon + HA-Dashboard"
+  echo " 3) AppDaemon / HADashboard"
   echo -e "\n 0) Exit Menu \n"
 }
 
