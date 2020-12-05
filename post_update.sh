@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 . /etc/rc.subr && load_rc_config
+: "${plugin_enable_primelist:="NO"}"
 
 install_primelist() {
   ## If enabled, re-install packages from the prime-list
@@ -10,4 +11,6 @@ install_primelist() {
   echo "${pkgs}" | xargs pkg install -y
 }
 
-checkyesno "${plugin_enable_primelist:-"NO"}" && install_primelist
+checkyesno plugin_enable_primelist && install_primelist
+
+echo "TODO: Update the PLUGIN_INFO"
