@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# plugin version 5.0
 
 plugin_version="5.0.$(date +%Y%m%d)"
 sysrc plugin_initialized="${plugin_version}"
@@ -34,7 +35,7 @@ chown -R "${service_name}":"${service_name}" "${service_home}" && chmod -R g=u "
 ## Install the jail's primary service, Home Assistant Core
 service "${service_name}" oneinstall "${service_name}" || exit 1
 
-## Enable and start Home Assistant Core service
+## Enable and start the Home Assistant Core service
 chmod +x "/usr/local/etc/rc.d/${service_name}"
 sysrc -f /etc/rc.conf ${service_name}_enable="YES"
 service "${service_name}" start

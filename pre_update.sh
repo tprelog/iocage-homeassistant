@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# plugin version 5.0
 
 . /etc/rc.subr && load_rc_config
 
