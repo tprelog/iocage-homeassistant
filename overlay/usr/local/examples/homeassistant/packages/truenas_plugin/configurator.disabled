@@ -1,0 +1,12 @@
+## This package.yaml file is provided by the Home Assistant Core iocage-jail for TrueNAS Core
+# Learn more at https://www.home-assistant.io/docs/configuration/packages/
+
+## Access the File Editor from the side panel of Home Assistant.
+# Learn more at https://www.home-assistant.io/integrations/panel_iframe/
+
+panel_iframe:
+  configurator:
+    title: File Editor
+    icon: mdi:wrench
+    require_admin: true
+    url: http://0.0.0.0:3218

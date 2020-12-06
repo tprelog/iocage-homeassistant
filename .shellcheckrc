@@ -1,0 +1,7 @@
+# shellcheck disable=SC2148
+# https://github.com/koalaman/shellcheck/wiki
+
+disable=SC1004 # This backslash+linefeed is literal.
+disable=SC1091 # Not following: (error message here)
+disable=SC2034 # foo appears unused.
+disable=SC2039 # In POSIX sh, something is undefined.

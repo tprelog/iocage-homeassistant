@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+## HACS is a custom integration for Home Assistant.
+## See the HACS website for details: https://hacs.xyz/
+
+. /etc/rc.subr && load_rc_config homeassistant
+
+# shellcheck disable=SC2154
+homeassistant_install_hacs() {
+  local _custom_components_ _hacs_ _zip_
+  _custom_components_="${1:-"${homeassistant_config_dir}"}/custom_components"
+  _hacs_="${_custom_components_}/hacs"
+  ## Check for existing directory. Fail if it's not empty, install if it does not exist
+  if [ -d "${_hacs_}" ] && [ -n "$(ls -A "${_hacs_}")" ]; then
+    echo -e "\nHACS is already installed: ${_hacs_}" ; err 1 "expecting empty directory"
+  elif [ ! -d "${_custom_components_}" ]; then
+    install -d -g "${homeassistant_group}" -m 775 -o "${homeassistant_user}" -- "${_custom_components_}"
+  fi
+  ## Download hacs.zip to a tmp_file and test, then extract to final location.
+  _zip_="$(mktemp -t hacs)"
+  wget -O "${_zip_}" https://github.com/hacs/integration/releases/latest/download/hacs.zip
+  unzip -qt "${_zip_}" || { rm "${_zip_}" ; err 1 "failed to extract" ; }
+  unzip -d "${_hacs_}" "${_zip_}" \
+  && chown -R "${homeassistant_user}":"${homeassistant_group}" "${_hacs_}" \
+  && echo -e "\nRemember to restart Home Assistant before you configure HACS\n https://hacs.xyz/docs/configuration/start \n"
+  rm "${_zip_}"
+}
+
+homeassistant_install_hacs "${1}"

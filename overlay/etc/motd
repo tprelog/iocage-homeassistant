@@ -1,18 +1,17 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Home Assistant Core - FreeNAS Plugin Service Menu
+        Home Assistant Core - TrueNAS Core Community Plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- Basic Home Assistant Core Service Control:
+- Basic Home Assistant Core service control:
     service homeassistant [ restart | start | status | stop ]
 
 - Upgrade Home Assistant Core:
     service homeassistant upgrade
 
-- Check Home Assistant Core Configuration:
+- Check the Home Assistant Core configuration:
     service homeassistant check_config
     
-- Home Assistant Core Log Files:
-    /home/hass/homeassistant/home-assistant.log
+- Home Assistant Core default log file locations:
+    /home/homeassistant/homeassistant/home-assistant.log
     /var/log/homeassistant_daemon.log
 
 -------------------------------------------------------------------
-

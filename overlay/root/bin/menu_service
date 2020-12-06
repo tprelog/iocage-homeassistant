@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2154
+. /etc/rc.subr && load_rc_config
+
+## What action are we taking?
+service_action="${1}"
+
+## Set the service_name and default service_port.
+if [ "${2}" == "configurator" ]; then
+  service_name="configurator"
+  service_port="3218"
+elif [ "${2}" == "appdaemon" ]; then
+  service_name="appdaemon"
+  service_port="5050"
+else # Sorry, only the above services are valid options.
+  err 1 "Sorry, ${2} is not provided here"
+fi
+
+## The version of Python to use.
+service_python="python3.8"
+
+## Optional services will be ran by the same user who
+## runs the jail's primary service, Home Assistant Core.
+service_user="${homeassistant_user}"
+service_group="${homeassistant_group}"
+service_home="/home/${service_user}"
+
+## The actual configuration directory for this service
+## This is the one that matters when making backups!
+service_config_dir="${service_home}/${service_name}"
+
+## Location of the package files, used to provide the panel_iframes.
+packages="${homeassistant_config_dir}/packages/truenas_plugin"
+iframe_disabled="${packages}/${service_name}.disabled"
+iframe_enabled="${packages}/${service_name}.yaml"
+
+## This is the current ip address for this plugin, used in panel_iframes.
+service_ip=$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+
+
+set_rc_vars() {
+  ## Configure the service using rcvars
+  echo -e "\n${grn}INFO:${end} Setting rcvars for service -- ${service_name}\n"
+  sysrc ${service_name}_umask="002"
+  sysrc ${service_name}_user="${service_user}"
+  sysrc ${service_name}_group="${service_group}"
+  sysrc ${service_name}_config_dir="${service_config_dir}"
+  sysrc ${service_name}_python="$(which ${service_python})"
+  sysrc ${service_name}_venv="/usr/local/share/${service_name}"
+  echo
+}
+
+install_service() {
+  local virtualenv
+  virtualenv="$(sysrc -n "${service_name}_venv")"
+  if [ -d "${virtualenv}" ] && [ -n "$(ls -A "${virtualenv}")" ]; then
+    err 1 "virtualenv directory is not empty!: ${virtualenv}"
+  else
+    install -d -g "${service_group}" -m 775 -o "${service_user}" -- "${virtualenv}" \
+    || err 1 "failed to install virtualenv directory: ${virtualenv}"
+    # shellcheck disable=SC2016
+    su "${service_user}" -c '
+      ${1} -m venv ${2}
+      source ${2}/bin/activate || exit 2
+      pip install --no-cache-dir --upgrade pip wheel
+      if [ ${3} == "configurator" ]; then
+        pip install --no-cache-dir hass-configurator
+      else
+        pip install --no-cache-dir ${3}
+      fi
+      deactivate
+    ' _ ${service_python} "${virtualenv}" "${service_name}" || err 1 "install function failed"
+  fi
+}
+
+remove_service() {
+  local rcvar virtualenv
+  virtualenv="$(sysrc -n ${service_name}_venv)"
+  echo -e "\n${orn}WARN:${end} You are about to remove the following service -- ${service_name}"
+  echo -e "${orn}WARN:${end} The following directory will be deleted -- ${virtualenv}\n"
+  read -rp " Type 'YES' to continue: " response
+  [[ "${response}" == [Yy][Ee][Ss] ]] || return 1 ; echo
+  service "${service_name}" onestop 2>/dev/null
+  rm -r "${virtualenv}"
+  for rcvar in $(eval sysrc -ae | grep ^"${service_name}"); do
+    echo "removing rcvar: ${rcvar}"
+    sysrc -x "${rcvar}" | cut -d= -f1
+  done
+}
+
+start_service () {
+  chmod +x "/usr/local/etc/rc.d/${service_name}" ; echo
+  sysrc -f /etc/rc.conf "${service_name}_enable"=YES
+  service "${service_name}" start ; echo
+}
+
+provide_examples() {
+  ## Provide the example configuration files this service.
+  ## These files are intended to be modified or replaced by users.
+  example_cfg="/usr/local/examples/${service_name}/"
+  if [ ! -d "${service_config_dir}" ]; then
+    install -d -g "${service_group}" -o "${service_user}" -m 775 -- "${service_config_dir}" \
+    || err 1 "failed to install ${service_config_dir}"
+  fi
+  ## ONLY if service_config is EMPTY, else nothing should be copied.
+  if [ ! "$(ls -A "${service_config_dir}")" ]; then
+    cp -R "${example_cfg}" "${service_config_dir}"
+    find "${service_config_dir}" -type f -name ".empty" -depth -exec rm -f {} \;
+    chown -R "${service_user}":"${service_group}" "${service_config_dir}"
+    chmod -R g=u "${service_config_dir}"
+  else
+    echo -e "\n${grn}INFO:${end} ${service_config_dir} is not empty!"
+    echo -e "\n${grn}INFO:${end} Example configuration will not be added."
+    echo -e "${orn}WARN:${end} ${service_name} may fail to start with missing or invalid configuration.\n"
+    sleep 1
+  fi
+}
+
+enable_iframe() {
+  ## Enable the iframe_panel for this service in Home Assistant
+  if [ -f "${iframe_disabled}" ]; then
+    sed -e "s%url: http://0.0.0.0:${service_port}%url: http://${service_ip}:${service_port}%" \
+      "${iframe_disabled}" > "${iframe_enabled}" && rm "${iframe_disabled}"
+    chown -R "${service_user}":"${service_group}" "${iframe_enabled}" ; chmod -R g=u "${iframe_enabled}"
+  fi
+}
+
+disable_iframe() {
+  ## Disable the iframe_panel for this service in Home Assistant
+  if [ -f "${iframe_enabled}" ]; then
+    sed -e "s%url: http://${service_ip}:${service_port}%url: http://0.0.0.0:${service_port}%" \
+      "${iframe_enabled}" > "${iframe_disabled}" && rm "${iframe_enabled}"
+    chown -R "${service_user}":"${service_group}" "${iframe_disabled}" ; chmod -R g=u "${iframe_disabled}"
+  fi
+}
+
+colors () {
+  red=$'\e[1;31m'
+  grn=$'\e[1;32m'
+  orn=$'\e[38;5;208m'
+  end=$'\e[0m'
+} ; colors
+
+## Finally, take action on selected service
+if [ "${service_action}" == "install" ]; then
+  set_rc_vars
+  install_service || err 1 "failed to install ${service_name}"
+  provide_examples
+  enable_iframe
+  start_service
+  exit
+elif [ "${service_action}" == "remove" ]; then
+  disable_iframe
+  remove_service
+  exit
+else
+  err 1 "unsupported action: ${service_action}"
+fi
+
+echo -e "\nYOU SHOULDN'T BE HERE\n"
+exit 1

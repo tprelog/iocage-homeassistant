@@ -4,120 +4,98 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
+# revised: 20201201
+#
 # configurator_enable: Set to YES to enable the configurator service.
-#       Default: NO
+#       Default: "NO"
+#       Enable:  sysrc configurator_enable="YES"
+#       Disable: sysrc -x configurator_enable
 #
 # configurator_user: The user account used to run the configurator daemon.
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
-#       Default:  configurator
-#       Set to retro:    `sysrc configurator_user="hass"`
-#       Reset to default: `sysrc -x configurator_user`
+#       Default:  "configurator"
+#       Change:   sysrc configurator_user="homeassistant"
 #
 # configurator_group: The group account used to run the configurator daemon.
-#       Default:  $PRIMARY_USER_GROUP
-#       Set to retro:    `sysrc configurator_group="hass"`
-#       Reset to default: `sysrc -x configurator_group`
+#       Default:  The primary group of the ${configurator_user}
+#       Change:   sysrc configurator_group="homeassistant"
 #
-# configurator_user_dir: Directory where the configurator user's files can be located.
-#       Default1: $HOME
-#       Default2: ${configurator_config_dir}     (If $HOME is not set)
-#       Set to retro:    `sysrc configurator_user_dir="/home/hass"`
-#       Reset to default: `sysrc -x configurator_user_dir`
+# configurator_user_dir: Path to directory, where ".cache/pip" will be located. This may also be the
+#       location for the user's files and ${configurator_config_dir}.
+#       Default:  The HOME directory for the ${configurator_user}
+#       Alternate: If HOME is not set or does not exist -- ${configurator_venv}
 #
-# configurator_config_dir: Directory where the configurator file is located.
-#       Default1: "$HOME/.configurator"
-#       Default2: "/usr/local/etc/configurator"  (If $HOME is not set)
-#       Set to retro:    `sysrc configurator_config_dir="/home/hass/configurator"`
-#       Reset to default: `sysrc -x configurator_config_dir`
+# configurator_config_dir: Path to directory, where the configurator "config.json" is located.
+#       Default:  ${configurator_user_dir}/.configurator"
+#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/configurator"
 #
-# configurator_config:	Full path to hass-configurator settings file.
-#       Default:  "$HOME/configurator/.configurator.conf"
-#       Set to retro:    'sysrc configurator_config="/home/hass/configurator/configurator.conf"`
-#       Reset to default: `sysrc -x configurator_config_dir`
+# configurator_config: Set a full and direct path to hass-configurator settings file. You can use this if you want
+#       to change the name of the configuration file. This also overrides the ${configurator_config_dir} path.
+#       Default:  "${configurator_config_dir}/config.json"
 #
-# configurator_python: Set the version of Python for the virtualenv.
-#       Default:  "/usr/local/bin/python3.7"
-#       Set to retro:    `sysrc configurator_python="/usr/local/bin/python3.7"`
-#       Reset to default: `sysrc -x configurator_python`
-#
-# configurator_venv: Directory where the configurator virtualenv is located.
+# configurator_venv: Path to directory, where the Haa-Configurator virtualenv is located or will be created.
 #       Default:  "/usr/local/share/configurator"
-#       Set to retro:    `sysrc configurator_venv="/srv/configurator"`
-#       Reset to default: `sysrc -x configurator_venv`
+#
+# configurator_python: Set the version of Python, used when creating the virtualenv for the Hass-Configurator.
+#       After changing the Python version, you must recreate the virtualenv for this change to take effect.
+#       Default:  "/usr/local/bin/python3.8"
+#
 
-# -------------------------------------------------------
-# Copy this file to '/usr/local/etc/rc.d/configurator' 
-# `chmod +x /usr/local/etc/rc.d/configurator`
-# `sysrc configurator_enable=YES`
-# `service configurator start`
-# ---------------------------------------------
-
-. /etc/rc.subr
 name=configurator
 rcvar=${name}_enable
 
-load_rc_config ${name}
+. /etc/rc.subr && load_rc_config ${name}
 
-: ${configurator_enable:="NO"}
-: ${configurator_python:="/usr/local/bin/python3.8"}
-: ${configurator_rc_debug:="OFF"}
-: ${configurator_rc_info:="OFF"}
-: ${configurator_rc_umask:="022"}
-: ${configurator_standalone:="YES"}
-: ${configurator_user:="configurator"}
-: ${configurator_venv:="/usr/local/share/configurator"}
+: "${configurator_enable:="NO"}"
+: "${configurator_rc_debug:="OFF"}"
+: "${configurator_user:="configurator"}"
+: "${configurator_python:="/usr/local/bin/python3.8"}"
+: "${configurator_venv:="/usr/local/share/configurator"}"
+: "${configurator_standalone:="YES"}"
 
 if [ ! "$(id ${configurator_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${configurator_user}"
 else
-  HOME=$(eval echo "~${configurator_user}" 2>/dev/null)
-  : ${configurator_group:="`id -gn ${configurator_user}`"}
+  HOME="$(getent passwd "${configurator_user}" | cut -d: -f6)"
+  : "${configurator_group:="$(id -gn ${configurator_user})"}"
 fi
 
-if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ] || [ "${HOME}" == "none" ]; then
-  : ${configurator_config_dir:="/usr/local/etc/${name}"}
-  : ${configurator_user_dir:="${configurator_venv}"}
+if [ -z "${HOME}" ] || [ ! -d "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ]; then
+  : "${configurator_config_dir:="/usr/local/etc/${name}"}"
+  : "${configurator_user_dir:="${configurator_venv}"}"
   export HOME="${configurator_user_dir}"
 else
-  : ${configurator_user_dir:="${HOME}"}
-  : ${configurator_config_dir:="${configurator_user_dir}/.${name}"}
+  : "${configurator_user_dir:="${HOME}"}"
+  : "${configurator_config_dir:="${configurator_user_dir}/.${name}"}"
 fi
-: ${configurator_config:="${configurator_config_dir}/config.json"}
+: "${configurator_config:="${configurator_config_dir}/config.json"}"
 
-export PATH=${PATH}:/usr/local/sbin:/usr/local/bin:${configurator_venv}/bin
-export TERM=xterm
-
-checkyesno configurator_rc_info && rc_info=${configurator_rc_info}
-checkyesno configurator_rc_debug && rc_debug=${configurator_rc_debug}
+umask "${configurator_rc_umask:-22}"
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
 logfile="/var/log/${name}_daemon.log"
 
 command="/usr/sbin/daemon"
-extra_commands="install upgrade test"
+extra_commands="upgrade test"
 
 configurator_precmd() {
-  ## TODO create $rcvar to use checkyesno / allow users to skip this test
-  local _srv_ _own_ _msg_ _cmd_="hass-configurator"
+  local _srv_ _own_ _msg_
   local _venv_="${configurator_venv}"
   local _user_="${configurator_user}"
   if [ ! -d "${_venv_}" ]; then
     _msg_="${_venv_} not found"
   elif [ ! -f "${_venv_}/bin/activate" ]; then
     _msg_="${_venv_}/bin/activate is not found"
-  elif [ ! -x ${_srv_:="${_venv_}/bin/${_cmd_}"} ]; then
+  elif [ ! -x "${_srv_:="${_venv_}/bin/hass-configurator"}" ]; then
     _msg_="${_srv_} is not found or is not executable"
-  elif [ "${_own_:="`stat -f '%Su' ${_srv_}`"}" != ${_user_} ]; then
+  elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
     warn "${_srv_} is currently owned by ${_own_}"
-    warn "option 1: set the service back to the correct configurator_user: sysrc configurator_user=${_own_}"
-    warn "option 2: change the permissions on the virtaulenv for a different configurator_user: chown -R ${configurator_user} ${configurator_venv}"
     _msg_="${_srv_} is not owned by ${_user_}"
   else
-    HC="${_srv_}"
-    cd ${configurator_venv}
-    umask ${configurator_rc_umask}
+    HC_CMD="${_srv_}"
+    cd "${_venv_}" || err 1 "cd ${_venv_}"
     return 0
   fi
   err 1 "${_msg_}"
@@ -127,9 +105,9 @@ start_precmd="${name}_prestart"
 configurator_prestart() {
   
   configurator_precmd \
-  && install -g ${configurator_group} -m 664 -o ${configurator_user} -- /dev/null "${logfile}" \
-  && install -g ${configurator_group} -m 664 -o ${configurator_user} -- /dev/null "${pidfile}" \
-  && install -g ${configurator_group} -m 664 -o ${configurator_user} -- /dev/null "${pidfile_child}" \
+  && install -g "${configurator_group}" -m 664 -o ${configurator_user} -- /dev/null "${logfile}" \
+  && install -g "${configurator_group}" -m 664 -o ${configurator_user} -- /dev/null "${pidfile}" \
+  && install -g "${configurator_group}" -m 664 -o ${configurator_user} -- /dev/null "${pidfile_child}" \
   || return 1
 
   HC_ARGS=""
@@ -138,11 +116,11 @@ configurator_prestart() {
     HC_ARGS="${HC_ARGS} --standalone"
   fi
   
-  if [ ! -z "${configurator_config}" ] && [ -f "${configurator_config}" ]; then
+  if [ -n "${configurator_config}" ] && [ -f "${configurator_config}" ]; then
     HC_CONFIG="${configurator_config}"
   fi
   
-  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HC} ${HC_ARGS} ${HC_CONFIG}" ${rc_flags}
+  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HC_CMD} ${HC_ARGS} ${HC_CONFIG}"
 }
 
 start_postcmd=${name}_poststart
@@ -154,12 +132,13 @@ configurator_poststart() {
 status_cmd=${name}_status
 configurator_status() {
   local _http_ _ip_ _port_
-  if [ -n "$rc_pid" ]; then
-    : ${configurator_secure:="NO"}
+  # shellcheck disable=SC2154
+  if [ -n "${rc_pid}" ]; then
+    : "${configurator_secure:="NO"}"
     _ip_="$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')"
     _port_="${configurator_port:-"3218"}"
     checkyesno configurator_secure && _http_="https" || _http_="http"
-    echo "${name} is running as pid $rc_pid."
+    echo "${name} is running as pid ${rc_pid}."
     echo "${_http_}://${_ip_}:${_port_}"
   else
     echo "${name} is not running."
@@ -175,7 +154,7 @@ configurator_rcvar() {
 stop_precmd=${name}_prestop
 configurator_prestop() {
   local _owner_
-  if [ "${_owner_:-"`stat -f '%Su' ${pidfile_child}`"}" != ${configurator_user} ]; then
+  if [ "${_owner_:-"$(stat -f '%Su' ${pidfile_child})"}" != ${configurator_user} ]; then
     err 1 "${configurator_user} can not stop a process owned by ${_owner_}"
   fi
 }
@@ -186,39 +165,34 @@ configurator_postcmd() {
   rm -f -- "${pidfile_child}"
 }
 
-install_cmd="${name}_install ${@}"
-configurator_install() {
-  shift; local _arg_="${@:-"hass-configurator"}"
-  debug "install: ${_arg_}"
-  run_rc_script /root/post_install.sh "${_arg_}"
-  debug "install returned: ${?}"
-}
-
 upgrade_cmd="${name}_upgrade"
 configurator_upgrade() {
-  configurator_precmd || return 1
+  configurator_precmd
   run_rc_command stop 2>/dev/null; _rcstop_=$?
+  # shellcheck disable=SC2016
   su ${configurator_user} -c '
     source ${1}/bin/activate || exit 1
-    pip3 install --upgrade hass-configurator
+    pip install --no-cache-dir --upgrade hass-configurator
     deactivate
   ' _ ${configurator_venv} || exit 1
-  [ $? == 0 ] && [ ${_rcstop_} == 0 ] && run_rc_command start
+  [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
 test_cmd="${name}_test"
 configurator_test() {
   echo -e "\nTesting virtualenv...\n"
-  configurator_precmd || return 1
-  echo " CWD: $PWD"
+  configurator_precmd
   ## Switch users / activate virtualenv / run a command
+  # shellcheck disable=SC2016
   su "${configurator_user}" -c '
-    source ${1}/bin/activate || exit 2
-    echo " $(python --version)" || exit 3
-    echo " Hass Configurator $(pip3 show hass-configurator | grep Version | cut -d" " -f2)" || exit 4
+    echo -e "  $(pwd)\n"
+    source ${1}/bin/activate
+    echo "  $(python --version)"
+    echo "  Hass Configurator $(pip show hass-configurator | grep Version | cut -d" " -f2)"
     deactivate
   ' _ ${configurator_venv}
-  [ $? != 0 ] && echo "exit $?"
+  echo
 }
 
-run_rc_command "$1"
+checkyesno configurator_rc_debug && rc_debug="ON"
+run_rc_command "${1}"

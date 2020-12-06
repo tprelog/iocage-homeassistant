@@ -4,113 +4,94 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
+# revised: 20201201
+#
 # appdaemon_enable: Set to YES to enable the appdaemon service.
 #       Default: NO
+#       Enable:  sysrc appdaemon_enable="YES"
+#       Disable: sysrc -x appdaemon_enable
 #
 # appdaemon_user: The user account used to run the appdaemon daemon.
 #       This is optional, however do not specifically set this to an
 #       empty string as this will cause the daemon to run as root.
 #       Default:  "appdaemon"
-#       Set to retro:    `sysrc appdaemon_user="hass"`
-#       Reset to default: `sysrc -x appdaemon_user`
+#       change:   sysrc appdaemon_user="homeassistant"
 #
 # appdaemon_group: The group account used to run the appdaemon daemon.
-#       Default:  $PRIMARY_USER_GROUP
-#       Set to retro:    `sysrc appdaemon_group="hass"`
-#       Reset to default: `sysrc -x appdaemon_group`
+#       Default:   The primary group of the ${appdaemon_user}
+#       change:   sysrc appdaemon_group="homeassistant"
 #
-# appdaemon_user_dir: Directory where the appdaemon user's files can be located.
-#       Default1: $HOME
-#       Default2: ${appdaemon_config_dir}     (If $HOME is not set)
-#       Set to retro:    `sysrc appdaemon_user_dir="/home/hass"`
-#       Reset to default: `sysrc -x appdaemon_user_dir`
+# appdaemon_user_dir: Path to directory, where ".cache/pip" will be located. This may also be the
+#       location for the user's files and ${appdaemon_config_dir}.
+#       Default:  The HOME directory for the ${appdaemon_user}
+#       Alternate: If HOME is not set or does not exist -- ${appdaemon_venv}
 #
-# appdaemon_config_dir: Directory where the appdaemon configuration is located.
-#       Default1: "$HOME/.appdaemon"
-#       Default2: "/usr/local/etc/appdaemon"  (If $HOME is not set)
-#       Set to retro:    `sysrc appdaemon_config_dir="/home/hass/appdaemon"`
-#       Reset to default: `sysrc -x appdaemon_config_dir`
+# appdaemon_config_dir: Path to directory, where the appdaemon configuration is located.
+#       Default:  ${appdaemon_user_dir}/.appdaemon"
+#       Alternate: If HOME is not set or does not exist -- "/usr/local/etc/appdaemon"
 #
-# appdaemon_python: Set the version of Python for Home Assistant Core.
-#       Default:  "/usr/local/bin/python3.8"
-#       Set to retro:    `sysrc appdaemon_python="/usr/local/bin/python3.7"`
-#       Reset to default: `sysrc -x appdaemon_python`
-#
-# appdaemon_venv: Directory where the appdaemon virtualenv is located.
+# appdaemon_venv: Path to directory, where the Appdaemon virtualenv is located or will be created.
 #       Default:  "/usr/local/share/appdaemon"
-#       Set to retro:    `sysrc appdaemon_venv="/srv/appdaemon"`
-#       Reset to default: `sysrc -x appdaemon_venv`
+#
+# appdaemon_python: Set the version of Python, used when creating the virtualenv for Appdaemon.
+#       After changing the Python version, you must recreate the virtualenv for this change to take effect.
+#       Default:  "/usr/local/bin/python3.8"
+#
 
-# -------------------------------------------------------
-# Copy this file to '/usr/local/etc/rc.d/appdaemon' 
-# `chmod +x /usr/local/etc/rc.d/appdaemon`
-# `sysrc appdaemon_enable=yes`
-# `service appdaemon start`
-# -------------------------------------------------------
-
-. /etc/rc.subr
 name=appdaemon
 rcvar=${name}_enable
 
-load_rc_config ${name}
+. /etc/rc.subr && load_rc_config ${name}
 
-: ${appdaemon_enable:="NO"}
-: ${appdaemon_python:="/usr/local/bin/python3.8"}
-: ${appdaemon_rc_debug:="OFF"}
-: ${appdaemon_rc_info:="OFF"}
-: ${appdaemon_rc_umask:="022"}
-: ${appdaemon_user:="appdaemon"}
-: ${appdaemon_venv:="/usr/local/share/appdaemon"}
+: "${appdaemon_enable:="NO"}"
+: "${appdaemon_rc_debug:="OFF"}"
+: "${appdaemon_user:="appdaemon"}"
+: "${appdaemon_python:="/usr/local/bin/python3.8"}"
+: "${appdaemon_venv:="/usr/local/share/appdaemon"}"
 
 if [ ! "$(id ${appdaemon_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${appdaemon_user}"
 else
-  HOME=$(eval echo "~${appdaemon_user}" 2>/dev/null)
-  : ${appdaemon_group:="`id -gn ${appdaemon_user}`"}
+  HOME="$(getent passwd "${appdaemon_user}" | cut -d: -f6)"
+  : "${appdaemon_group:="$(id -gn ${appdaemon_user})"}"
 fi
 
-if [ -z "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ] || [ "${HOME}" == "none" ]; then
-  : ${appdaemon_config_dir:="/usr/local/etc/${name}"}
-  : ${appdaemon_user_dir:="${appdaemon_venv}"}
+if [ -z "${HOME}" ] || [ ! -d "${HOME}" ] || [ "${HOME}" == "/nonexistent" ] || [ "${HOME}" == "/var/empty" ]; then
+  : "${appdaemon_config_dir:="/usr/local/etc/${name}"}"
+  : "${appdaemon_user_dir:="${appdaemon_venv}"}"
   export HOME="${appdaemon_user_dir}"
 else
-  : ${appdaemon_user_dir:="${HOME}"}
-  : ${appdaemon_config_dir:="${appdaemon_user_dir}/${name}"}
+  : "${appdaemon_user_dir:="${HOME}"}"
+  : "${appdaemon_config_dir:="${appdaemon_user_dir}/${name}"}"
 fi
 
-export PATH=${PATH}:/usr/local/sbin:/usr/local/bin:${appdaemon_venv}/bin
+export PATH=${PATH}:/usr/local/sbin:/usr/local/bin
 export TERM=xterm
-
-checkyesno appdaemon_rc_info && rc_info=${appdaemon_rc_info}
-checkyesno appdaemon_rc_debug && rc_debug=${appdaemon_rc_debug}
+umask "${appdaemon_rc_umask:-022}"
 
 pidfile_child="/var/run/${name}.pid"
 pidfile="/var/run/${name}_daemon.pid"
 logfile="/var/log/${name}_daemon.log"
 
 command="/usr/sbin/daemon"
-extra_commands="install upgrade test"
+extra_commands="upgrade test"
 
 appdaemon_precmd() {
-  ## TODO create $rcvar to use checkyesno / allow users to skip this test
-  local _srv_ _own_ _msg_ _cmd_="appdaemon"
+  local _srv_ _own_ _msg_
   local _venv_="${appdaemon_venv}"
   local _user_="${appdaemon_user}"
   if [ ! -d "${_venv_}" ]; then
     _msg_="${_venv_} not found"
   elif [ ! -f "${_venv_}/bin/activate" ]; then
     _msg_="${_venv_}/bin/activate is not found"
-  elif [ ! -x ${_srv_:="${_venv_}/bin/${_cmd_}"} ]; then
+  elif [ ! -x "${_srv_:="${_venv_}/bin/appdaemon"}" ]; then
     _msg_="${_srv_} is not found or is not executable"
-  elif [ "${_own_:="`stat -f '%Su' ${_srv_}`"}" != ${_user_} ]; then
+  elif [ "${_own_:="$(stat -f '%Su' ${_srv_})"}" != ${_user_} ]; then
     warn "${_srv_} is currently owned by ${_own_}"
-    warn "option 1: set the service back to the correct appdaemon_user: sysrc appdaemon_user=${_own_}"
-    warn "option 2: change the permissions on the virtaulenv for a different appdaemon_user: chown -R ${appdaemon_user} ${appdaemon_venv}"
     _msg_="${_srv_} is not owned by ${_user_}"
   else
-    AD="${_srv_}"
-    cd ${appdaemon_venv}
-    umask ${appdaemon_rc_umask}
+    AD_CMD="${_srv_}"
+    cd "${_venv_}" || err 1 "cd ${_venv_}"
     return 0
   fi
   err 1 "${_msg_}"
@@ -120,19 +101,19 @@ start_precmd=${name}_prestart
 appdaemon_prestart() {
 
   appdaemon_precmd \
-  && install -g ${appdaemon_group} -m 664 -o ${appdaemon_user} -- /dev/null "${logfile}" \
-  && install -g ${appdaemon_group} -m 664 -o ${appdaemon_user} -- /dev/null "${pidfile}" \
-  && install -g ${appdaemon_group} -m 664 -o ${appdaemon_user} -- /dev/null "${pidfile_child}" \
+  && install -g "${appdaemon_group}" -m 664 -o ${appdaemon_user} -- /dev/null "${logfile}" \
+  && install -g "${appdaemon_group}" -m 664 -o ${appdaemon_user} -- /dev/null "${pidfile}" \
+  && install -g "${appdaemon_group}" -m 664 -o ${appdaemon_user} -- /dev/null "${pidfile_child}" \
   || return 1
 
   AD_ARGS=""
   AD_ARGS="--config ${appdaemon_config_dir}"
 
-  if [ ! -z "${appdaemon_debug_level}" ]; then
+  if [ -n "${appdaemon_debug_level:-}" ]; then
     AD_ARGS="${AD_ARGS} --debug ${appdaemon_debug_level}"
   fi
 
-  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${AD} ${AD_ARGS}" ${rc_flags}
+  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${AD_CMD} ${AD_ARGS}"
 }
 
 
@@ -145,12 +126,13 @@ appdaemon_poststart() {
 status_cmd=${name}_status
 appdaemon_status() {
   local _http_ _ip_ _port_
-  if [ -n "$rc_pid" ]; then
-    : ${appdaemon_secure:="NO"}
+  # shellcheck disable=SC2154
+  if [ -n "${rc_pid}" ]; then
+    : "${appdaemon_secure:="NO"}"
     _ip_="$(ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')"
     _port_="${appdaemon_port:-"5050"}"
     checkyesno appdaemon_secure && _http_="https" || _http_="http"
-    echo "${name} is running as pid $rc_pid."
+    echo "${name} is running as pid ${rc_pid}."
     echo "${_http_}://${_ip_}:${_port_}"
   else
     echo "${name} is not running."
@@ -164,59 +146,48 @@ appdaemon_postcmd() {
   rm -f -- "${pidfile_child}"
 }
 
-install_cmd="${name}_install ${@}"
-appdaemon_install() {
-  shift; local _arg_="${@:-"${name}"}"
-  debug "install: ${_arg_}"
-  run_rc_script /root/post_install.sh "${_arg_}"
-  debug "install returned: ${?}"
-}
-
 restart_cmd="${name}_restart"
 appdaemon_restart() {
   run_rc_command stop 2>/dev/null
-  sleep 1
-  run_rc_command start
-}
-
-rcvar_cmd=${name}_rcvar
-appdaemon_rcvar() {
-  sysrc -a | grep ^${name}
+  sleep 1 ; run_rc_command start
 }
 
 stop_precmd=${name}_prestop
 appdaemon_prestop() {
   local _owner_
-  if [ "${_owner_:-"`stat -f '%Su' ${pidfile_child}`"}" != ${appdaemon_user} ]; then
+  if [ "${_owner_:-"$(stat -f '%Su' ${pidfile_child})"}" != ${appdaemon_user} ]; then
     err 1 "${appdaemon_user} can not stop a process owned by ${_owner_}"
   fi
 }
 
 upgrade_cmd="${name}_upgrade"
 appdaemon_upgrade() {
-  appdaemon_precmd || return 1
+  appdaemon_precmd
   run_rc_command stop 2>/dev/null; _rcstop_=$?
+  # shellcheck disable=SC2016
   su ${appdaemon_user} -c '
     source ${1}/bin/activate || exit 1
-    pip install --upgrade appdaemon
+    pip install --no-cache-dir --upgrade appdaemon
     deactivate
   ' _ ${appdaemon_venv} || exit 1
-  [ $? == 0 ] && [ ${_rcstop_} == 0 ] && run_rc_command start
+  [ ${_rcstop_} == 0 ] && run_rc_command start
 }
 
 test_cmd="${name}_test"
 appdaemon_test() {
   echo -e "\nTesting virtualenv...\n"
-  appdaemon_precmd || return 1
-  echo " CWD: $PWD"
-## Switch users / activate virtualenv / run a command
+  appdaemon_precmd
+  ## Switch users / activate virtualenv / run a command
+  # shellcheck disable=SC2016
   su "${appdaemon_user}" -c '
-    source ${1}/bin/activate || exit 2
-    echo " $(python --version)" || exit 3
-    echo " AppDaemon $(pip show appdaemon | grep Version | cut -d" " -f2)" || exit 4
+    echo -e "  $(pwd)\n"
+    source ${1}/bin/activate 
+    echo "  $(python --version)"
+    echo "  AppDaemon $(pip show appdaemon | grep Version | cut -d" " -f2)"
     deactivate
   ' _ ${appdaemon_venv}
-  [ $? != 0 ] && echo "exit $?"
+  echo
 }
 
-run_rc_command "$1"
+checkyesno appdaemon_rc_debug && rc_debug="ON"
+run_rc_command "${1}"
