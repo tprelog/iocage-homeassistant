@@ -251,17 +251,17 @@ homeassistant_install() {
   su ${homeassistant_user} -c '
     if [ ${1} == "YES" ]; then
       ${2} -m venv ${3}
-      source ${3}/bin/activate 2>/tmp/err || exit 1
+      source ${3}/bin/activate || exit 1
       shift 3
       pip install --upgrade pip wheel
       pip install ${@}
     else
-      source ${3}/bin/activate 2>/tmp/err || exit 1
+      source ${3}/bin/activate || exit 1
       shift 3
       pip install ${@}
     fi
     deactivate
-  ' _ ${_create_:-"NO"} ${homeassistant_python} ${homeassistant_venv} "${_arg_}" || err ${?} "$(</tmp/err)"
+  ' _ ${_create_:-"NO"} ${homeassistant_python} ${homeassistant_venv} "${_arg_}" || err 1 "install function failed"
 }
 
 reinstall_cmd="${name}_reinstall ${*}"
@@ -290,7 +290,7 @@ homeassistant_reinstall() {
   if [ "$(echo "${_ans2_:-"NO"}" | tr '[:lower:]' '[:upper:]')" == "YES" ]; then
     # shellcheck disable=SC2016
     su ${homeassistant_user} -c '
-      source ${1}/bin/activate 2>/tmp/err || exit
+      source ${1}/bin/activate || exit
       pip cache purge
       deactivate
     ' _ ${homeassistant_venv}
