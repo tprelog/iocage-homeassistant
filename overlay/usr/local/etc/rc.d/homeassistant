@@ -4,7 +4,7 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# revised: 20210205
+# revised: 20201201
 #
 # homeassistant_enable: Enable the Home Assistant Core service.
 #       Default: "NO"
@@ -68,11 +68,9 @@ else
   : "${homeassistant_config_dir:="${homeassistant_user_dir}/.${name}"}"
 fi
 
-: "${homeassistant_path:="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"}"
-export PATH="${homeassistant_path}"
-
 [ -n "${homeassistant_cpath:-}" ] && export CPATH="${homeassistant_cpath}"
 [ -n "${homeassistant_library_path:-}" ] && export LIBRARY_PATH="${homeassistant_library_path}"
+[ -n "${homeassistant_path:-}" ] && export PATH="${homeassistant_path}"
 
 umask "${homeassistant_umask:-022}"
 
