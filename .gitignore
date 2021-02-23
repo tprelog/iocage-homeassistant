@@ -1,0 +1,11 @@
+.vscode/
+_tmp
+
+## Related to GitHub Pages
+Gemfile*
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+__pycache__
