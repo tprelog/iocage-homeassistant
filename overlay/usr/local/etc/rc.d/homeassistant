@@ -253,7 +253,7 @@ homeassistant_install() {
       ${2} -m venv ${3}
       source ${3}/bin/activate || exit 1
       shift 3
-      pip install --upgrade pip wheel
+      pip install wheel
       pip install ${@}
     else
       source ${3}/bin/activate || exit 1
