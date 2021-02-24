@@ -198,7 +198,7 @@ homeassistant_script() {
   local _args_="${*}"
   homeassistant_precmd
   # shellcheck disable=SC2016
-  su ${homeassistant_user} -c '
+  su - ${homeassistant_user} -c '
     source ${1}/bin/activate || exit 1
     hass --script ${2} ${3}
     deactivate
@@ -248,7 +248,7 @@ homeassistant_install() {
     err 1 "${name} is not installed: ${homeassistant_venv}"
   fi
   # shellcheck disable=SC2016
-  su ${homeassistant_user} -c '
+  su - ${homeassistant_user} -c '
     if [ ${1} == "YES" ]; then
       ${2} -m venv ${3}
       source ${3}/bin/activate || exit 1
