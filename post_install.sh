@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# plugin version 5.0
 
-plugin_version="5.0.$(date +%Y%m%d)"
-sysrc plugin_initialized="${plugin_version}"
-sysrc plugin_version="${plugin_version}"
+version="$(cat /root/.PLUGIN_VERSION)"
+sysrc plugin_initialized="${version}"
+sysrc plugin_version="${version}"
 
 ## Who will run the jail's primary service, Home Assistant Core
+## Typically, the username is similar to the name of the service
+## Also, the UID usually matches the service's default port ---
 ## If installed, optional services will also be run as this user
-service_port="8123"           # service_port == UID
-service_name="homeassistant"  # service_name == username
+service_port="8123"           # UID == service_port
+service_name="homeassistant"  # username == service_name
 service_home="/home/${service_name}"
 service_config="${service_home}/${service_name}"
 
@@ -47,6 +48,6 @@ echo -e "\n# Start console menu after login." >> /root/.login
 echo "if ( -x /root/bin/menu ) menu" >> /root/.login
 
 ## TODO Add someting useful to PLUGIN_INFO
-echo "version: ${plugin_version}" > /root/PLUGIN_INFO
+echo "version: ${version}" > /root/PLUGIN_INFO
 echo -e "\nInitial startup can take 5-10 minutes before Home Assistant is reachable." >> /root/PLUGIN_INFO
 echo -e " Please see the wiki for more information\n" >> /root/PLUGIN_INFO
