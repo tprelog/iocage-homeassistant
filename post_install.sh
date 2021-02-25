@@ -33,7 +33,9 @@ find "${service_config}" -type f -name ".empty" -depth -exec rm -f {} \;
 chown -R "${service_name}":"${service_name}" "${service_home}" && chmod -R g=u "${service_home}"
 
 ## Install the jail's primary service, Home Assistant Core
-service "${service_name}" oneinstall "${service_name}" || exit 1
+/root/.plugin/bin/get-pip-required "${service_name}" \
+&& service "${service_name}" oneinstall "${service_name}" \
+  -r "/root/.plugin/pip/requirements.${service_name}" || exit 1
 
 ## Enable and start the Home Assistant Core service
 chmod +x "/usr/local/etc/rc.d/${service_name}"

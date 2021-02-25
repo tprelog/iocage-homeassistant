@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+plugin='/root/.plugin/pip'
+install -d -m 775 -- "${plugin}" || exit 1
+
+get_pip_required() {
+  local service="${1:-none}"
+  local R required="${plugin}/requirements.${service}"
+  local C constraints="${plugin}/constraints.${service}"
+  rm -f "${required}" "${constraints}"
+  ## HOME-ASSISTANT-CORE -----------------------------
+  if [ "${service}" == "homeassistant" ]; then
+    local R="https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt"
+    local C="https://raw.githubusercontent.com/home-assistant/core/master/homeassistant/package_constraints.txt"
+    curl -so "${constraints}" ${C} \
+      && curl -s ${R} | sed "s|homeassistant/package_constraints.txt|${constraints}|" > "${required}"
+    return $?
+  ## APPDAEMON ---------------------------------------
+  elif [ "${service}" == "appdaemon" ]; then
+    local R="https://raw.githubusercontent.com/AppDaemon/appdaemon/master/requirements.txt"
+    echo "cryptography<3.4" > "${constraints}" \
+      && curl -s ${R} | sed -e "1s|^| -c ${constraints}\n|" > "${required}"
+    return $?
+  else
+    echo "# requirements for ${service} are not defined" > "${required}"
+    return $?
+  fi
+}
+
+get_pip_required "${1}"
