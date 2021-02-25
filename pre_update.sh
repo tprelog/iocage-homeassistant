@@ -18,6 +18,8 @@ if [ "${plugin_ver}" == "v_0.4.0" ]; then
   update_post_install
 elif [ "${plugin_version%%.*}" == "5" ]; then
   true
+elif [ "${plugin_version%%-*}" == "6" ]; then
+  true
 else ## if plugin_ver != 4 then suggested a fresh install and fail.
 # TODO if plugin_force_update then attempt to force upgrade (useful for debugging)
   warn "Version 5 now is available! Please see the wiki for breaking changes."
