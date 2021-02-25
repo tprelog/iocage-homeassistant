@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC1091,2154
+. /etc/rc.subr && load_rc_config
+
+## TODO - Add someting useful to PLUGIN_INFO ----
+## NOTE Try not to use more than 50 characters or
+## the line will wrap. -- Leading white space and
+## blank lines are not rendered in the TrueNAS UI
+## ----------------------------------------------
+cat << PLUGIN_INFO > /root/PLUGIN_INFO
+
+Initial startup after install or Plugin UPDATE may
+need extra time before Home Assistant is reachable
+--------------------------------------------------
+Please see the wiki for more information
+- plugin version:  ${plugin_version}
+
+PLUGIN_INFO
+## ----------------------------------------------
+
+exit

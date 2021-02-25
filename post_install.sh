@@ -47,7 +47,5 @@ service "${service_name}" start
 echo -e "\n# Start console menu after login." >> /root/.login
 echo "if ( -x /root/bin/menu ) menu" >> /root/.login
 
-## TODO Add someting useful to PLUGIN_INFO
-echo "version: ${version}" > /root/PLUGIN_INFO
-echo -e "\nInitial startup can take 5-10 minutes before Home Assistant is reachable." >> /root/PLUGIN_INFO
-echo -e " Please see the wiki for more information\n" >> /root/PLUGIN_INFO
+## Gererate PLUGIN_INFO
+/root/.plugin/bin/plugin-info

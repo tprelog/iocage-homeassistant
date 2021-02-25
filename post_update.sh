@@ -26,5 +26,4 @@ checkyesno plugin_upgrade_service && upgrade_service
 sysrc plugin_version="$(cat /root/.PLUGIN_VERSION)"
 
 ## Gererate PLUGIN_INFO
-echo "TODO: Update the PLUGIN_INFO"
-#/root/.plugin/bin/plugin-info
+/root/.plugin/bin/plugin-info
