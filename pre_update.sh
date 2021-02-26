@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1091,2016,2154
 . /etc/rc.subr && load_rc_config
 
-# shellcheck disable=SC2154
-if [ "${plugin_ver}" == "v_0.4.0" ]; then
-  warn "Version 6 is now available! Please see the wiki for breaking changes."
-  warn "You may need a fresh install of this plugin in order to upgrade!"
+if  [ "${plugin_ver}" == "v_0.4.0" ] && [ "${homeassistant_user}" == "homeassistant" ]; then
+  plugin_version=5 ; sysrc -x plugin_ver
   rm -f /root/post_install.sh
-elif [ "${plugin_version%%.*}" == "5" ]; then
-  ## TODO -- for now just exit 0
-  exit 0
-elif [ "${plugin_version%%-*}" == "6" ]; then
+elif [ "${plugin_ver}" == "v_0.4.0" ] && [ "${homeassistant_user}" == "hass" ]; then
+  warn "BREAKING CHANGES - The 'hass' username is no longer supported."
+fi
+
+if [ "${plugin_version%%.*}" == "5" ]; then
+  rm -rf /root/bin/{menu,menu_service,install_hacs} /home/"${homeassistant_user}"/.cache \
+  && sed -i~ 's|# Start console menu after login.|set path = (${path} /root/.plugin/bin)|
+      s|if ( -x /root/bin/menu ) menu|if ( -x /root/.plugin/bin/menu ) menu|' /root/.login
+elif [ "${plugin_version%%-*}" == "v6" ]; then
   exit 0
 else
-  warn "Upgrades from unknown versions are no longer supported! Please reinstall this plugin."
-  err 1 "Manual intervention is required! Please see the wiki for breaking changes."
+  warn "Manual intervention is required!"
+  err 1 "Please see the wiki for breaking changes."
 fi

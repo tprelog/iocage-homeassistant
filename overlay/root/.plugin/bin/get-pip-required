@@ -19,7 +19,8 @@ get_pip_required() {
   elif [ "${service}" == "appdaemon" ]; then
     local R="https://raw.githubusercontent.com/AppDaemon/appdaemon/master/requirements.txt"
     echo "cryptography<3.4" > "${constraints}" \
-      && curl -s ${R} | sed -e "1s|^| -c ${constraints}\n|" > "${required}"
+    #  && curl -s ${R} | sed -e "1s|^| -c ${constraints}\n|" > "${required}"
+    echo "-c ${constraints}" > "${required}"
     return $?
   else
     echo "# requirements for ${service} are not defined" > "${required}"

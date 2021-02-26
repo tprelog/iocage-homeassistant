@@ -81,11 +81,11 @@ service_menu() {
         goodbye ; exit 0
         ;;
       "install_service")
-        menu_service install "${1}"
+        menu-service install "${1}"
         pause ; break
         ;;
       "remove_service")
-        menu_service remove "${1}"
+        menu-service remove "${1}"
         pause ; break
         ;;
       "test_service")
@@ -139,7 +139,7 @@ read_options() {
       ;;
     ## Install HACS (Custom integration for Home Assistant)
     [iI]"nstall "[hH][aA][cC][sS])
-      install_hacs
+      install-hacs
       pause ; return
       ;;
     ## Exit menu, returns to the jail's console.

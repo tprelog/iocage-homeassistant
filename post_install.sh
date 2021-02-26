@@ -43,9 +43,10 @@ chmod +x "/usr/local/etc/rc.d/${service_name}"
 sysrc -f /etc/rc.conf ${service_name}_enable="YES"
 service "${service_name}" start
 
-## Start the console menu, upon login as user "root"
-echo -e "\n# Start console menu after login." >> /root/.login
-echo "if ( -x /root/bin/menu ) menu" >> /root/.login
+# shellcheck disable=SC1073,2016
+{ echo -e '\nset path = (${path} /root/.plugin/bin)\n' ; \
+  echo -e "\n# Start console menu after login." ; \
+  echo "if ( -x /root/.plugin/bin/menu ) menu" ; } >> /root/.login
 
 ## Gererate PLUGIN_INFO
 /root/.plugin/bin/plugin-info
