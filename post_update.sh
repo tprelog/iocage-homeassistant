@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC1091
+# shellcheck disable=SC1091,2154
 . /etc/rc.subr && load_rc_config
 : "${plugin_enable_pkglist:="NO"}"
+: "${plugin_clean_install_service:="NO"}"
+: "${plugin_force_reinstall_service:="NO"}"
 : "${plugin_upgrade_service:="NO"}"
 
 install_pkglist() {
@@ -14,6 +16,24 @@ install_pkglist() {
   echo "${pkgs}" | xargs pkg install -y
 }
 
+clean_install_service() {
+  ## If enabled, clean install Home Assistant Core during a Plugin UPDATE
+  ## Use `sysrc plugin_clean_install_service=YES` to enable
+  local service="homeassistant" ; rm -rf "${homeassistant_venv}"
+  /root/.plugin/bin/get-pip-required "${service}" \
+  && service "${service}" install "${service}" \
+    -r "/root/.plugin/pip/requirements.${service}"
+}
+
+force_reinstall_service() {
+  ## If enabled, reinstall Home Assistant Core during a Plugin UPDATE
+  ## Use `sysrc plugin_force_reinstall_service=YES` to enable
+  local service="homeassistant"
+  /root/.plugin/bin/get-pip-required "${service}" \
+  && service "${service}" install --upgrade --force-reinstall "${service}" \
+    -r "/root/.plugin/pip/requirements.${service}"
+}
+
 upgrade_service() {
   ## If enabled, upgrade Home Assistant Core during a Plugin UPDATE
   ## Use `sysrc plugin_upgrade_service=YES` to enable
@@ -21,7 +41,14 @@ upgrade_service() {
 }
 
 checkyesno plugin_enable_pkglist && install_pkglist
-checkyesno plugin_upgrade_service && upgrade_service
+
+if checkyesno plugin_clean_install_service; then
+  clean_install_service
+elif checkyesno plugin_force_reinstall_service; then
+  force_reinstall_service
+elif checkyesno plugin_upgrade_service; then
+  upgrade_service
+fi
 
 sysrc plugin_version="$(cat /root/.PLUGIN_VERSION)"
 
