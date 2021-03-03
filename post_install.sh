@@ -25,6 +25,7 @@ sysrc ${service_name}_umask="002"
 sysrc ${service_name}_user="${service_name}"
 sysrc ${service_name}_group="${service_name}"
 sysrc ${service_name}_config_dir="${service_config}"
+sysrc ${service_name}_path="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"
 sysrc ${service_name}_python="$(which ${service_python})"
 sysrc ${service_name}_venv="/usr/local/share/${service_name}"
 
