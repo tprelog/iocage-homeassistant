@@ -8,7 +8,7 @@
 : "${plugin_upgrade_service:="NO"}"
 
 install_pkglist() {
-  ## If enabled, re-install packages from a pkglist, after a Plugin UPDATE
+  ## If enabled, re-install packages from a pkglist, during a Plugin UPDATE
   ## Use `sysrc plugin_pkglist="/path/to/pkglist"` to set a pkglist
   ## Use `sysrc plugin_enable_pkglist=YES` to enable
   local pkgs ; pkgs=$(cat "${plugin_pkglist:-/dev/null}")
@@ -17,7 +17,7 @@ install_pkglist() {
 }
 
 clean_install_service() {
-  ## If enabled, clean install Home Assistant Core during a Plugin UPDATE
+  ## If enabled, clean-install Home Assistant Core during a Plugin UPDATE
   ## Use `sysrc plugin_clean_install_service=YES` to enable
   local service="homeassistant" ; rm -rf "${homeassistant_venv}"
   /root/.plugin/bin/get-pip-required "${service}" \
@@ -26,7 +26,7 @@ clean_install_service() {
 }
 
 force_reinstall_service() {
-  ## If enabled, reinstall Home Assistant Core during a Plugin UPDATE
+  ## If enabled, force-reinstall Home Assistant Core during a Plugin UPDATE
   ## Use `sysrc plugin_force_reinstall_service=YES` to enable
   local service="homeassistant"
   /root/.plugin/bin/get-pip-required "${service}" \
@@ -41,6 +41,12 @@ upgrade_service() {
 }
 
 checkyesno plugin_enable_pkglist && install_pkglist
+
+if [ "${plugin_version%%.*}" == "5" ]; then
+  plugin_clean_install_service=YES
+elif [ "${plugin_version%%-*}" == "v6" ]; then
+  true
+fi
 
 if checkyesno plugin_clean_install_service; then
   clean_install_service

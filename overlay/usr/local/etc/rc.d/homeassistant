@@ -4,7 +4,7 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# revised: 20201201
+# VERSION: 20210308
 #
 # homeassistant_enable: Enable the Home Assistant Core service.
 #       Default: "NO"
@@ -284,17 +284,6 @@ homeassistant_reinstall() {
   echo -e "\n${orn}You are about to recreate the virtualenv:${end}\n  ${homeassistant_venv}\n"
   echo -e "${orn}The following package(s) will be installed:${end}\n  ${_arg_}\n"
   read -rp " Type 'YES' to continue: " _ans1_
-  #[ "$(echo "${_ans1_:-"NO"}" | tr '[:lower:]' '[:upper:]')" == "YES" ] || exit
-  #echo -e "\n${orn}Do you want to clear the pip cache?${end}"
-  #read -rp " Type 'YES' to clear cache: " _ans2_
-  #if [ "$(echo "${_ans2_:-"NO"}" | tr '[:lower:]' '[:upper:]')" == "YES" ]; then
-  #  # shellcheck disable=SC2016
-  #  su - ${homeassistant_user} -c '
-  #    source ${1}/bin/activate || exit
-  #    pip cache purge
-  #    deactivate
-  #  ' _ ${homeassistant_venv}
-  #fi ; echo
   run_rc_command stop 2>/dev/null ; _rcstop_=${?}
   cd / ; rm -r -- "${homeassistant_venv}" || err 1 "failed to remove ${homeassistant_venv}"
   { homeassistant_install ${_arg_} ; homeassistant_check_config ; } \
