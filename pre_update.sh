@@ -3,9 +3,11 @@
 # shellcheck disable=SC1091,2016,2154
 . /etc/rc.subr && load_rc_config
 
-if [ "${plugin_ver}" == "ver_0.4.0" ] && [ "${homeassistant_user}" == "hass" ]; then
-  warn "BREAKING CHANGES - The 'hass' username is no longer supported."
-elif [ "${plugin_ver}" == "ver_0.4.0" ] && [ "${homeassistant_user}" == "homeassistant" ]; then
+if [ "${homeassistant_user}" == "hass" ]; then
+  warn "Manual intervention is required!"
+  warn "BREAKING CHANGES - The 'hass' username is no longer supported"
+  err 1 "Please see the wiki for details"
+elif [ -n "${plugin_ver}" ] && [ "${homeassistant_user}" == "homeassistant" ]; then
   sysrc -x plugin_ver 2>/dev/null
   sysrc -x homeassistant_library_path 2>/dev/null
   sysrc -x homeassistant_cpath 2>/dev/null
@@ -22,6 +24,6 @@ if [ "${plugin_version%%.*}" == "5" ]; then
 elif [ "${plugin_version%%-*}" == "v6" ]; then
   exit 0
 else
-  warn "Manual intervention is required!"
-  err 1 "Please see the wiki for breaking changes."
+  warn "Unknown Version -- You shouldn't be here!"
+  err 1 "Please reinstall this plugin"
 fi
