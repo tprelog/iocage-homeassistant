@@ -38,6 +38,9 @@ chown -R "${service_name}":"${service_name}" "${service_home}" && chmod -R g=u "
 ## Building the wheel for cryptography requires Rust >=1.41.0.
 pkg install -y rust
 
+## ISSUE 46 - Home Assistant 2021.10 requires libjpeg-turbo
+pkg install -y libjpeg-turbo
+
 ## Install the jail's primary service, Home Assistant Core
 /root/.plugin/bin/get-pip-required "${service_name}" \
 && service "${service_name}" oneinstall "${service_name}" \

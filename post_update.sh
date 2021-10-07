@@ -52,6 +52,9 @@ fi
 ## Building the wheel for cryptography requires Rust >=1.41.0.
 pkg install -y rust
 
+## ISSUE 46 - Home Assistant 2021.10 requires libjpeg-turbo
+pkg install -y libjpeg-turbo
+
 if checkyesno plugin_clean_install_service; then
   clean_install_service
 elif checkyesno plugin_force_reinstall_service; then
