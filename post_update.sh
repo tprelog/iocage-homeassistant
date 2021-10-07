@@ -48,6 +48,10 @@ elif [ "${plugin_version%%-*}" == "v6" ]; then
   true
 fi
 
+## ISSUE 44 - Home Assistant 2021.10 - Failed to build cryptography
+## Building the wheel for cryptography requires Rust >=1.41.0.
+pkg install -y rust
+
 if checkyesno plugin_clean_install_service; then
   clean_install_service
 elif checkyesno plugin_force_reinstall_service; then

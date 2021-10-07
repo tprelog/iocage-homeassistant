@@ -34,6 +34,10 @@ cp -R "/usr/local/examples/${service_name}/" "${service_config}"
 find "${service_config}" -type f -name ".empty" -depth -exec rm -f {} \;
 chown -R "${service_name}":"${service_name}" "${service_home}" && chmod -R g=u "${service_home}"
 
+## ISSUE 44 - Home Assistant 2021.10 - Failed to build cryptography
+## Building the wheel for cryptography requires Rust >=1.41.0.
+pkg install -y rust
+
 ## Install the jail's primary service, Home Assistant Core
 /root/.plugin/bin/get-pip-required "${service_name}" \
 && service "${service_name}" oneinstall "${service_name}" \
