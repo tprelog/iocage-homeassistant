@@ -67,7 +67,7 @@ install_service() {
       if [ ${3} == "configurator" ]; then
         pip install --no-cache-dir hass-configurator
       else
-        pip install --no-cache-dir ${3} -r "/root/.plugin/pip/requirements.${3}"
+        pip install --no-cache-dir ${3}
       fi
       deactivate
     ' _ "${service_python}" "${virtualenv}" "${service_name}" || err 1 "install function failed"
@@ -145,7 +145,6 @@ colors () {
 ## Finally, take action on selected service
 if [ "${service_action}" == "install" ]; then
   set_rc_vars
-  /root/.plugin/bin/get-pip-required "${service_name}"
   install_service || err 1 "failed to install ${service_name}"
   provide_examples
   enable_iframe
