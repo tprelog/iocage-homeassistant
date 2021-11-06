@@ -3,22 +3,28 @@
 # shellcheck disable=SC2154
 . /etc/rc.subr && load_rc_config
 
+## Extra services for this jail will be installed in a Python Virtualenv
+## When the Python version changes, the services should be reinstalled
+
+## The default version of Python to use.
+service_python="python3.9"
+
 ## What action are we taking?
 service_action="${1}"
 
 ## Set the service_name and default service_port.
+## Override default python version if rcvar is set.
 if [ "${2}" == "configurator" ]; then
   service_name="configurator"
   service_port="3218"
+  service_python="${configurator_python:-${service_python}}"
 elif [ "${2}" == "appdaemon" ]; then
   service_name="appdaemon"
   service_port="5050"
+  service_python="${appdaemon_python:-${service_python}}"
 else # Sorry, only the above services are valid options.
   err 1 "Sorry, ${2} is not provided here"
 fi
-
-## The version of Python to use.
-service_python="python3.8"
 
 ## Optional services will be ran by the same user who
 ## runs the jail's primary service, Home Assistant Core.
