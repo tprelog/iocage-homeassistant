@@ -48,12 +48,9 @@ elif [ "${plugin_version%%-*}" == "v6" ]; then
   true
 fi
 
-## ISSUE 44 - Home Assistant 2021.10 - Failed to build cryptography
-## Building the wheel for cryptography requires Rust >=1.41.0.
-pkg install -y rust
-
-## ISSUE 46 - Home Assistant 2021.10 requires libjpeg-turbo
-pkg install -y libjpeg-turbo
+## ISSUE 47 - Support for Python 3.8 to be dropped
+pkg install -y python39 py39-sqlite3
+sysrc homeassistant_python=/usr/local/bin/python3.9
 
 if checkyesno plugin_clean_install_service; then
   clean_install_service

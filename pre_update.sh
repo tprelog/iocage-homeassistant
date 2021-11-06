@@ -10,7 +10,7 @@ elif [ -n "${plugin_ver}" ] && [ "${homeassistant_user}" == "homeassistant" ]; t
   sysrc -x plugin_ver 2>/dev/null
   sysrc -x homeassistant_library_path 2>/dev/null
   sysrc -x homeassistant_cpath 2>/dev/null
-  sysrc homeassistant_python=/usr/local/bin/python3.8
+  sysrc homeassistant_python=/usr/local/bin/python3.9
   rm -f /root/post_install.sh
   plugin_version="5.a"
 fi

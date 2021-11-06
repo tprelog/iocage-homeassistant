@@ -13,8 +13,11 @@ service_name="homeassistant"  # username == service_name
 service_home="/home/${service_name}"
 service_config="${service_home}/${service_name}"
 
+## ISSUE 47 - Support for Python 3.8 to be dropped
+pkg install -y python39 py39-sqlite3
+
 ## Which version of Python to use
-service_python="python3.8"
+service_python="python3.9"
 
 ## Add the service_name user and install a service_config directory. Creates service_home in the process
 pw adduser -u "${service_port}" -n "${service_name}" -d "${service_home}" -w no -s /usr/local/bin/bash -G dialer
@@ -33,13 +36,6 @@ sysrc ${service_name}_venv="/usr/local/share/${service_name}"
 cp -R "/usr/local/examples/${service_name}/" "${service_config}"
 find "${service_config}" -type f -name ".empty" -depth -exec rm -f {} \;
 chown -R "${service_name}":"${service_name}" "${service_home}" && chmod -R g=u "${service_home}"
-
-## ISSUE 44 - Home Assistant 2021.10 - Failed to build cryptography
-## Building the wheel for cryptography requires Rust >=1.41.0.
-pkg install -y rust
-
-## ISSUE 46 - Home Assistant 2021.10 requires libjpeg-turbo
-pkg install -y libjpeg-turbo
 
 ## Install the jail's primary service, Home Assistant Core
 /root/.plugin/bin/get-pip-required "${service_name}" \
