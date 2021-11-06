@@ -46,7 +46,7 @@ set_rc_vars() {
   sysrc ${service_name}_user="${service_user}"
   sysrc ${service_name}_group="${service_group}"
   sysrc ${service_name}_config_dir="${service_config_dir}"
-  sysrc ${service_name}_python="$(which ${service_python})"
+  sysrc ${service_name}_python="$(which "${service_python}")"
   sysrc ${service_name}_venv="/usr/local/share/${service_name}"
   echo
 }
@@ -70,7 +70,7 @@ install_service() {
         pip install --no-cache-dir ${3} -r "/root/.plugin/pip/requirements.${3}"
       fi
       deactivate
-    ' _ ${service_python} "${virtualenv}" "${service_name}" || err 1 "install function failed"
+    ' _ "${service_python}" "${virtualenv}" "${service_name}" || err 1 "install function failed"
   fi
 }
 
