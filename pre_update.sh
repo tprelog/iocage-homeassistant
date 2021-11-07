@@ -21,7 +21,7 @@ if [ "${plugin_version%%.*}" == "5" ]; then
   sed -i~ 's|# Start console menu after login.|set path = (${path} /root/.plugin/bin)|
     s|if ( -x /root/bin/menu ) menu|if ( -x /root/.plugin/bin/menu ) menu|' /root/.login
   sysrc plugin_version=${plugin_version}
-elif [ "${plugin_version%%-*}" == "v6" ]; then
+elif [ "${plugin_version%%-*}" == "v6" ] || [ "${plugin_version%%-*}" == "v7" ]; then
   exit 0
 else
   warn "Manual intervention required! You may need to reinstall this plugin."
