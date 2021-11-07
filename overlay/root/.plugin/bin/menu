@@ -14,7 +14,7 @@ show_banner_0() {
   clear
   echo "${blu}"
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-  echo "  Console Menu for TrueNAS Core Community Plugin, Home Assistant Core  "
+  echo "  Console Menu - plugin version $(cat /root/.PLUGIN_VERSION)           "
   echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
   echo -e "${end}\n"
 }
@@ -97,7 +97,7 @@ service_menu() {
         pause ; break
         ;;
       ## Anything else is an invalid option.
-      *) echo -e "Sorry, that is not an option" && sleep 1 
+      *) echo -e "Sorry, that is not an option" && sleep 1
         ;;
     esac
   done
