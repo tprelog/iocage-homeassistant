@@ -4,7 +4,7 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# VERSION: 20210308
+# VERSION: 20220202
 #
 # homeassistant_enable: Enable the Home Assistant Core service.
 #       Default: "NO"
@@ -105,31 +105,31 @@ homeassistant_precmd() {
 
 start_precmd=${name}_prestart
 homeassistant_prestart() {
-  
+
   homeassistant_precmd \
   && install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${logfile}" \
   && install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${pidfile}" \
   && install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${pidfile_child}" \
   || return 1
-  
+
   homeassistant_ensure_config "${homeassistant_config_dir}"
-  HA_ARGS="--config ${homeassistant_config_dir}"
-  
+  HA_ARGS="--ignore-os-check --config ${homeassistant_config_dir}"
+
   if [ -n "${homeassistant_log_file:-}" ]; then
     install -g "${homeassistant_group}" -m 664 -o ${homeassistant_user} -- /dev/null "${homeassistant_log_file}" \
     && HA_ARGS="${HA_ARGS} --log-file ${homeassistant_log_file}"
   fi
-  
+
   if [ -n "${homeassistant_log_rotate_days:-}" ]; then
     HA_ARGS="${HA_ARGS} --log-rotate-days ${homeassistant_log_rotate_days}"
   fi
-  
+
   checkyesno homeassistant_color_log || HA_ARGS="${HA_ARGS} --log-no-color"
   checkyesno homeassistant_debug && HA_ARGS="${HA_ARGS} --debug"
   checkyesno homeassistant_safe_mode && HA_ARGS="${HA_ARGS} --safe_mode"
   checkyesno homeassistant_skip_pip && HA_ARGS="${HA_ARGS} --skip_pip"
   checkyesno homeassistant_verbose && HA_ARGS="${HA_ARGS} --verbose"
-  
+
   rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HA_CMD} ${HA_ARGS}"
 }
 
