@@ -51,6 +51,7 @@ rcvar=${name}_enable
 : "${homeassistant_skip_pip:="NO"}"
 : "${homeassistant_verbose:="NO"}"
 : "${homeassistant_color_log:="YES"}"
+: "${homeassistant_restart_delay:=1}"
 
 if [ ! "$(id ${homeassistant_user} 2>/dev/null)" ]; then
   err 1 "user not found: ${homeassistant_user}"
@@ -130,7 +131,7 @@ homeassistant_prestart() {
   checkyesno homeassistant_skip_pip && HA_ARGS="${HA_ARGS} --skip_pip"
   checkyesno homeassistant_verbose && HA_ARGS="${HA_ARGS} --verbose"
 
-  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} ${HA_CMD} ${HA_ARGS}"
+  rc_flags="-f -o ${logfile} -P ${pidfile} -p ${pidfile_child} -R ${homeassistant_restart_delay} ${HA_CMD} ${HA_ARGS}"
 }
 
 start_postcmd=${name}_poststart
