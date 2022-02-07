@@ -47,11 +47,9 @@ curl -so "${constraints}" ${C} \
   && chown "${service_name}" "${requirements}" "${constraints}"
 
 ## Install the jail's primary service, Home Assistant Core
-service "${service_name}" oneinstall "${service_name}" \
-  -r "${service_name}.requirements"
-
-## Remove temporary requirements and constraints files
-rm "${service_name}.requirements" "${service_name}.constraints"
+## and remove temporary requirements and constraints files
+service "${service_name}" oneinstall "${service_name}" -r "${requirements}" \
+  && rm "${requirements}" "${constraints}"
 
 ## Enable and start the Home Assistant Core service
 chmod +x "/usr/local/etc/rc.d/${service_name}"
