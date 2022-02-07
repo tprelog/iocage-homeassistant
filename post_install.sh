@@ -37,10 +37,21 @@ cp -R "/usr/local/examples/${service_name}/" "${service_config}"
 find "${service_config}" -type f -name ".empty" -depth -exec rm -f {} \;
 chown -R "${service_name}":"${service_name}" "${service_home}" && chmod -R g=u "${service_home}"
 
+## Download R -> requirements and C -> constraints for the initial install
+R="https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt"
+C="https://raw.githubusercontent.com/home-assistant/core/master/homeassistant/package_constraints.txt"
+requirements="$(mktemp -t ${service_name}.requirements)"
+constraints="$(mktemp -t ${service_name}.constraints)"
+curl -so "${constraints}" ${C} \
+  && curl -s ${R} | sed "s|homeassistant/package_constraints.txt|${constraints}|" > "${requirements}" \
+  && chown "${service_name}" "${requirements}" "${constraints}"
+
 ## Install the jail's primary service, Home Assistant Core
-/root/.plugin/bin/get-pip-required "${service_name}" \
-&& service "${service_name}" oneinstall "${service_name}" \
-  -r "/root/.plugin/pip/requirements.${service_name}" || exit 1
+service "${service_name}" oneinstall "${service_name}" \
+  -r "${service_name}.requirements"
+
+## Remove temporary requirements and constraints files
+rm "${service_name}.requirements" "${service_name}.constraints"
 
 ## Enable and start the Home Assistant Core service
 chmod +x "/usr/local/etc/rc.d/${service_name}"
