@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # A menu driven shell script, hacked together from internet samples and other shit.
-# The console menu for the TrueNAS Core Community Plugin, Home Assistant Core, is
+# The console menu for the Xigmanas Bastille Extension, Home Assistant Core, is
 # just a simple menu, nothing more than a shortcut to execute basic service commands.
 
 main_menu="0"
