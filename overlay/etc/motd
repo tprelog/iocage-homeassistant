@@ -1,5 +1,5 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Home Assistant Core - TrueNAS Core Community Plugin
+        Home Assistant Core - Xigmanas Bastille Extension
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Basic Home Assistant Core service control:
     service homeassistant [ restart | start | status | stop ]
