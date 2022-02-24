@@ -1,8 +1,6 @@
 PKG ca_root_nss
 PKG bash
-PKG python39
 PKG sqlite3
-PKG py39-sqlite3
 PKG rust
 PKG libjpeg-turbo
 CP overlay/root /root
