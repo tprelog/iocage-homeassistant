@@ -5,11 +5,11 @@ PKG sqlite3
 PKG py39-sqlite3
 PKG rust
 PKG libjpeg-turbo
-CMD fetch https://github.com/DarkenLight/homeassistant-core/archive/refs/heads/master.zip
-CMD tar -xf master.zip --strip-components=1 && rm master.zip
-CMD chmod -R +x *
-CMD cp -R overlay/root/.plugin /root
-CMD cp -R overlay/root/.PLUGIN_VERSION /root
+CP overlay/root /root
 CP overlay/etc /
 CP overlay/usr /
+CP post_install.sh /root
+CP post_update.sh /root
+CP pre_update.sh /root
+CMD chmod -R +x *
 CMD ./post_install.sh
