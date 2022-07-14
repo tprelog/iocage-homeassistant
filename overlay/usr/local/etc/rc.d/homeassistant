@@ -4,7 +4,7 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# VERSION: 20220202
+# VERSION: 20220713
 #
 # homeassistant_enable: Enable the Home Assistant Core service.
 #       Default: "NO"
@@ -33,7 +33,7 @@
 # homeassistant_python: Set a supported version of Python to be used when creating the virtualenv for Home Assistant Core.
 #       https://github.com/home-assistant/architecture/blob/master/adr/0016-home-assistant-core.md#supported-python-versions
 #       After changing the Python version, you must recreate the virtualenv for the updated version to take effect.
-#       Default:  "/usr/local/bin/python3.8"
+#       Default:  "NOT_SET"
 #
 
 name=homeassistant
@@ -44,7 +44,7 @@ rcvar=${name}_enable
 : "${homeassistant_enable:="NO"}"
 : "${homeassistant_rc_debug:="NO"}"
 : "${homeassistant_user:="homeassistant"}"
-: "${homeassistant_python:="/usr/local/bin/python3.8"}"
+: "${homeassistant_python:="NOT_SET"}"
 : "${homeassistant_venv:="/usr/local/share/homeassistant"}"
 : "${homeassistant_safe_mode:="NO"}"
 : "${homeassistant_debug:="NO"}"

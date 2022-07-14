@@ -4,7 +4,7 @@
 # REQUIRE: LOGIN
 # KEYWORD: shutdown
 #
-# revised: 20201201
+# VERSION: 20220713
 #
 # appdaemon_enable: Set to YES to enable the appdaemon service.
 #       Default: NO
@@ -35,7 +35,7 @@
 #
 # appdaemon_python: Set the version of Python, used when creating the virtualenv for Appdaemon.
 #       After changing the Python version, you must recreate the virtualenv for this change to take effect.
-#       Default:  "/usr/local/bin/python3.8"
+#       Default:  NOT SET
 #
 
 name=appdaemon
@@ -46,7 +46,6 @@ rcvar=${name}_enable
 : "${appdaemon_enable:="NO"}"
 : "${appdaemon_rc_debug:="OFF"}"
 : "${appdaemon_user:="appdaemon"}"
-: "${appdaemon_python:="/usr/local/bin/python3.8"}"
 : "${appdaemon_venv:="/usr/local/share/appdaemon"}"
 
 if [ ! "$(id ${appdaemon_user} 2>/dev/null)" ]; then
@@ -181,7 +180,7 @@ appdaemon_test() {
   # shellcheck disable=SC2016
   su "${appdaemon_user}" -c '
     echo -e "  $(pwd)\n"
-    source ${1}/bin/activate 
+    source ${1}/bin/activate
     echo "  $(python --version)"
     echo "  AppDaemon $(pip show appdaemon | grep Version | cut -d" " -f2)"
     deactivate
