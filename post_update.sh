@@ -8,7 +8,7 @@
 : "${plugin_upgrade_service:="NO"}"
 
 install_pkglist() {
-  ## If enabled, re-install packages from a pkglist, during a Plugin UPDATE
+  ## If enabled, re-install packages from a pkglist during a Plugin UPDATE
   ## Use `sysrc plugin_pkglist="/path/to/pkglist"` to set a pkglist
   ## Use `sysrc plugin_enable_pkglist=YES` to enable
   local pkgs ; pkgs=$(cat "${plugin_pkglist:-/dev/null}")
@@ -20,18 +20,14 @@ clean_install_service() {
   ## If enabled, clean-install Home Assistant Core during a Plugin UPDATE
   ## Use `sysrc plugin_clean_install_service=YES` to enable
   local service="homeassistant" ; rm -rf "${homeassistant_venv}"
-  /root/.plugin/bin/get-pip-required "${service}" \
-  && service "${service}" install "${service}" \
-    -r "/root/.plugin/pip/requirements.${service}"
+  service "${service}" install "${service}"
 }
 
 force_reinstall_service() {
   ## If enabled, force-reinstall Home Assistant Core during a Plugin UPDATE
   ## Use `sysrc plugin_force_reinstall_service=YES` to enable
   local service="homeassistant"
-  /root/.plugin/bin/get-pip-required "${service}" \
-  && service "${service}" install --upgrade --force-reinstall "${service}" \
-    -r "/root/.plugin/pip/requirements.${service}"
+  service "${service}" install --upgrade --force-reinstall "${service}"
 }
 
 upgrade_service() {
@@ -41,16 +37,6 @@ upgrade_service() {
 }
 
 checkyesno plugin_enable_pkglist && install_pkglist
-
-if [ "${plugin_version%%.*}" == "5" ]; then
-  plugin_clean_install_service=YES
-elif [ "${plugin_version%%-*}" == "v6" ]; then
-  true
-fi
-
-## ISSUE 47 - Support for Python 3.8 to be dropped
-pkg install -y python39 py39-sqlite3
-sysrc homeassistant_python=/usr/local/bin/python3.9
 
 if checkyesno plugin_clean_install_service; then
   clean_install_service
