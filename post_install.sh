@@ -4,26 +4,27 @@ version="$(cat /root/.PLUGIN_VERSION)"
 sysrc plugin_initialized="${version}"
 sysrc plugin_version="${version}"
 
-## Who will run the jail's primary service, Home Assistant Core
-## Typically, the username is similar to the name of the service
-## Also, the UID usually matches the service's default port ---
-## If installed, optional services will also be run as this user
-service_port="8123"           # UID == service_port
-service_name="homeassistant"  # username == service_name
+## Set a supported version of Python for Home Assistant Core
+service_python="python3.10"
+
+## Who will run the jail's primary & optional services
+## Here the username is similar to the name of the primary service
+## Also the UID is set to match the service's default port
+service_port="8123"
+service_name="homeassistant"
 service_home="/home/${service_name}"
 service_config="${service_home}/${service_name}"
-
-## ISSUE 47 - Support for Python 3.8 to be dropped
-pkg install -y python39 py39-sqlite3
-
-## Which version of Python to use
-service_python="python3.9"
 
 ## Add the service_name user and install a service_config directory. Creates service_home in the process
 pw adduser -u "${service_port}" -n "${service_name}" -d "${service_home}" -w no -s /usr/local/bin/bash -G dialer
 install -d -m 775 -o "${service_name}" -g "${service_name}" -- "${service_config}"
 
-## Configure the jail's primary service using rcvars
+## Install the required version of Python
+# shellcheck disable=SC2001
+version=$(echo "${service_python##*python}" | sed 's/\.//')
+pkg install -y "python${version}" "py${version}-sqlite3"
+
+## Configure rcvars for the jail's primary service
 sysrc ${service_name}_umask="002"
 sysrc ${service_name}_user="${service_name}"
 sysrc ${service_name}_group="${service_name}"
