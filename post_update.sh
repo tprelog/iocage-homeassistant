@@ -18,21 +18,21 @@ install_pkglist() {
 
 check_for_python() {
   ## Ensure the set version of Python is installed for Home Assistant Core
-  if ! which "${homeassistant_python:?"version not set"}" &> /dev/null; then
-    local version; version=$(echo "${homeassistant_python##*python}" | sed 's/\.//')
-    pkg install -y "python${version} py${version}-sqlite3"
+  if [ -n "${homeassistant_python}" ]; then
+    local version ; version=$(echo "${homeassistant_python##*python}" | sed 's/\.//')
+    pkg install -y "python${version}" "py${version}-sqlite3"
   fi
   ## ... and Appdaemon, if enabled
-  if service -e | grep appdaemon &> /dev/null; then
-    if ! which "${appdaemon_python:?"version not set"}" &> /dev/null; then
-      local version; version=$(echo "${appdaemon_python##*python}" | sed 's/\.//')
+  if checkyesno "{appdaemon_enable:-NO}"; then
+    if [ -n "${appdaemon_python}" ] && ! which "${appdaemon_python}" > /dev/null 2>&1; then
+      local version ; version=$(echo "${appdaemon_python##*python}" | sed 's/\.//')
       pkg install -y "python${version}"
     fi
   fi
   ## ... and Hass-Configurator, if enabled
-  if service -e | grep configurator &> /dev/null; then
-    if ! which "${configurator_python:?"version not set"}" &> /dev/null; then
-      local version; version=$(echo "${configurator_python##*python}" | sed 's/\.//')
+  if checkyesno "{configurator_enable:-NO}"; then
+    if [ -n "${configurator_python}" ] && ! which "${configurator_python}" > /dev/null 2>&1; then
+      local version ; version=$(echo "${configurator_python##*python}" | sed 's/\.//')
       pkg install -y "python${version}"
     fi
   fi
