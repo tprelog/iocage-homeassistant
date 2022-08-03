@@ -12,9 +12,42 @@ http:
   ip_ban_enabled: False
   login_attempts_threshold: 5
 
-## Configure a default setup of Home Assistant Core (frontend, api, etc)
-# Learn more at https://www.home-assistant.io/integrations/default_config
-default_config:
+## Configure a default setup of Home Assistant Core
+## Disabled after the addition of Bluetooth in HA 2022.8.0
+#default_config:
+
+## Integrations normally enabled by 'default_config' as of HA 2022.08.0
+## https://github.com/home-assistant/core/blob/dev/homeassistant/components/default_config/manifest.json
+application_credentials:
+cloud:
+counter:
+dhcp:
+energy:
+frontend:
+homeassistant_alerts:
+history:
+input_boolean:
+input_button:
+input_datetime:
+input_number:
+input_select:
+input_text:
+logbook:
+map:
+media_source:
+mobile_app:
+my:
+network:
+person:
+ssdp:
+sun:
+system_health:
+tag:
+timer:
+usb:
+webhook:
+zeroconf:
+zone:
 
 # Text to speech
 tts:
