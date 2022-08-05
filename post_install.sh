@@ -49,7 +49,7 @@ curl -so "${constraints}" ${C} \
 
 ## Install the jail's primary service, Home Assistant Core
 ## and remove temporary requirements and constraints files
-service "${service_name}" oneinstall "${service_name}" -r "${requirements}" \
+service "${service_name}" oneinstall "${service_name}" SQLAlchemy fnvhash -r "${requirements}" \
   && rm "${requirements}" "${constraints}"
 
 ## Enable and start the Home Assistant Core service
